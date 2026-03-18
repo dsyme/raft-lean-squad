@@ -28,6 +28,7 @@ network:
     - github
     - "arxiv.org"
     - "leanprover-community.github.io"
+    - "release.leanlang.org"
 
 safe-outputs:
   create-issue:
