@@ -39,7 +39,6 @@ safe-outputs:
     title-prefix: "[Lean Squad] "
     max: 1
   create-pull-request:
-    draft: true
     title-prefix: "[Lean Squad] "
     labels: [automation, lean-squad]
     max: 2
