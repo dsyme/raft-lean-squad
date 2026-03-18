@@ -1,6 +1,6 @@
 {
   "last_run": "2026-03-18",
-  "run_id": "23265935328",
+  "run_id": "23267431936",
   "fv_tool": "Lean4+Mathlib",
   "lake_project": "formal-verification/lean/",
   "targets": [
@@ -15,13 +15,20 @@
       "phase": 4,
       "lean_file": "formal-verification/lean/FVSquad/CommittedIndex.lean",
       "informal_spec": "formal-verification/specs/committed_index_informal.md",
-      "notes": "Lean spec + implementation model done (PR: lean-squad/lean-spec-committed-index). Proved: committedIndex_empty, committedIndex_eq_nth, committedIndex_singleton, countGe_antitone, countGe_zero, committedIndex_nonneg. Still sorry: committedIndex_safety, committedIndex_maximal, committedIndex_monotone. Next: Task5 proofs for these three theorems.",
-      "theorems_proved": ["committedIndex_empty","committedIndex_eq_nth","committedIndex_singleton","countGe_antitone","countGe_zero","committedIndex_nonneg"],
-      "theorems_sorry": ["committedIndex_safety","committedIndex_maximal","committedIndex_monotone"]
+      "notes": "PR #9 open. New helpers added: sortedAcked_sorted (proved), countGe_mono_acked (proved). committedIndex_monotone FULLY PROVED via contradiction using safety+maximality+countGe_mono_acked. Still sorry: committedIndex_safety, committedIndex_maximal (one sorry each - need List.countP/Finset.card chain: Finset.card_filter + List.countP_map + List.Perm.countP_eq). Also need List.pairwise_iff_get for sortedDesc_get_mono.",
+      "theorems_proved": ["committedIndex_empty","committedIndex_eq_nth","committedIndex_singleton","countGe_antitone","countGe_zero","committedIndex_nonneg","sortedAcked_sorted","countGe_mono_acked","committedIndex_monotone"],
+      "theorems_sorry": ["committedIndex_safety","committedIndex_maximal","sortedDesc_get_mono"],
+      "proof_steps_remaining": {
+        "sortedDesc_get_mono": "Need List.pairwise_iff_get (or List.Sorted.rel_getElem in newer Mathlib)",
+        "committedIndex_safety": "Need: (voters.filter p).card = voters.toList.countP p (via Finset.card_filter + Multiset.countP_coe), then List.countP_map, then List.Perm.countP_eq. Plus List.countP_eq_length for take-q elements.",
+        "committedIndex_maximal": "Same countP/Finset chain as safety, plus bounding countP by (q-1)."
+      }
     },
     {
       "id": "limit_size",
-      "phase": 1
+      "phase": 2,
+      "informal_spec": "formal-verification/specs/limit_size_informal.md",
+      "notes": "Informal spec written in PR #9. Model as limitSize : List Nat -> Option Nat -> List Nat. Key properties: prefix, minimum-one, size-respecting, maximal. Good candidate for decide on small examples."
     },
     {
       "id": "unstable_log",
@@ -33,11 +40,13 @@
     }
   ],
   "next_steps": [
-    "Task5: prove committedIndex_safety, committedIndex_maximal, committedIndex_monotone using List.mergeSort order-statistic lemmas",
-    "Task2/3: Lean spec for limit_size (simple list truncation, good candidate for decide)"
+    "Task5: Resolve sorry in committedIndex_safety and committedIndex_maximal by adding the countP/Finset.card chain. Key lemmas needed: Finset.card_filter (gives s.val.countP p), Multiset.countP_coe (connects to List.countP), List.countP_map, List.Perm.countP_eq, List.countP_eq_length (for take-q). Check exact Lean4 API names.",
+    "Task5: Also fix sortedDesc_get_mono - need List.pairwise_iff_get or List.Sorted.rel_getElem.",
+    "Task3: Write Lean spec for limit_size (simple, good for decide). Model: limitSize (sizes : List Nat) (max : Option Nat) : List Nat. Theorems: is_prefix, length_ge_1 (if nonempty), sum_le_max, maximality."
   ],
-  "build_note": "elan/lean toolchain install blocked by network firewall CONNECT tunnel 403. Syntax validated by following MajorityQuorum.lean patterns.",
+  "build_note": "elan/lean toolchain install blocked by network firewall CONNECT tunnel 403. Syntax validated by following MajorityQuorum.lean patterns. Lean toolchain domain: release.leanlang.org needs to be allowlisted.",
   "open_prs": [
-    {"branch": "lean-squad/lean-spec-committed-index", "description": "CommittedIndex Lean spec + impl model"}
-  ]
+    {"branch": "lean-squad/proofs-and-limit-size-spec", "description": "limit_size informal spec + CommittedIndex proof improvements (PR #9)"}
+  ],
+  "status_issue": "Open: [Lean Squad] Formal Verification Status"
 }
