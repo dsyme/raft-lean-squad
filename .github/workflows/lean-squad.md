@@ -52,7 +52,8 @@ tools:
   github:
     toolsets: [default]
   bash: true
-  repo-memory: true
+  repo-memory:
+    max-patch-size: 102400  # 100KB max (default 10KB)
 
 steps:
   - name: Assess FV state and compute task weights
@@ -169,7 +170,7 @@ steps:
           json.dump(result, f, indent=2)
       EOF
 
-source: githubnext/agentics/workflows/lean-squad.md@8f677a45bd5c5174d7bef4188993b1cbe49673fc
+source: githubnext/agentics/workflows/lean-squad.md@851905c06e905bf362a9f6cc54f912e3df747d55
 ---
 
 # Lean Squad
