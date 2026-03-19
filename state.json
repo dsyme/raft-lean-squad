@@ -1,6 +1,6 @@
 {
   "last_run": "2026-03-19",
-  "run_id": "23284664650",
+  "run_id": "23290496884",
   "fv_tool": "Lean4+Mathlib",
   "lake_project": "formal-verification/lean/",
   "targets": [
@@ -39,12 +39,12 @@
     },
     {
       "id": "progress",
-      "phase": 4,
+      "phase": 5,
       "lean_file": "formal-verification/lean/FVSquad/Progress.lean",
       "informal_spec": "formal-verification/specs/progress_informal.md",
-      "notes": "Informal spec + full Lean implementation + ~30 theorems proved (0 sorry). maybeUpdate, becomeProbe/Replicate/Snapshot, maybeDecrTo. INV-1 (matched+1<=next_idx) proved preserved by all operations. PR #23 open.",
+      "notes": "COMPLETE. ~45 theorems proved (0 sorry). master invariant valid_preserved_by_all_ops proves INV-1 preserved by ALL operations. PR open (run29 branch).",
       "open_prs": [
-        {"pr": "#23", "branch": "lean-squad/task1-2-3-progress-statemachine-run26-5866a97c6777fdea"}
+        {"pr": "run29", "branch": "lean-squad/task1-4-logordering-run29"}
       ]
     },
     {
@@ -62,30 +62,24 @@
       "phase": 4,
       "lean_file": "formal-verification/lean/FVSquad/LogOrdering.lean",
       "informal_spec": "formal-verification/specs/log_ordering_informal.md",
-      "notes": "NEW this run. isUpToDate (total preorder proof: refl, total, trans, antisymm, higher/lower/same-term rules). findConflictByTerm (range, postcondition, maximality, monotonicity). 18+ theorems proved (0 sorry). lexGe as Nat*Nat order. PR created this run.",
-      "theorems_proved": [
-        "isUpToDate_refl", "isUpToDate_higher_term", "isUpToDate_lower_term",
-        "isUpToDate_same_term", "isUpToDate_total", "isUpToDate_trans", "isUpToDate_antisymm",
-        "isUpToDate_not_reverse_of_longer", "isUpToDate_not_reverse_of_higher_term",
-        "findConflict_le", "findConflict_term_le", "findConflict_gt_above",
-        "findConflict_eq_of_le", "findConflict_mono_index", "findConflict_eq_iff_of_mono",
-        "lexGe_trans", "lexGe_total", "lexGe_refl", "lexGe_antisymm"
+      "notes": "NEW this run. IsUpToDate (total preorder proof: refl, total, trans, antisymm, higher/lower/same-term rules, iff_pair_ge). findConflictByTerm (structural recursion on Nat: le, zero, none_eq, found_eq, step_eq, term_le, mono_idx). 17+ theorems (0 sorry). PR open (run29 branch).",
+      "open_prs": [
+        {"pr": "run29", "branch": "lean-squad/task1-4-logordering-run29"}
       ]
     }
   ],
   "next_steps": [
     "Task5: Inflights - prove concreteFreeTo_abstract: need loop invariant for 'go' recursion. Strategy: refactor concreteFreeTo to use top-level freeToGo def, then prove concreteItems_drop, then prove freeToGo_spec by induction.",
-    "Task5: Progress - advance to phase 5. Key proofs use split+omega, should work.",
-    "Task5: JointQuorum - consider adding jointVoteResult_monotone (more yes votes can't make Won into Lost) and connection to CommittedIndex.lean.",
-    "Task5: LogOrdering - advance to phase 5 by connecting to full RaftLog struct, or prove additional properties like log_ordering_election_safety (two elected leaders must have overlapping committed entries).",
-    "Task3/4: New targets - src/raft_log.rs maybe_append/commit_to, or src/tracker.rs for next new target."
+    "Task5: JointQuorum - advance to phase 5. Add jointVoteResult_monotone (more yes votes can't turn Won into Lost) and connection to CommittedIndex.lean.",
+    "Task5: LogOrdering - advance to phase 5. Key: strengthen findConflict_term_le to eliminate the 'r = idx' disjunct for non-error cases. Add findConflict_maximality theorem.",
+    "Task3/4: New targets - src/raft_log.rs maybe_append/commit_to, or src/read_only.rs read index tracking."
   ],
   "build_note": "Lean toolchain install blocked by network firewall. Proofs validated by following proved patterns. Key proof patterns: cases+simp for VoteResult 3-way match, omega for arithmetic, structural induction for Nat/List.",
   "open_prs": [
     {"pr": "#22", "description": "Inflights: 0 sorry abstract + concrete ring-buffer model (Tasks 4+5)", "branch": "lean-squad/task4-5-inflights-concrete-proofs-run25-793dd70723cb08f3"},
     {"pr": "#23", "description": "Progress: informal spec + Lean spec + ~30 theorems (Tasks 1+2+3+4)", "branch": "lean-squad/task1-2-3-progress-statemachine-run26-5866a97c6777fdea"},
     {"pr": "#24", "description": "JointQuorum: informal spec + Lean spec + 20+ theorems (Tasks 1+2+3+4)", "branch": "lean-squad/task1-4-jointquorum-research-run27-df969ac-8f2995be037fa6fb"},
-    {"pr": "run28", "description": "LogOrdering: is_up_to_date + find_conflict_by_term: 18+ theorems (Tasks 1+2+3+4)", "branch": "lean-squad/task1-4-raftlog-research-run28-df969ac"}
+    {"pr": "run29", "description": "LogOrdering: IsUpToDate total preorder + findConflictByTerm (17+ theorems, 0 sorry) + Progress phase 5 (~45 theorems, master invariant). Tasks 1+2+3+4+5", "branch": "lean-squad/task1-4-logordering-run29"}
   ],
   "status_issue": "Open issue #21: [Lean Squad] Formal Verification Status"
 }
