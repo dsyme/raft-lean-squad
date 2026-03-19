@@ -180,6 +180,45 @@ state discrimination. Very tractable — no induction required.
 
 ---
 
+### Target 8 — `is_up_to_date` + `find_conflict_by_term` — Log Ordering (★★★★★ Priority)
+
+**File**: `src/raft_log.rs`
+
+**What it does**:
+- `is_up_to_date(last_index, term)` determines whether a candidate's log is at
+  least as up-to-date as the current log. Returns `true` iff `term > last_term` or
+  (`term == last_term` and `last_index >= last_index`). This is the Raft election
+  restriction (Section 5.4).
+- `find_conflict_by_term(index, term)` scans backward from `index` to find the
+  last position where the log term is ≤ `term`. Used during AppendEntries rejection
+  to efficiently skip conflicting entries.
+
+**Why FV**: `is_up_to_date` is the **election safety mechanism** — a quorum of nodes
+only votes for a candidate whose log is up-to-date. The total preorder property
+(reflexive, total, transitive, antisymmetric) is essential to correctness: without
+transitivity, a chain of elections might elect a leader missing committed entries.
+`find_conflict_by_term` is a correctness-critical optimization: bugs here could
+cause a follower to skip too many entries and miss committed data.
+
+**Key properties to verify**:
+1. **Reflexivity**: a log is always up-to-date wrt itself.
+2. **Totality**: for any two logs, one is up-to-date wrt the other.
+3. **Transitivity**: the preorder is transitive.
+4. **Antisymmetry**: mutual up-to-date-ness implies equal `(lastIndex, lastTerm)`.
+5. **Lex equivalence**: `is_up_to_date` is equivalent to lex order on `(term, index)`.
+6. **Scan range**: `findConflict result ≤ input index`.
+7. **Scan correctness**: if `logTerm(result) = some t` then `t ≤ queryTerm`.
+8. **Scan monotonicity**: larger input index → larger or equal result.
+
+**Spec size**: ~250 Lean lines  
+**Proof tractability**: `is_up_to_date` theorems all close with `unfold; omega`.
+`findConflictByTerm` requires structural induction (decreasing Nat argument);
+proofs use `simp` + `omega` + induction.  
+**Approximations**: `RaftLog` abstracted as `logTerm : Nat → Option Nat`; no
+overflow (u64 → Nat); out-of-range guard omitted (modelled as constant case).
+
+---
+
 ### Target 7 — `JointConfig` Joint Quorum (★★★★ Priority)
 
 **Files**: `src/quorum/joint.rs`

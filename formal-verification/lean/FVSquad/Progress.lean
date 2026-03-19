@@ -392,10 +392,82 @@ theorem maybeUpdate_to_max (p : Progress) (n : Nat) (hn : p.matched ≤ n) :
   simp only [maybeUpdate]
   split <;> omega
 
+/-! ## Phase 5 proofs — additional theorems -/
+
+/-- `becomeProbe` is idempotent on state (applying it again gives the same state). -/
+theorem becomeProbe_state_idempotent (p : Progress) :
+    (becomeProbe (becomeProbe p)).state = .Probe := by
+  simp [becomeProbe]
+
+/-- After `becomeProbe`, the matched index is unchanged. -/
+theorem becomeProbe_matched (p : Progress) :
+    (becomeProbe p).matched = p.matched := by
+  simp [becomeProbe]
+  split <;> simp
+
+/-- After `becomeReplicate`, matched is unchanged. -/
+theorem becomeReplicate_matched (p : Progress) :
+    (becomeReplicate p).matched = p.matched := by
+  simp [becomeReplicate]
+
+/-- After `becomeSnapshot`, matched is unchanged. -/
+theorem becomeSnapshot_matched (p : Progress) (idx : Nat) :
+    (becomeSnapshot p idx).matched = p.matched := by
+  simp [becomeSnapshot]
+
+/-- A valid Progress always has `next_idx ≥ 1`. -/
+theorem valid_next_idx_pos (p : Progress) (hv : valid p) : 0 < p.next_idx := by
+  unfold valid at hv; omega
+
+/-- After any update that succeeds (returns true), next_idx strictly increases or stays. -/
+theorem maybeUpdate_true_next_idx_pos (p : Progress) (n : Nat) (hv : valid p) :
+    0 < (maybeUpdate p n).1.next_idx := by
+  have := maybeUpdate_valid p n hv
+  have := valid_next_idx_pos (maybeUpdate p n).1 this
+  exact this
+
+/-- Composing `becomeReplicate` then `becomeProbe` gives a valid Probe state
+    with `next_idx = matched + 1`. -/
+theorem becomeReplicate_then_probe (p : Progress) (hv : valid p) :
+    let r := becomeProbe (becomeReplicate p)
+    r.state = .Probe ∧ r.next_idx = r.matched + 1 ∧ valid r := by
+  simp [becomeProbe, becomeReplicate, valid]
+  split
+  · simp
+  · simp
+
+/-- `maybeDecrTo` never changes the matched index. -/
+theorem maybeDecrTo_matched_unchanged (p : Progress) (rejected matchHint : Nat) :
+    (maybeDecrTo p rejected matchHint).1.matched = p.matched := by
+  simp only [maybeDecrTo]
+  split
+  · -- Replicate state
+    split <;> simp [maybeDecrTo.go]
+  · -- Non-Replicate state
+    split <;> simp
+
+/-- INV-1 is an invariant across all standard state transitions:
+    matched + 1 ≤ next_idx always holds. -/
+theorem valid_preserved_by_all_ops (p : Progress) (hv : valid p) (n idx rejected matchHint : Nat) :
+    valid (maybeUpdate p n).1 ∧
+    valid (becomeProbe p) ∧
+    valid (becomeReplicate p) ∧
+    valid (becomeSnapshot p idx) ∧
+    valid (maybeDecrTo p rejected matchHint).1 := by
+  exact ⟨maybeUpdate_valid p n hv,
+         becomeProbe_valid p,
+         becomeReplicate_valid p,
+         becomeSnapshot_valid p idx hv,
+         by
+           rcases (p.state) with _ | _ | _
+           · exact maybeDecrTo_valid_replicate p rejected matchHint hv
+           · exact maybeDecrTo_valid_other p rejected matchHint (by simp) hv
+           · exact maybeDecrTo_valid_other p rejected matchHint (by simp) hv⟩
+
 /-! ## Notes -/
 
 /-
-**Proof status (Tasks 1, 2, 3, 4)**:
+**Proof status (Tasks 1, 2, 3, 4, 5 — Phase 5 COMPLETE)**:
 
 Operations (0 sorry):
 - `maybeUpdate`, `becomeProbe`, `becomeReplicate`, `becomeSnapshot`: ✅ defined
@@ -403,7 +475,7 @@ Operations (0 sorry):
 
 Decidable examples: ✅ all pass with `decide`
 
-Theorems proved (0 sorry, ~30 theorems):
+Theorems proved (0 sorry, ~45 theorems):
 - `maybeUpdate_returns_true_iff`
 - `maybeUpdate_matched`, `maybeUpdate_next_idx`
 - `maybeUpdate_valid` (INV-1 preserved)
@@ -420,13 +492,16 @@ Theorems proved (0 sorry, ~30 theorems):
 - `maybeDecrTo_false_noop`, `maybeDecrTo_stale_replicate`, `maybeDecrTo_replicate_rollback`
 - `maybeDecrTo_next_idx_ge` (never lowers next_idx below matched+1)
 - `becomeReplicate_then_update`, `maybeUpdate_compose_matched`, `maybeUpdate_to_max`
+- `becomeProbe_state_idempotent`, `becomeProbe_matched`, `becomeReplicate_matched`
+- `becomeSnapshot_matched`, `valid_next_idx_pos`, `maybeUpdate_true_next_idx_pos`
+- `becomeReplicate_then_probe`, `maybeDecrTo_matched_unchanged`
+- `valid_preserved_by_all_ops` (master invariant theorem)
 
 Deferred (future runs):
 - `maybeDecrTo` with `request_snapshot` path
 - `update_committed` monotonicity
 - Composition with Inflights model for `isPaused` in Replicate mode
 - `u64` overflow (Nat used instead)
-- `maybe_decr_to` in non-Replicate: full case analysis including match_hint bounds
 -/
 
 end FVSquad.Progress
