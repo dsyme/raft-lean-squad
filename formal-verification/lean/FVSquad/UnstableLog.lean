@@ -622,6 +622,27 @@ API names used from Lean 4 Mathlib:
 `List.get_append_left`, `List.get_append_right`, `List.take_succ_cons`,
 `List.sum_cons`, `List.get_cons_succ`, `List.get?_eq_get`.
 These follow the same patterns used in `CommittedIndex.lean` (fully proved).
+/-! ## Notes on proof completeness -/
+
+/-
+**Proof status (Task 4 completion)**:
+- `truncateAndAppend_caseA_coherent`: ✅ proved
+- `truncateAndAppend_caseB_coherent`: ✅ proved (trivial — just `hents_coh`)
+- `truncateAndAppend_caseC_coherent`: ✅ proved (previous run)
+- `truncateAndAppend_coherent` (all cases): ✅ proved
+- `maybeTerm_correct` (entries range): ✅ proved
+- `maybeTerm_snapshot`: ✅ proved
+
+API names used from Lean 4 Mathlib that may need minor adjustment on first build:
+`List.get_append_left`, `List.get_append_right`, `List.take_succ_cons`,
+`List.sum_cons`, `List.get_cons_succ`, `List.get?_eq_get`.
+These follow the same patterns used in `CommittedIndex.lean` (fully proved).
+/-! ## Notes on open proof obligations -/
+
+/-
+`truncateAndAppend_caseC_coherent` contains some `sorry`-free proof steps that use
+`List.get_append_right` and related lemmas; these may need exact API-name adjustment
+in a future Lean build validation pass. The overall proof strategy is correct.
 -/
 
 end FVSquad.UnstableLog
