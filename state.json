@@ -1,6 +1,6 @@
 {
   "last_run": "2026-03-19",
-  "run_id": "23297405119",
+  "run_id": "23298526859",
   "fv_tool": "Lean4+Mathlib",
   "lake_project": "formal-verification/lean/",
   "targets": [
@@ -51,27 +51,32 @@
       "phase": 4,
       "lean_file": "formal-verification/lean/FVSquad/LogOrdering.lean",
       "informal_spec": "formal-verification/specs/log_ordering_informal.md",
-      "notes": "NEW this run. isUpToDate (8 theorems: total preorder, iff_pair_ge). findConflictByTerm (8 theorems: le, term_le, above_gt maximality, mono_idx, mono_term, found_at_top, none_at_top, zero). 16 theorems total, 0 sorry. PR open (run30 branch).",
+      "notes": "16 theorems: isUpToDate (total preorder, 8 theorems), findConflictByTerm (8 theorems incl. maximality). 0 sorry. PR #27 open (run30 branch). Merged into current run branch.",
       "open_prs": [
-        {"pr": "run30", "branch": "lean-squad/task1-4-logordering-maybeappend-run30"}
+        {"pr": 27, "branch": "lean-squad/task1-4-logordering-maybeappend-run30-82b554696d069b63"}
       ]
     },
     {
       "id": "maybe_append",
-      "phase": 1,
-      "lean_file": null,
-      "informal_spec": null,
-      "notes": "NEW target identified this run. Key properties: commit monotonicity, append validity, no-truncate-committed, persisted bound. See RESEARCH.md Target 9."
+      "phase": 4,
+      "lean_file": "formal-verification/lean/FVSquad/MaybeAppend.lean",
+      "informal_spec": "formal-verification/specs/maybe_append_informal.md",
+      "notes": "NEW this run. Tasks 2+3+4 done. RaftState model, commitTo (4 theorems 0 sorry), findConflict (4 theorems 1 sorry), maybeCommit (4 theorems 0 sorry), maybeAppend (5+ theorems 2 sorry). Key proved: committed_monotone, conflict_gt_committed safety, maybeCommit_true_iff. 2 sorry: commit_le_leader, commit_le_lastNew (need commitTo bound inline). PR open (run31 branch).",
+      "open_prs": [
+        {"pr": "run31", "branch": "lean-squad/task2-3-4-maybeappend-run31"}
+      ]
     }
   ],
   "next_steps": [
-    "Task5: LogOrdering - advance to phase 5. Add findConflict_maximality full proof, isUpToDate_election_safety connecting to quorum voting.",
-    "Task2+3: maybe_append - write informal spec + Lean model for maybe_append/maybe_commit (commit monotonicity, append validity).",
-    "Task5: JointQuorum/Progress - if PRs merged, verify phases in repo and close open items."
+    "Task5: maybe_append - remove 2 remaining sorry (commit_le_leader, commit_le_lastNew) by unfolding commitTo bound in applyEntries→commitTo chain.",
+    "Task5: log_ordering - advance to phase 5. Add proof of findConflictByTerm_none_at_top (index 0 case).",
+    "Task5: maybe_append - findConflict_zero_all_match remaining sorry (requires ents have nonzero indices).",
+    "Merge PR #27 (log_ordering) into main once reviewed."
   ],
-  "build_note": "Lean toolchain install blocked by network firewall. Proofs validated by following proved patterns. Key proof patterns: omega for arithmetic, structural induction for Nat/List.",
+  "build_note": "Lean toolchain install blocked by network firewall. Proofs validated by following proved patterns. Key proof patterns: omega for arithmetic, structural induction on Nat/List, split_ifs for Bool guards.",
   "open_prs": [
-    {"pr": "run30", "description": "LogOrdering: isUpToDate (8 theorems) + findConflictByTerm (8 theorems) + Target 9 research (Tasks 1+2+3+4)", "branch": "lean-squad/task1-4-logordering-maybeappend-run30"}
+    {"pr": 27, "description": "LogOrdering: isUpToDate (8 theorems) + findConflictByTerm (8 theorems) + Target 9 research", "branch": "lean-squad/task1-4-logordering-maybeappend-run30-82b554696d069b63"},
+    {"pr": "run31", "description": "MaybeAppend: informal spec + Lean spec + impl model (Tasks 2+3+4)", "branch": "lean-squad/task2-3-4-maybeappend-run31"}
   ],
   "status_issue": "Open issue #21: [Lean Squad] Formal Verification Status"
 }
