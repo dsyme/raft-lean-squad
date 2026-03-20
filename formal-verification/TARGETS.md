@@ -44,6 +44,7 @@
 | 15 | `RaftLog::next_entries_since` + `applied_index_upper_bound` | `src/raft_log.rs` | 3 — Lean Spec | 🔄 In progress | Window computation for ready-to-apply entries. 7+ properties (aub bounds, monotonicity, window emptiness). See `FVSquad/NextEntries.lean`. |
 | 16 | `RaftLog::append` | `src/raft_log.rs` | 1 — Research | ⬜ Not started | Safety gate before `truncate_and_append`. Guard `after ≥ committed` prevents committed-entry truncation. |
 | 17 | `RaftLog::entries` | `src/raft_log.rs` | 1 — Research | ⬜ Not started | Slice `[idx, last+1)` subject to `max_size`. Trivial bounds; delegates to `slice`. |
+| 18 | `RaftLog::slice` + `must_check_outofbounds` | `src/raft_log.rs`, `src/log_unstable.rs` | 3 — Lean Spec | 🔄 In progress | Informal spec + 30 Lean theorems (0 `sorry`): bounds check characterisation, split-point assembly, monotonicity, empty range, unstable buffer bounds. See `FVSquad/RaftLogSlice.lean`. |
 
 ## Phase Legend
 

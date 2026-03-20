@@ -3,3 +3,4 @@ import FVSquad.MajorityQuorum
 import FVSquad.CommittedIndex
 import FVSquad.LimitSize
 import FVSquad.UnstableLog
+import FVSquad.RaftLogSlice
