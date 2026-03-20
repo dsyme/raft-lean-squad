@@ -11,12 +11,9 @@
 | 5 | `limit_size` utility | `src/util.rs` | 5 — Proofs | ✅ Done | All theorems proved (0 `sorry`). Budget helpers `limitSizeGo_count_add`, `limitSizeGo_budget'`, `limitSizeGo_stop_condition` enable proofs of `limitSize_sum_le` (budget safety) and `limitSize_maximal` (maximality). See `FVSquad/LimitSize.lean`. |
 | 6 | `Progress` state machine | `src/tracker/progress.rs`, `src/tracker/state.rs` | 5 — Proofs | ✅ Done | All theorems proved (0 `sorry`). ~45 theorems including master invariant `valid_preserved_by_all_ops`. See `FVSquad/Progress.lean`. |
 | 7 | `JointConfig` joint quorum | `src/quorum/joint.rs` | 5 — Proofs | ✅ Done | All theorems proved (0 `sorry`). 20+ theorems covering `jointVoteResult` and `jointCommittedIndex` safety/monotonicity. See `FVSquad/JointQuorum.lean`. |
-
 | 8 | `is_up_to_date` + `find_conflict_by_term` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | 16 theorems, 0 `sorry`. `isUpToDate` (total preorder, 8 theorems), `findConflictByTerm` (8 theorems incl. maximality). See `FVSquad/LogOrdering.lean`. |
 | 9 | `RaftLog::maybe_append` + `maybe_commit` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | All sorrys removed. `findConflict_zero_all_match` (with `hpos` precondition), `maybeAppend_commit_le_leader` (with `hle`), `maybeAppend_commit_le_lastNew` (with `hle`) fully proved via `commitTo_exact_or_unchanged`. See `FVSquad/MaybeAppend.lean`. |
-
 | 10 | `ReadOnly` queue (ReadIndex protocol) | `src/read_only.rs` | 5 — Proofs | ✅ Done | All 30 theorems proved (0 `sorry`). `mem_take_indexOf` inductive lemma closed PROP-19/20. See `FVSquad/ReadOnly.lean`. |
-
 | 11 | `RaftLog::maybe_persist` | `src/raft_log.rs` | 3 — Lean Spec | 🔄 In progress | Informal spec + 16 Lean propositions covering WF-preservation, monotonicity, idempotency, fixed-point. See `FVSquad/MaybePersist.lean`. |
 
 ## Phase Legend
