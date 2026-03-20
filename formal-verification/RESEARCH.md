@@ -285,3 +285,80 @@ is violated, making it a good target for finding latent bugs.
 - [Raft paper](https://raft.github.io/raft.pdf) — original algorithm specification
 - [Mathlib4 docs](https://leanprover-community.github.io/mathlib4_docs/) — available lemmas
 - etcd Raft Go implementation (referenced in source comments) for design intent
+
+---
+
+### Target 15 — `RaftLog::next_entries_since` + `applied_index_upper_bound` (★★★ Priority)
+
+**Files**: `src/raft_log.rs` (lines ~450–480)
+
+**What it does**: `next_entries_since(since_idx, max_size)` returns the committed-and-ready-to-apply
+slice of the log. The window is computed as:
+- `offset = max(since_idx + 1, first_index())` — never goes below the compaction frontier
+- `high   = applied_index_upper_bound() + 1`
+- `applied_index_upper_bound() = min(committed, persisted + max_apply_unpersisted_log_limit)`
+
+Returns `Some(entries[offset..high])` (subject to `max_size`) if `high > offset`, else `None`.
+
+**Why FV**: This function controls exactly which entries reach the application state machine.
+A wrong window (off-by-one, wrong clamping) could deliver entries twice or skip entries.
+Key properties:
+1. The upper bound is always ≤ committed (no uncommitted entries escape).
+2. The upper bound is monotone in both `committed` and `persisted`.
+3. The window is non-empty iff there exist new ready entries.
+4. The lower clamp (`first_index`) ensures `offset` never underflows below the log start.
+5. Non-decreasing: advancing `since_idx` never returns a lower-indexed set of entries.
+
+**Key properties to verify**:
+1. `appliedIndexUpperBound_le_committed` : `aub ≤ committed`
+2. `appliedIndexUpperBound_le_persisted_add` : `aub ≤ persisted + limit`
+3. `appliedIndexUpperBound_mono_committed` : monotone in committed
+4. `appliedIndexUpperBound_mono_persisted` : monotone in persisted
+5. `nextEntriesSince_none_iff` : returns None iff high ≤ offset
+6. `offset_ge_first` : offset ≥ first_index always
+7. `nextEntriesSince_since_mono` : larger `since_idx` ⇒ offset is no smaller
+
+**Spec size**: ~200 Lean lines
+**Proof tractability**: all `omega` + `Nat.min`/`max` lemmas from Mathlib; no induction needed
+**Approximations**:
+- Storage layer abstracted away; log modelled as arithmetic on indices only (no entry content).
+- `max_size` / `limit_size` left as an axiom (already proved in `LimitSize.lean`).
+- Panics modelled as preconditions.
+
+---
+
+### Target 16 — `RaftLog::append` (★★ Priority)
+
+**Files**: `src/raft_log.rs` (lines ~377–395)
+
+**What it does**: Validates that `ents[0].index - 1 >= committed` (no truncation of committed
+entries), then delegates to `Unstable::truncate_and_append`. Returns the new `last_index`.
+
+**Why FV**: Safety gate before the `truncate_and_append` already proved in `UnstableLog.lean`.
+Key property: the guard prevents truncating below `committed`.
+
+**Key properties to verify**:
+1. Guard `after ≥ committed` is sufficient to prevent committed-entry truncation.
+2. `last_index` after append equals `first_entry.index - 1 + len(ents)`.
+3. If entries are empty, `last_index` is unchanged.
+
+**Spec size**: ~100 Lean lines
+**Proof tractability**: `omega`; reuse `UnstableLog.lean` model
+**Approximations**: panics modelled as preconditions; `truncate_and_append` semantics imported from `UnstableLog.lean`.
+
+---
+
+### Target 17 — `RaftLog::entries` (★ Priority)
+
+**Files**: `src/raft_log.rs` (lines ~401–415)
+
+**What it does**: Returns entries `[idx, last_index+1)` subject to `max_size`, by delegating to `slice`. If `idx > last_index`, returns empty. The main logic is the bounds check and the slice call.
+
+**Key properties to verify**:
+1. If `idx > last_index`, result is empty.
+2. Result length ≤ `last_index - idx + 1`.
+3. Result respects `max_size` via `limit_size` (already proved).
+
+**Spec size**: ~80 Lean lines
+**Proof tractability**: trivial `omega`; mostly a spec-consistency check
+
