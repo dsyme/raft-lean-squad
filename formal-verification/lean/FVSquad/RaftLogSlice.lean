@@ -585,3 +585,113 @@ theorem unstableSlice_full_of_lo_ge_offset (s : RaftLogSliceState) (low high : �
 -- Empty range: sliceIndices of equal bounds is []
 #eval sliceIndices 5 5   -- expected: []
 #eval sliceIndices 10 5  -- expected: [] (high < low)
+
+/-! ## Task 5 — Partition list equality: `slice_partition` -/
+
+/-- **Partition theorem (list equality)**: the full slice index list is the
+    concatenation of the stable part followed by the unstable part (in index order).
+
+    This is stronger than `slice_coverage` (which is a membership equivalence);
+    it proves actual list identity:
+    ```
+    sliceIndices low high = stableSliceIndices s low high ++ unstableSliceIndices s low high
+    ```
+
+    Proof strategy — three cases on where `unstableOffset` falls:
+
+    * **Case 1** (`high ≤ unstableOffset`): all stable, unstable is `[]`.
+      Follows from `stableSlice_full_of_hi_le_offset` + `List.append_nil`.
+
+    * **Case 2** (`unstableOffset ≤ low`): all unstable, stable is `[]`.
+      Follows from `unstableSlice_full_of_lo_ge_offset` + `List.nil_append`.
+
+    * **Case 3** (`low < unstableOffset < high`): mixed.
+      `stable = List.range' low (unstableOffset - low)`,
+      `unstable = List.range' unstableOffset (high - unstableOffset)`.
+      Their concatenation equals `List.range' low (high - low)` by
+      `List.range'_append` (using `low + (unstableOffset - low) = unstableOffset`
+      and `(unstableOffset - low) + (high - unstableOffset) = high - low`). -/
+theorem slice_partition (s : RaftLogSliceState) (low high : ℕ) :
+    stableSliceIndices s low high ++ unstableSliceIndices s low high =
+    sliceIndices low high := by
+  simp only [stableSliceIndices, unstableSliceIndices, sliceIndices]
+  rcases Nat.le_or_lt high s.unstableOffset with h1 | h1
+  · -- Case 1: high ≤ unstableOffset — all stable
+    have hmin : min high s.unstableOffset = high := Nat.min_eq_left h1
+    have hmax_ge : s.unstableOffset ≤ max low s.unstableOffset := Nat.le_max_right _ _
+    rw [hmin]
+    have hzero : high - max low s.unstableOffset = 0 := by omega
+    simp [hzero]
+  · -- Case 1 not: unstableOffset < high
+    rcases Nat.le_or_lt s.unstableOffset low with h2 | h2
+    · -- Case 2: unstableOffset ≤ low — all unstable
+      have hmax : max low s.unstableOffset = low := Nat.max_eq_left h2
+      have hmin_le : min high s.unstableOffset ≤ low := by omega
+      have hzero : min high s.unstableOffset - low = 0 := Nat.sub_eq_zero_of_le hmin_le
+      simp [hmax, hzero]
+    · -- Case 3: low < unstableOffset < high — mixed partition
+      have hmin : min high s.unstableOffset = s.unstableOffset := by omega
+      have hmax : max low s.unstableOffset = s.unstableOffset := by omega
+      rw [hmin, hmax]
+      -- Now goal: List.range' low (s.unstableOffset - low) ++
+      --           List.range' s.unstableOffset (high - s.unstableOffset) =
+      --           List.range' low (high - low)
+      rw [← List.range'_append low (s.unstableOffset - low) (high - s.unstableOffset) 1]
+      congr 1
+      · -- start of second list: low + (unstableOffset - low) * 1 = unstableOffset
+        omega
+      · -- total length: (unstableOffset - low) + (high - unstableOffset) = high - low
+        omega
+
+/-- Corollary: `sliceIndices` is a permutation of stable ++ unstable. -/
+theorem slice_partition_perm (s : RaftLogSliceState) (low high : ℕ) :
+    (stableSliceIndices s low high ++ unstableSliceIndices s low high).Perm
+    (sliceIndices low high) := by
+  rw [slice_partition]; exact List.Perm.refl _
+
+/-- Corollary: every member of the concatenated stable ++ unstable list is
+    a member of `sliceIndices`. -/
+theorem slice_partition_mem (s : RaftLogSliceState) (low high i : ℕ)
+    (h : i ∈ stableSliceIndices s low high ∨ i ∈ unstableSliceIndices s low high) :
+    i ∈ sliceIndices low high := by
+  rw [← slice_partition]
+  exact List.mem_append.mpr h
+
+/-- Corollary: the total length via list append equals `sliceIndices` length. -/
+theorem slice_partition_length (s : RaftLogSliceState) (low high : ℕ) :
+    (stableSliceIndices s low high).length + (unstableSliceIndices s low high).length =
+    (sliceIndices low high).length := by
+  rw [← List.length_append, slice_partition]
+
+-- Verify the partition equality concretely for [148, 153) with offset 150
+#eval decide (
+  stableSliceIndices
+    { firstIndex := 101, unstableOffset := 150, unstableLen := 50,
+      h_first_le_offset := by omega } 148 153 ++
+  unstableSliceIndices
+    { firstIndex := 101, unstableOffset := 150, unstableLen := 50,
+      h_first_le_offset := by omega } 148 153
+  = sliceIndices 148 153)
+-- expected: true → [148, 149] ++ [150, 151, 152] = [148, 149, 150, 151, 152]
+
+-- All-stable case: [148, 150) with offset 155 (all stable)
+#eval decide (
+  stableSliceIndices
+    { firstIndex := 101, unstableOffset := 155, unstableLen := 10,
+      h_first_le_offset := by omega } 148 150 ++
+  unstableSliceIndices
+    { firstIndex := 101, unstableOffset := 155, unstableLen := 10,
+      h_first_le_offset := by omega } 148 150
+  = sliceIndices 148 150)
+-- expected: true → [148, 149] ++ [] = [148, 149]
+
+-- All-unstable case: [160, 162) with offset 155 (all unstable)
+#eval decide (
+  stableSliceIndices
+    { firstIndex := 101, unstableOffset := 155, unstableLen := 10,
+      h_first_le_offset := by omega } 160 162 ++
+  unstableSliceIndices
+    { firstIndex := 101, unstableOffset := 155, unstableLen := 10,
+      h_first_le_offset := by omega } 160 162
+  = sliceIndices 160 162)
+-- expected: true → [] ++ [160, 161] = [160, 161]
