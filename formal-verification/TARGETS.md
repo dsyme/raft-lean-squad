@@ -15,7 +15,11 @@
 | 8 | `is_up_to_date` + `find_conflict_by_term` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | 16 theorems, 0 `sorry`. `isUpToDate` (total preorder, 8 theorems), `findConflictByTerm` (8 theorems incl. maximality). See `FVSquad/LogOrdering.lean`. |
 | 9 | `RaftLog::maybe_append` + `maybe_commit` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | All sorrys removed. `findConflict_zero_all_match` (with `hpos` precondition), `maybeAppend_commit_le_leader` (with `hle`), `maybeAppend_commit_le_lastNew` (with `hle`) fully proved via `commitTo_exact_or_unchanged`. See `FVSquad/MaybeAppend.lean`. |
 
-| 10 | `ReadOnly` queue (ReadIndex protocol) | `src/read_only.rs` | 4 — Implementation | 🔄 In progress | Informal spec + Lean spec + implementation model. 30 theorems (WF, addRequest, recvAck, advance, count). See `FVSquad/ReadOnly.lean`. |
+| 10 | `ReadOnly` queue (ReadIndex protocol) | `src/read_only.rs` | 5 — Proofs | ✅ Done | All 30 theorems proved (0 `sorry`). `mem_take_indexOf` inductive lemma closed PROP-19/20. See `FVSquad/ReadOnly.lean`. |
+
+| 11 | `RaftLog::maybe_persist` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | Informal spec + 16 Lean propositions, all proved (0 `sorry`). See `FVSquad/MaybePersist.lean`. |
+
+| 12 | `RaftLog::maybe_commit` (standalone) | `src/raft_log.rs` | 5 — Proofs | ✅ Done | Informal spec + 16 theorems (0 `sorry`): guard iff, monotone committed, WF-preservation, idempotency, sequential composition. See `FVSquad/MaybeCommit.lean`. |
 
 ## Phase Legend
 
