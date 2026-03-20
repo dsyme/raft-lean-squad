@@ -17,7 +17,9 @@
 
 | 10 | `ReadOnly` queue (ReadIndex protocol) | `src/read_only.rs` | 5 — Proofs | ✅ Done | All 30 theorems proved (0 `sorry`). `mem_take_indexOf` inductive lemma closed PROP-19/20. See `FVSquad/ReadOnly.lean`. |
 
-| 11 | `RaftLog::maybe_persist` | `src/raft_log.rs` | 3 — Lean Spec | 🔄 In progress | Informal spec + 16 Lean propositions covering WF-preservation, monotonicity, idempotency, fixed-point. See `FVSquad/MaybePersist.lean`. |
+| 11 | `RaftLog::maybe_persist` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | Informal spec + 16 Lean propositions, all proved (0 `sorry`). See `FVSquad/MaybePersist.lean`. |
+
+| 12 | `RaftLog::maybe_commit` (standalone) | `src/raft_log.rs` | 5 — Proofs | ✅ Done | Informal spec + 16 theorems (0 `sorry`): guard iff, monotone committed, WF-preservation, idempotency, sequential composition. See `FVSquad/MaybeCommit.lean`. |
 
 ## Phase Legend
 
