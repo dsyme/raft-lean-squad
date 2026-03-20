@@ -30,6 +30,12 @@
 
 | 13 | `Progress` tracking (`maybe_update`, `update_committed`, `maybe_decr_to`) | `src/tracker/progress.rs` | 5 — Proofs | ✅ Done | Informal spec + 31 theorems (0 `sorry`): monotonicity, WF-preservation (both Replicate and Probe states), stale-rejection characterisation, cross-operation commutativity. See `FVSquad/ProgressTracking.lean`. |
 
+| 10 | `ReadOnly` queue (ReadIndex protocol) | `src/read_only.rs` | 5 — Proofs | ✅ Done | 30 theorems, 0 `sorry`. addRequest idempotency, recvAck ack accumulation, advance FIFO drain. `mem_take_indexOf` inductive lemma unlocked the 2 remaining `sorry`s. See `FVSquad/ReadOnly.lean`. |
+| 11 | `RaftLog::maybe_persist` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | 16 theorems, 0 `sorry`. Term-checked guard: index > persisted, index < firstUpdateIndex, storedTerm matches. WF preserved. See `FVSquad/MaybePersist.lean`. |
+| 12 | `RaftLog::maybe_commit` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | 16 theorems, 0 `sorry`. Raft §5.4.2 term-lock safety gate. Idempotent, WF preserved, committed non-decreasing. See `FVSquad/MaybeCommit.lean`. |
+| 13 | `Progress::maybe_update` / `update_committed` / `maybe_decr_to` | `src/tracker/progress.rs` | 5 — Proofs | ✅ Done | 31 theorems, 0 `sorry`. WF = `next_idx ≥ matched + 1` preserved by all ops. See `FVSquad/ProgressTracking.lean`. |
+| 14 | `ProgressTracker::quorum_recently_active` | `src/tracker.rs` | 5 — Proofs | 🔄 In progress | 15 theorems + examples. Self-inclusion, monotonicity, post-state reset. See `FVSquad/QuorumRecentlyActive.lean`. |
+
 ## Phase Legend
 
 | Phase | Description |
