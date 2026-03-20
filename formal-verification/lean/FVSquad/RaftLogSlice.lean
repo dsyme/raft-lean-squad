@@ -371,3 +371,217 @@ theorem unstableSubrange_start_ge_first (s : RaftLogSliceState) (low high : ℕ)
     { firstIndex := 1, unstableOffset := 5, unstableLen := 10,
       h_first_le_offset := by omega } 5 5).count = 0)
 -- expected: true
+
+/-! ## Task 4 — Concrete implementation model: `sliceIndices`
+
+  The `SliceResult` abstraction above tracks (startIdx, count) pairs — enough for
+  reasoning about *how many* entries come from each storage tier. This section adds
+  a concrete `List ℕ` model that enumerates the *actual index values* returned by
+  `slice`, enabling membership-based reasoning.
+
+  ### What is modelled
+  - `sliceIndices low high : List ℕ` — the ordered list `[low, low+1, …, high-1]`
+  - `stableSliceIndices` and `unstableSliceIndices` — the sub-lists corresponding
+    to the two `store.entries` / `unstable.slice` reads in the Rust `slice` function.
+  - Partition: every index in `[low, high)` belongs to exactly one tier.
+
+  ### What is NOT modelled (same as above)
+  - Entry content, terms, or data — only index identity.
+  - Partial stable reads (modelled as always returning the full requested sub-range).
+  - `max_size` byte budget (proved separately in `LimitSize.lean`).
+-/
+
+/-- The ordered list of entry indices returned by `slice(low, high)` when
+    `mustCheckOutofbounds` returns `ok` and storage is complete.
+    Concretely: `[low, low+1, …, high-1]`. -/
+def sliceIndices (low high : ℕ) : List ℕ :=
+  List.range' low (high - low)
+
+/-! ### Basic characterisation -/
+
+/-- An index `i` is in the slice result iff `low ≤ i < high`. -/
+theorem sliceIndices_mem_iff (low high i : ℕ) :
+    i ∈ sliceIndices low high ↔ low ≤ i ∧ i < high := by
+  simp [sliceIndices, List.mem_range']
+  omega
+
+/-- The slice result has exactly `high - low` elements. -/
+theorem sliceIndices_length (low high : ℕ) :
+    (sliceIndices low high).length = high - low := by
+  simp [sliceIndices]
+
+/-- The slice result is empty iff the range is degenerate (`high ≤ low`). -/
+theorem sliceIndices_empty_iff (low high : ℕ) :
+    sliceIndices low high = [] ↔ high ≤ low := by
+  constructor
+  · intro h
+    by_contra hlt
+    push_neg at hlt
+    have hmem : low ∈ sliceIndices low high := by
+      rw [sliceIndices_mem_iff]; omega
+    exact absurd h (List.ne_nil_of_mem hmem)
+  · intro h
+    simp [sliceIndices, show high - low = 0 from Nat.sub_eq_zero_of_le h]
+
+/-- The slice result has no duplicate indices. -/
+theorem sliceIndices_nodup (low high : ℕ) : (sliceIndices low high).Nodup :=
+  List.nodup_range' _ _
+
+/-- All returned indices are ≥ `low`. -/
+theorem sliceIndices_ge_low {low high i : ℕ} (h : i ∈ sliceIndices low high) :
+    low ≤ i :=
+  ((sliceIndices_mem_iff low high i).mp h).1
+
+/-- All returned indices are < `high`. -/
+theorem sliceIndices_lt_high {low high i : ℕ} (h : i ∈ sliceIndices low high) :
+    i < high :=
+  ((sliceIndices_mem_iff low high i).mp h).2
+
+/-- The slice of an empty range contains no elements. -/
+theorem sliceIndices_eq_high_empty (n : ℕ) : sliceIndices n n = [] := by
+  simp [sliceIndices]
+
+/-! ## Stable / unstable partition -/
+
+/-- Indices in the slice sourced from **stable storage**: `[low, min(high, unstableOffset))`.
+    Corresponds to `self.store.entries(low, min(high, offset), …)` in the Rust `slice`. -/
+def stableSliceIndices (s : RaftLogSliceState) (low high : ℕ) : List ℕ :=
+  List.range' low (min high s.unstableOffset - low)
+
+/-- Indices in the slice sourced from the **unstable buffer**: `[max(low, unstableOffset), high)`.
+    Corresponds to `self.unstable.slice(max(low, offset), high)` in the Rust `slice`. -/
+def unstableSliceIndices (s : RaftLogSliceState) (low high : ℕ) : List ℕ :=
+  List.range' (max low s.unstableOffset) (high - max low s.unstableOffset)
+
+/-- Membership in `stableSliceIndices`. -/
+theorem stableSliceIndices_mem_iff (s : RaftLogSliceState) (low high i : ℕ) :
+    i ∈ stableSliceIndices s low high ↔ low ≤ i ∧ i < min high s.unstableOffset := by
+  simp [stableSliceIndices, List.mem_range']
+  omega
+
+/-- Membership in `unstableSliceIndices`. -/
+theorem unstableSliceIndices_mem_iff (s : RaftLogSliceState) (low high i : ℕ) :
+    i ∈ unstableSliceIndices s low high ↔ max low s.unstableOffset ≤ i ∧ i < high := by
+  simp [unstableSliceIndices, List.mem_range']
+  omega
+
+/-- Stable indices are strictly below `unstableOffset`. -/
+theorem stableSliceIndices_lt_offset {s : RaftLogSliceState} {low high i : ℕ}
+    (h : i ∈ stableSliceIndices s low high) : i < s.unstableOffset := by
+  rw [stableSliceIndices_mem_iff] at h; omega
+
+/-- Unstable indices are at or above `unstableOffset`. -/
+theorem unstableSliceIndices_ge_offset {s : RaftLogSliceState} {low high i : ℕ}
+    (h : i ∈ unstableSliceIndices s low high) : s.unstableOffset ≤ i := by
+  rw [unstableSliceIndices_mem_iff] at h; omega
+
+/-- Stable and unstable index sets are disjoint. -/
+theorem stableUnstable_disjoint (s : RaftLogSliceState) (low high : ℕ) :
+    ∀ i, ¬ (i ∈ stableSliceIndices s low high ∧ i ∈ unstableSliceIndices s low high) := by
+  intro i
+  simp only [stableSliceIndices_mem_iff, unstableSliceIndices_mem_iff]
+  omega
+
+/-- Every index in `[low, high)` is in the stable part, the unstable part, or both tiers
+    share the boundary — key partition theorem.
+
+    Formally: membership in `sliceIndices` is equivalent to membership in at least one tier. -/
+theorem slice_coverage (s : RaftLogSliceState) (low high i : ℕ) :
+    i ∈ sliceIndices low high ↔
+    i ∈ stableSliceIndices s low high ∨ i ∈ unstableSliceIndices s low high := by
+  simp only [sliceIndices_mem_iff, stableSliceIndices_mem_iff, unstableSliceIndices_mem_iff]
+  omega
+
+/-- Corollary: every element of either tier is a valid slice index. -/
+theorem stableUnstable_subset_slice (s : RaftLogSliceState) (low high i : ℕ)
+    (h : i ∈ stableSliceIndices s low high ∨ i ∈ unstableSliceIndices s low high) :
+    i ∈ sliceIndices low high :=
+  (slice_coverage s low high i).mpr h
+
+/-- Stable index list has no duplicates. -/
+theorem stableSliceIndices_nodup (s : RaftLogSliceState) (low high : ℕ) :
+    (stableSliceIndices s low high).Nodup :=
+  List.nodup_range' _ _
+
+/-- Unstable index list has no duplicates. -/
+theorem unstableSliceIndices_nodup (s : RaftLogSliceState) (low high : ℕ) :
+    (unstableSliceIndices s low high).Nodup :=
+  List.nodup_range' _ _
+
+/-- The combined length of the two tiers equals the total slice length.
+    This is the arithmetic dual of `subrange_lengths_add` for the concrete list model. -/
+theorem stableUnstable_length_sum (s : RaftLogSliceState) (low high : ℕ) :
+    (stableSliceIndices s low high).length + (unstableSliceIndices s low high).length =
+    (sliceIndices low high).length := by
+  simp [stableSliceIndices, unstableSliceIndices, sliceIndices]
+  omega
+
+/-- When the range is entirely in stable storage (`high ≤ unstableOffset`),
+    the stable tier is the full slice and the unstable tier is empty. -/
+theorem stableSlice_full_of_hi_le_offset (s : RaftLogSliceState) (low high : ℕ)
+    (h : high ≤ s.unstableOffset) :
+    stableSliceIndices s low high = sliceIndices low high ∧
+    unstableSliceIndices s low high = [] := by
+  have hmin : min high s.unstableOffset = high := Nat.min_eq_left h
+  have hmax_ge : s.unstableOffset ≤ max low s.unstableOffset := Nat.le_max_right _ _
+  constructor
+  · simp [stableSliceIndices, sliceIndices, hmin]
+  · simp only [unstableSliceIndices]
+    have : high - max low s.unstableOffset = 0 := by omega
+    simp [this]
+
+/-- When the range is entirely in the unstable buffer (`unstableOffset ≤ low`),
+    the unstable tier is the full slice and the stable tier is empty. -/
+theorem unstableSlice_full_of_lo_ge_offset (s : RaftLogSliceState) (low high : ℕ)
+    (h : s.unstableOffset ≤ low) :
+    unstableSliceIndices s low high = sliceIndices low high ∧
+    stableSliceIndices s low high = [] := by
+  have hmax : max low s.unstableOffset = low := Nat.max_eq_left h
+  have hmin_le : min high s.unstableOffset ≤ low := by omega
+  constructor
+  · simp [unstableSliceIndices, sliceIndices, hmax]
+  · simp only [stableSliceIndices]
+    have : min high s.unstableOffset - low = 0 := Nat.sub_eq_zero_of_le hmin_le
+    simp [this]
+
+/-! ### `#eval` examples for the concrete index model -/
+
+-- All indices in [148, 153) for a log split at offset 150
+#eval sliceIndices 148 153
+-- expected: [148, 149, 150, 151, 152]
+
+-- Stable part: [148, 150) read from stable storage
+#eval stableSliceIndices
+    { firstIndex := 101, unstableOffset := 150, unstableLen := 50,
+      h_first_le_offset := by omega } 148 153
+-- expected: [148, 149]
+
+-- Unstable part: [150, 153) read from the unstable buffer
+#eval unstableSliceIndices
+    { firstIndex := 101, unstableOffset := 150, unstableLen := 50,
+      h_first_le_offset := by omega } 148 153
+-- expected: [150, 151, 152]
+
+-- Partition coverage: every index in [148, 153) is in stable ∪ unstable
+#eval decide (∀ i ∈ sliceIndices 148 153,
+  i ∈ stableSliceIndices
+    { firstIndex := 101, unstableOffset := 150, unstableLen := 50,
+      h_first_le_offset := by omega } 148 153
+  ∨ i ∈ unstableSliceIndices
+    { firstIndex := 101, unstableOffset := 150, unstableLen := 50,
+      h_first_le_offset := by omega } 148 153)
+-- expected: true
+
+-- Disjointness: no index is in both stable and unstable
+#eval decide (∀ i ∈ sliceIndices 148 153,
+  ¬ (i ∈ stableSliceIndices
+    { firstIndex := 101, unstableOffset := 150, unstableLen := 50,
+      h_first_le_offset := by omega } 148 153
+  ∧ i ∈ unstableSliceIndices
+    { firstIndex := 101, unstableOffset := 150, unstableLen := 50,
+      h_first_le_offset := by omega } 148 153))
+-- expected: true
+
+-- Empty range: sliceIndices of equal bounds is []
+#eval sliceIndices 5 5   -- expected: []
+#eval sliceIndices 10 5  -- expected: [] (high < low)

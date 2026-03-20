@@ -42,9 +42,9 @@
 | 13 | `Progress::maybe_update` / `update_committed` / `maybe_decr_to` | `src/tracker/progress.rs` | 5 — Proofs | ✅ Done | 31 theorems, 0 `sorry`. WF = `next_idx ≥ matched + 1` preserved by all ops. See `FVSquad/ProgressTracking.lean`. |
 | 14 | `ProgressTracker::quorum_recently_active` | `src/tracker.rs` | 5 — Proofs | 🔄 In progress | 15 theorems + examples. Self-inclusion, monotonicity, post-state reset. See `FVSquad/QuorumRecentlyActive.lean`. |
 | 15 | `RaftLog::next_entries_since` + `applied_index_upper_bound` | `src/raft_log.rs` | 3 — Lean Spec | 🔄 In progress | Window computation for ready-to-apply entries. 7+ properties (aub bounds, monotonicity, window emptiness). See `FVSquad/NextEntries.lean`. |
-| 16 | `RaftLog::append` | `src/raft_log.rs` | 1 — Research | ⬜ Not started | Safety gate before `truncate_and_append`. Guard `after ≥ committed` prevents committed-entry truncation. |
+| 16 | `RaftLog::append` | `src/raft_log.rs` | 2 — Informal Spec | 🔄 In progress | Informal spec written. Safety gate (`after ≥ committed`) prevents committed-entry truncation. See `specs/raftlog_append_informal.md`. |
 | 17 | `RaftLog::entries` | `src/raft_log.rs` | 1 — Research | ⬜ Not started | Slice `[idx, last+1)` subject to `max_size`. Trivial bounds; delegates to `slice`. |
-| 18 | `RaftLog::slice` + `must_check_outofbounds` | `src/raft_log.rs`, `src/log_unstable.rs` | 3 — Lean Spec | 🔄 In progress | Informal spec + 30 Lean theorems (0 `sorry`): bounds check characterisation, split-point assembly, monotonicity, empty range, unstable buffer bounds. See `FVSquad/RaftLogSlice.lean`. |
+| 18 | `RaftLog::slice` + `must_check_outofbounds` | `src/raft_log.rs`, `src/log_unstable.rs` | 4 — Implementation | 🔄 In progress | Informal spec + 30 Lean theorems (0 `sorry`) + concrete `sliceIndices` model: 18 new theorems covering membership, partition, disjointness, tier completeness. See `FVSquad/RaftLogSlice.lean`. |
 
 ## Phase Legend
 
