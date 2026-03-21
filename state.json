@@ -1,6 +1,6 @@
 {
   "last_run": "2026-03-21",
-  "run_id": "23374741250",
+  "run_id": "23377233883",
   "fv_tool": "Lean4+Mathlib",
   "lake_project": "formal-verification/lean/",
   "targets": [
@@ -23,72 +23,26 @@
     {"id": "raftlog_slice", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/RaftLogSlice.lean", "notes": "COMPLETE. 35+ theorems, 0 sorry."},
     {"id": "raftlog_append", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/RaftLogAppend.lean", "notes": "COMPLETE. 14 theorems, 0 sorry."},
     {"id": "raftlog_entries", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/RaftLogEntries.lean", "notes": "COMPLETE. 18 theorems, 0 sorry."},
-    {
-      "id": "config_validate",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/ConfigValidate.lean",
-      "notes": "Run-49. COMPLETE. 18 theorems, 0 sorry. PR #62 open (not yet merged)."
-    },
-    {
-      "id": "uncommitted_state",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/UncommittedState.lean",
-      "notes": "Run-50. COMPLETE. 28 theorems, 0 sorry. PR #63 open (not yet merged). Stacks on PR #62."
-    },
-    {
-      "id": "confchange_invariants",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/ConfChangeInvariants.lean",
-      "informal_spec": "formal-verification/specs/confchange_invariants_informal.md",
-      "notes": "Run-51. COMPLETE. 18 theorems, 0 sorry. check_invariants from src/confchange/changer.rs. 7 structural predicates: voter/learner disjointness, progress coverage, joint-state constraints. Key: checkInvariants_iff exact characterisation. PR #64 open."
-    },
-    {
-      "id": "raftlog_restore",
-      "phase": 1,
-      "notes": "Run-51. Research identified. src/raft_log.rs::restore(). Snapshot-based log recovery. Interesting: committed monotonicity, persisted reset guard, unstable.restore delegation. EASY-MEDIUM."
-    },
-    {
-      "id": "tally_votes",
-      "phase": 1,
-      "notes": "Run-51. Research identified. src/tracker.rs::tally_votes(). Vote counting: filter non-voters, count granted/rejected. Bounds: granted+rejected <= |voters|. EASY."
-    },
-    {
-      "id": "raftlog_term",
-      "phase": 1,
-      "notes": "Run-51. Research identified. src/raft_log.rs::term()+match_term(). Layer dispatch: unstable first, then storage. Out-of-bounds → 0. EASY."
-    },
-    {
-      "id": "has_quorum",
-      "phase": 1,
-      "notes": "Run-51. Research identified. src/tracker.rs::has_quorum(). Quorum safety, superset-closure, joint composition. Depends on JointQuorum proofs. MEDIUM."
-    }
+    {"id": "config_validate", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/ConfigValidate.lean", "notes": "COMPLETE. 18 theorems, 0 sorry."},
+    {"id": "uncommitted_state", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/UncommittedState.lean", "notes": "COMPLETE. 28 theorems, 0 sorry."},
+    {"id": "raftlog_term", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/RaftLogTerm.lean", "notes": "Run-52. COMPLETE. 18 theorems, 0 sorry. term() + match_term(). Two-layer dispatch (unstable->store), out-of-range sentinel 0. PROP-1..18. PR open (run 52 branch)."},
+    {"id": "raftlog_restore", "phase": 1, "notes": "Research identified. src/raft_log.rs::restore(). Snapshot-based log recovery. committed monotonicity, persisted reset guard. EASY-MEDIUM."},
+    {"id": "tally_votes", "phase": 1, "notes": "Research identified. src/tracker.rs::tally_votes(). Vote counting. Bounds: granted+rejected <= |voters|. EASY."},
+    {"id": "has_quorum", "phase": 1, "notes": "Research identified. src/tracker.rs::has_quorum(). Quorum safety, superset-closure. MEDIUM."}
   ],
   "next_steps": [
-    "4 new targets at phase 1: raftlog_restore, tally_votes, raftlog_term, has_quorum.",
-    "Priority: raftlog_term (easy, builds on UnstableLog), then tally_votes, then has_quorum.",
-    "Open PRs: #62 (ConfigValidate), #63 (UncommittedState), #64 (ConfChangeInvariants) — all awaiting merge."
+    "3 new targets at phase 1: raftlog_restore, tally_votes, has_quorum.",
+    "Priority order: tally_votes (easy), raftlog_restore (medium), has_quorum (harder).",
+    "raftlog_term PR open on branch lean-squad/task2-5-raftlog-term-run52."
   ],
   "build_note": "Lean toolchain install blocked by network firewall. Proofs validated by following established omega/simp/decide patterns from prior files.",
   "open_prs": [
     {
-      "pr": 62,
-      "branch": "lean-squad/task3-config-validate-lean-run49-34df02ea8f35ab8b",
-      "description": "Tasks 3+2 (run 49): ConfigValidate.lean (18 theorems, 0 sorry) + UncommittedState informal spec.",
-      "sorry_count": 0
-    },
-    {
-      "pr": 63,
-      "branch": "lean-squad/task3-uncommitted-state-run50-bee9f1a41f7ada9b",
-      "description": "Tasks 3+4+5 (run 50): UncommittedState.lean (28 theorems, 0 sorry). Stacks on PR #62.",
-      "sorry_count": 0
-    },
-    {
-      "pr": 64,
-      "branch": "lean-squad/task1-5-confchange-invariants-run51",
-      "description": "Tasks 1+5 (run 51): ConfChangeInvariants.lean (18 theorems, 0 sorry) + 5 new research targets. Incorporates merged #62 and #63.",
+      "branch": "lean-squad/task2-5-raftlog-term-run52",
+      "description": "Tasks 2+3+4+5 (run 52): RaftLogTerm.lean (18 theorems, 0 sorry).",
       "sorry_count": 0
     }
   ],
-  "closed_prs": [31, 32, 33, 34, 35, 36, 58],
+  "closed_prs": [31, 32, 33, 34, 35, 36, 58, 62, 63],
   "status_issue": "Open issue #21: [Lean Squad] Formal Verification Status"
 }
