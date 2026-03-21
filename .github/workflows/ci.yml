@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches: 
-    - master
+    - main
 
 env:
   RUST_BACKTRACE: 1
@@ -22,7 +22,11 @@ jobs:
           - os: ubuntu-latest
             rust: nightly
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        shared-key: ${{ matrix.os }}-${{ matrix.rust }}
     - if: matrix.os == 'ubuntu-latest'
       name: Install dependencies (ubuntu-latest)
       run: |
