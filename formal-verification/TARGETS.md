@@ -45,8 +45,12 @@
 | 16 | `RaftLog::append` | `src/raft_log.rs` | 3 — Lean Spec | 🔄 In progress | Lean 4 formal spec written (14 theorems, 0 `sorry`): noop, committed-unchanged, return-value, safety-gate, WF-preservation. See `FVSquad/RaftLogAppend.lean`. |
 | 17 | `RaftLog::entries` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | 18 theorems (0 `sorry`): empty/non-empty branches, membership, length bounds, nodup, monotonicity. Delegates to `sliceIndices`. See `FVSquad/RaftLogEntries.lean`. |
 | 18 | `RaftLog::slice` + `must_check_outofbounds` | `src/raft_log.rs`, `src/log_unstable.rs` | 5 — Proofs | ✅ Done | 35+ theorems (0 `sorry`): mustCheckOutofbounds, stableSubrange, unstableSubrange, sliceIndices membership/length/nodup, `slice_partition` list equality, tier disjointness. See `FVSquad/RaftLogSlice.lean`. |
-| 19 | `Config::validate` | `src/config.rs` | 5 — Proofs | 🔄 In progress | Pure validation function. 8 constraints (C1–C8): id, heartbeat, election tick range, inflight, lease-quorum, uncommitted size. Lean spec + implementation model + 18 theorems (0 `sorry`). See `FVSquad/ConfigValidate.lean`. |
-| 20 | `UncommittedState` | `src/raft.rs` | 5 — Proofs | 🔄 In progress | Leader-side uncommitted size tracker. `maybe_increase` + `maybe_reduce`. 28 theorems (0 `sorry`): `increase_true_iff`, `increase_budget`, `reduce_monotone`, `reduce_true_iff`, `increase_reduce_roundtrip`, and more. See `FVSquad/UncommittedState.lean`. |
+| 19 | `Config::validate` | `src/config.rs` | 5 — Proofs | ✅ Done | Pure validation function. 8 constraints (C1–C8): id, heartbeat, election tick range, inflight, lease-quorum, uncommitted size. 18 theorems (0 `sorry`). See `FVSquad/ConfigValidate.lean`. |
+| 20 | `UncommittedState` | `src/raft.rs` | 5 — Proofs | ✅ Done | Leader-side uncommitted size tracker. `maybe_increase` + `maybe_reduce`. 28 theorems (0 `sorry`): `increase_true_iff`, `increase_budget`, `reduce_monotone`, `reduce_true_iff`, `increase_reduce_roundtrip`, and more. See `FVSquad/UncommittedState.lean`. |
+| 21 | `RaftLog::term` + `match_term` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | Term dispatch (unstable → store) with out-of-range sentinel `0`. 18 theorems (0 `sorry`): boundary conditions PROP-1–4, matchTerm characterisation PROP-5–10, out-of-range PROP-11–15, error/none PROP-16–17, dummy-entry PROP-18. See `FVSquad/RaftLogTerm.lean`. |
+| 22 | `RaftLog::restore` | `src/raft_log.rs` | 1 — Research | ⬜ Not started | Snapshot-based log recovery. committed monotonicity, persisted reset guard, unstable.restore delegation. |
+| 23 | `tally_votes` | `src/tracker.rs` | 1 — Research | ⬜ Not started | Vote counting: filter non-voters, count granted/rejected. Bounds: granted+rejected ≤ |voters|. |
+| 24 | `has_quorum` | `src/tracker.rs` | 1 — Research | ⬜ Not started | Quorum safety, superset-closure, joint composition. Depends on JointQuorum proofs. |
 
 ## Phase Legend
 
