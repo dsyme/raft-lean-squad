@@ -51,6 +51,10 @@
 | 22 | `RaftLog::restore` | `src/raft_log.rs` | 1 — Research | ⬜ Not started | Snapshot-based log recovery. committed monotonicity, persisted reset guard, unstable.restore delegation. |
 | 23 | `tally_votes` | `src/tracker.rs` | 1 — Research | ⬜ Not started | Vote counting: filter non-voters, count granted/rejected. Bounds: granted+rejected ≤ |voters|. |
 | 24 | `has_quorum` | `src/tracker.rs` | 1 — Research | ⬜ Not started | Quorum safety, superset-closure, joint composition. Depends on JointQuorum proofs. |
+=======
+| 19 | `Config::validate` | `src/config.rs` | 5 — Proofs | 🔄 In progress | Pure validation function. 8 constraints (C1–C8): id, heartbeat, election tick range, inflight, lease-quorum, uncommitted size. Lean spec + implementation model + 18 theorems (0 `sorry`). See `FVSquad/ConfigValidate.lean`. |
+| 20 | `UncommittedState` | `src/raft.rs` | 2 — Informal Spec | 🔄 In progress | Leader-side uncommitted size tracker. `maybe_increase` (accept/reject proposals) + `maybe_reduce` (commit accounting). Informal spec at `specs/uncommitted_state_informal.md`. |
+>>>>>>> feat(fv): ConfigValidate.lean + UncommittedState informal spec (run 49)
 
 ## Phase Legend
 
