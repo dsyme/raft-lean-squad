@@ -43,7 +43,7 @@
 | 14 | `ProgressTracker::quorum_recently_active` | `src/tracker.rs` | 5 — Proofs | 🔄 In progress | 15 theorems + examples. Self-inclusion, monotonicity, post-state reset. See `FVSquad/QuorumRecentlyActive.lean`. |
 | 15 | `RaftLog::next_entries_since` + `applied_index_upper_bound` | `src/raft_log.rs` | 3 — Lean Spec | 🔄 In progress | Window computation for ready-to-apply entries. 7+ properties (aub bounds, monotonicity, window emptiness). See `FVSquad/NextEntries.lean`. |
 | 16 | `RaftLog::append` | `src/raft_log.rs` | 3 — Lean Spec | 🔄 In progress | Lean 4 formal spec written (14 theorems, 0 `sorry`): noop, committed-unchanged, return-value, safety-gate, WF-preservation. See `FVSquad/RaftLogAppend.lean`. |
-| 17 | `RaftLog::entries` | `src/raft_log.rs` | 1 — Research | ⬜ Not started | Slice `[idx, last+1)` subject to `max_size`. Trivial bounds; delegates to `slice`. |
+| 17 | `RaftLog::entries` | `src/raft_log.rs` | 5 — Proofs | ✅ Done | 18 theorems (0 `sorry`): empty/non-empty branches, membership, length bounds, nodup, monotonicity. Delegates to `sliceIndices`. See `FVSquad/RaftLogEntries.lean`. |
 | 18 | `RaftLog::slice` + `must_check_outofbounds` | `src/raft_log.rs`, `src/log_unstable.rs` | 5 — Proofs | ✅ Done | 35+ theorems (0 `sorry`): mustCheckOutofbounds, stableSubrange, unstableSubrange, sliceIndices membership/length/nodup, `slice_partition` list equality, tier disjointness. See `FVSquad/RaftLogSlice.lean`. |
 
 ## Phase Legend

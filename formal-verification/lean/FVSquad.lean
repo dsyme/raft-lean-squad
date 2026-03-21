@@ -4,6 +4,7 @@ import FVSquad.CommittedIndex
 import FVSquad.LimitSize
 import FVSquad.UnstableLog
 import FVSquad.RaftLogSlice
+import FVSquad.RaftLogEntries
 -- Aeneas integration: primitive types and collection models
 import FVSquad.Aeneas.UtilRefinements
 import FVSquad.Aeneas.HashSetModel
