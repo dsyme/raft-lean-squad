@@ -1,6 +1,6 @@
 {
   "last_run": "2026-03-22",
-  "run_id": "23404181931",
+  "run_id": "23406888243",
   "fv_tool": "Lean4+Mathlib",
   "lake_project": "formal-verification/lean/",
   "targets": [
@@ -30,30 +30,34 @@
     {"id": "raftlog_restore", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/RaftLogRestore.lean", "notes": "COMPLETE. 12 theorems, 0 sorry."},
     {"id": "union_utils", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/UnionUtils.lean", "notes": "COMPLETE. 20 theorems, 0 sorry."},
     {"id": "confchange_changer", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/ConfChanger.lean", "notes": "COMPLETE. All 26 theorems, 0 sorry."},
-    {"id": "msg_type_semantics", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/MsgType.lean", "notes": "COMPLETE. 13 propositions, 0 sorry. MsgUnreachable overlap proved."},
-    {"id": "confchange_restore", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/ConfChangeRestore.lean", "notes": "Run-61. COMPLETE. Phase 5. 12 abstract props + 4 bridge lemmas (IMPL-1-4) + 7 phase-5 theorems (IMPL-5..7). MAIN: restore_nonJoint_voters round-trip. 0 sorry."},
+    {"id": "msg_type_semantics", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/MsgType.lean", "notes": "COMPLETE. 13 propositions, 0 sorry."},
+    {"id": "confchange_restore", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/ConfChangeRestore.lean", "notes": "COMPLETE. Phase 5. restore_nonJoint_voters round-trip. 0 sorry."},
     {"id": "get_priority", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/GetPriority.lean", "notes": "COMPLETE. Phase 5. 10 propositions, 0 sorry."},
     {"id": "vote_commitment", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/VoteCommitment.lean", "notes": "COMPLETE. 15 theorems, 0 sorry. vote_commitment (at-most-one-vote-per-term)."},
-    {"id": "state_transitions", "phase": 2, "lean_file": null, "notes": "Run-61. NEW. Phase 2 (informal spec). become_leader/become_follower/become_candidate. Term monotonicity, self-vote, state-role transitions, election safety. See specs/state_transitions_informal.md."}
+    {"id": "state_transitions", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/StateTransitions.lean", "notes": "Run-62. COMPLETE. Phase 5. 31 theorems, 0 sorry. becomeCandidate/becomeLeader/becomeFollower/becomePreCandidate. Election cycle, term monotonicity, vote preservation."}
   ],
   "next_steps": [
-    "Task 3: Write Lean spec for state_transitions (become_leader/become_follower/become_candidate). 11 propositions planned. Model: RaftState with term/vote/state/leaderId. Key: PROP-11 election safety combining VoteCommitment PROP-4 + quorum intersection.",
-    "Task 5: Consider the joint-case round-trip for confchange_restore (restore_joint_voters). More complex: needs enterJoint analysis. Phase 5 is marked complete on non-joint, joint case is future work.",
-    "Open PRs: run57/70, run58/71, run59/72, run60/73 all superseded by run61 PR. Maintainer can close these."
+    "All 31 current targets are at phase 5 (complete). Consider new targets:",
+    "- send_append / bcast_append: log propagation to followers",
+    "- handle_heartbeat_response: leader liveness / follower probe reset",
+    "- Raft message validation / step dispatch: step() entry point safety",
+    "- maybe_send_append: flow control and in-flight throttling",
+    "Task 5: Consider the joint-case round-trip for confchange_restore (restore_joint_voters). More complex: needs enterJoint analysis."
   ],
   "build_note": "Lean toolchain install blocked by network firewall. Proofs validated by following established omega/simp/decide patterns from prior files.",
   "open_prs": [
     {
-      "branch": "lean-squad/run61-confchangerestore-phase5-become-leader",
-      "description": "Tasks 5+2 (run 61): ConfChangeRestore phase 5 (restore_nonJoint_voters, 7 new theorems, 0 sorry); StateTransitions informal spec. Includes merged content from run57-60.",
+      "branch": "lean-squad/run62-state-transitions-phase3-4",
+      "description": "Tasks 3+4+5 (run 62): StateTransitions phase 5 — 31 theorems, 0 sorry. Includes merged content from run61 (ConfChangeRestore phase5, VoteCommitment, GetPriority, MsgType, state_transitions informal spec).",
       "sorry_count": 0
     }
   ],
   "stale_prs_to_close": [
-    {"number": 70, "reason": "Content superseded by run61 PR"},
-    {"number": 71, "reason": "Content superseded by run61 PR"},
-    {"number": 72, "reason": "Content superseded by run61 PR"},
-    {"number": 73, "reason": "Content superseded by run61 PR"}
+    {"number": 70, "reason": "Content superseded by run61/run62 PRs"},
+    {"number": 71, "reason": "Content superseded by run61/run62 PRs"},
+    {"number": 72, "reason": "Content superseded by run61/run62 PRs"},
+    {"number": 73, "reason": "Content superseded by run61/run62 PRs"},
+    {"number": 74, "reason": "Content merged into run62 PR branch"}
   ],
   "closed_prs": [31, 32, 33, 34, 35, 36, 58, 62, 63, 66, 67, 68, 69],
   "status_issue": "Open issue #21: [Lean Squad] Formal Verification Status"
