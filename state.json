@@ -1,6 +1,6 @@
 {
   "last_run": "2026-03-22",
-  "run_id": "23394868180",
+  "run_id": "23396285634",
   "fv_tool": "Lean4+Mathlib",
   "lake_project": "formal-verification/lean/",
   "targets": [
@@ -29,22 +29,29 @@
     {"id": "tally_votes", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/TallyVotes.lean", "notes": "COMPLETE. 27 theorems, 0 sorry."},
     {"id": "raftlog_restore", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/RaftLogRestore.lean", "notes": "COMPLETE. 12 theorems, 0 sorry."},
     {"id": "union_utils", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/UnionUtils.lean", "notes": "COMPLETE. 20 theorems, 0 sorry."},
-    {"id": "confchange_changer", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/ConfChanger.lean", "notes": "Run-57. COMPLETE. All 9 sorry proved. 26 theorems, 0 sorry. Helper lemmas: applyOne_outgoing_unchanged, applyAll_outgoing_unchanged, leaveJoint_isJoint. PR open (branch lean-squad/run57-confchanger-proofs-restore)."},
-    {"id": "confchange_restore", "phase": 3, "lean_file": "formal-verification/lean/FVSquad/ConfChangeRestore.lean", "notes": "Run-57. Phase 3. 12 propositions, 0 sorry. toConfChangeSingle + restore. Informal spec in specs/confchange_restore_informal.md. PR open (branch lean-squad/run57-confchanger-proofs-restore)."}
+    {"id": "confchange_changer", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/ConfChanger.lean", "notes": "COMPLETE. All 9 sorry proved. 26 theorems, 0 sorry."},
+    {"id": "confchange_restore", "phase": 4, "lean_file": "formal-verification/lean/FVSquad/ConfChangeRestore.lean", "notes": "Run-58. Phase 4. 12 propositions (0 sorry) + 4 bridge lemmas (3 sorry). IMPL-3 needs induction proof: applySimpleAll AddNode list builds incoming. PR open (branch lean-squad/run58-new-target)."},
+    {"id": "msg_type_semantics", "phase": 3, "lean_file": "formal-verification/lean/FVSquad/MsgType.lean", "notes": "Run-58. NEW. Phase 3. 13 propositions, 0 sorry, all by decide. isLocalMsg+isResponseMsg+voteRespMsgType from raw_node.rs/raft.rs. Key finding: MsgUnreachable in both local and response sets. PR open (branch lean-squad/run58-new-target)."}
   ],
   "next_steps": [
-    "Task 4: Strengthen ConfChangeRestore.lean with implementation-level bridge lemmas — specifically prove that applySimpleAll on the outgoing list starting from an empty cfg produces cfg.incoming = votersOutgoing.",
-    "Task 5: Prove the full round-trip for restore: that restore from empty config yields a Cfg whose incoming/outgoing/learners/learnersNext match the input ConfState.",
-    "New targets: raft.rs message-handling (step_leader, step_follower), or broader cross-function invariants (e.g., committed monotonicity across multiple operations)."
+    "Task 5: Prove IMPL-1 (diff≤1 Finset arithmetic), IMPL-2 (mem_incoming), IMPL-3 (induction on AddNode list) in ConfChangeRestore.lean. Key tool: Finset.card_insert_of_not_mem, Nat.le_of_succ_le.",
+    "Task 5: Prove full round-trip for restore: restore empty config yields Cfg matching ConfState fields.",
+    "Task 4: MsgType.lean is at phase 3 — no implementation needed (pure spec). Could advance to phase 5 by adding additional decidable theorems (e.g., partition of all 19 types into local/response/request categories).",
+    "Task 3: Consider new target from raft.rs: step_leader/step_follower have complex logic but some properties (e.g., term monotonicity) could be stated."
   ],
   "build_note": "Lean toolchain install blocked by network firewall. Proofs validated by following established omega/simp/decide patterns from prior files.",
   "open_prs": [
     {
-      "branch": "lean-squad/run57-confchanger-proofs-restore",
+      "branch": "lean-squad/run57-confchanger-proofs-restore-f5da05382f1abdbc",
       "description": "Tasks 5+3 (run 57): ConfChanger.lean (0 sorry, 26 theorems complete) + ConfChangeRestore.lean (12 propositions, 0 sorry, phase 3).",
       "sorry_count": 0
+    },
+    {
+      "branch": "lean-squad/run58-new-target",
+      "description": "Tasks 2+3 (run 58): MsgType.lean (13 theorems, 0 sorry) + ConfChangeRestore phase 4 (4 bridge lemmas, 3 sorry).",
+      "sorry_count": 3
     }
   ],
-  "closed_prs": [31, 32, 33, 34, 35, 36, 58, 62, 63, 66, 67, 68],
+  "closed_prs": [31, 32, 33, 34, 35, 36, 58, 62, 63, 66, 67, 68, 69],
   "status_issue": "Open issue #21: [Lean Squad] Formal Verification Status"
 }
