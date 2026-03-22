@@ -8,6 +8,7 @@ import FVSquad.UnstableLog
 import FVSquad.RaftLogSlice
 import FVSquad.RaftLogEntries
 import FVSquad.RaftLogRestore
+import FVSquad.UnionUtils
 -- Aeneas integration: primitive types and collection models
 import FVSquad.Aeneas.UtilRefinements
 import FVSquad.Aeneas.HashSetModel
