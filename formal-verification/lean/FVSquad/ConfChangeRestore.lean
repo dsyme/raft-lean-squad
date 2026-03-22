@@ -206,4 +206,68 @@ example :
     (toConfChangeSingle cs).2.length = 8 := by
   native_decide
 
+-- ===========================================================================
+-- Phase 4: Implementation bridge lemmas
+--
+-- These lemmas connect the abstract spec above to concrete execution of
+-- `changerSimple` / `applySimpleAll` on `AddNode` lists starting from
+-- an empty config.  They prove the round-trip for the outgoing segment.
+-- ===========================================================================
+
+/-- IMPL-1  Applying a single `AddNode i` (i ≠ 0) via `changerSimple` always
+    succeeds when the config is not joint. -/
+theorem applySimple_addNode_succeeds (cfg : Cfg) (prs : Prs) (i : NodeId)
+    (hi : i ≠ 0) (hnj : isJoint cfg = false) :
+    (applySimple cfg prs ⟨i, ChangeType.AddNode⟩).isSome = true := by
+  simp only [applySimple, changerSimple, hnj, ite_false, applyAll, applyOne, hi, ite_true]
+  simp only [Finset.insert_nonempty, ite_true]
+  -- diff ≤ 1: adding exactly one element changes card by at most 1
+  sorry  -- Requires Finset.card arithmetic: (|incoming.insert i| + |incoming| - 2·|(incoming ∩ incoming.insert i)|) ≤ 1
+
+/-- IMPL-2  After `changerSimple` adds node `i` (i ≠ 0) to a non-joint config,
+    `i` is in the resulting `incoming`. -/
+theorem applySimple_addNode_mem_incoming (cfg : Cfg) (prs : Prs) (i : NodeId)
+    (hi : i ≠ 0) (hnj : isJoint cfg = false)
+    (cfg' : Cfg) (prs' : Prs)
+    (h : applySimple cfg prs ⟨i, ChangeType.AddNode⟩ = some (cfg', prs')) :
+    i ∈ cfg'.incoming := by
+  simp only [applySimple, changerSimple, hnj, ite_false, applyAll, applyOne,
+             hi, ite_true, Finset.insert_nonempty] at h
+  split_ifs at h <;> simp_all [Finset.mem_insert]
+
+/-- IMPL-3  `applySimpleAll` on a list of `AddNode` changes (all ids non-zero)
+    starting from a non-joint config adds exactly those ids to `incoming`.
+
+    Formally: `applySimpleAll cfg prs (ids.map AddNode)` succeeds and the result's
+    `incoming = cfg.incoming ∪ ids.toFinset`.
+
+    **Phase 4 note**: This key bridge lemma has a `sorry`; proving it requires
+    induction with a non-joint invariant for each intermediate config.  Specifically,
+    one must show that `applyOne (AddNode i)` preserves `isJoint = false` (the
+    outgoing field is unchanged — see `applyOne_outgoing_unchanged` in ConfChanger.lean). -/
+theorem applySimpleAll_addNodes_incoming (ids : List NodeId)
+    (h_nonzero : ∀ i ∈ ids, i ≠ 0)
+    (cfg : Cfg) (prs : Prs) (hnj : isJoint cfg = false)
+    (cfg' : Cfg) (prs' : Prs)
+    (h : applySimpleAll cfg prs (ids.map (fun id => ⟨id, ChangeType.AddNode⟩)) = some (cfg', prs')) :
+    cfg'.incoming = cfg.incoming ∪ ids.toFinset := by
+  sorry  -- Induction on ids. Base case: ids = [] → h gives cfg' = cfg, result is ∅.
+         -- Step: apply applySimple_addNode_succeeds + applyOne_outgoing_unchanged to
+         --   show the joint invariant is preserved, then use the IH.
+
+/-- IMPL-4  Main round-trip for the outgoing segment.
+    Starting from the empty config, applying the `outgoing` list from
+    `toConfChangeSingle cs` yields `cfg1.incoming = cs.votersOutgoing.toFinset`.
+
+    Follows immediately from IMPL-3 applied to the empty initial config. -/
+theorem restore_outgoing_builds_incoming (cs : ConfState)
+    (h_nonzero : ∀ i ∈ cs.votersOutgoing, i ≠ 0)
+    (cfg₁ : Cfg) (prs₁ : Prs)
+    (h : applySimpleAll ⟨∅, ∅, ∅, ∅, false⟩ ∅ (toConfChangeSingle cs).1 = some (cfg₁, prs₁)) :
+    cfg₁.incoming = cs.votersOutgoing.toFinset := by
+  have key := applySimpleAll_addNodes_incoming cs.votersOutgoing h_nonzero
+    ⟨∅, ∅, ∅, ∅, false⟩ ∅ (by simp [isJoint]) cfg₁ prs₁
+    (toConfChangeSingle cs |>.1 |> (by simp [toConfChangeSingle] ▸ h))
+  simpa using key
+
 end FVSquad.ConfChangeRestore

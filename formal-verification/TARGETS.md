@@ -52,7 +52,8 @@
 | 23 | `tally_votes` + `has_quorum` | `src/tracker.rs` | 5 — Proofs | ✅ Done | Vote counting + quorum check. 27 theorems, 0 sorry. See `FVSquad/TallyVotes.lean`. |
 | 24 | `Union<'a>` + `is_continuous_ents` | `src/util.rs` | 5 — Proofs | ✅ Done | Union set + entry-continuity predicate. 20 theorems, 0 sorry. See `FVSquad/UnionUtils.lean` (PR open). |
 | 25 | `Changer::enter_joint` / `leave_joint` / `check_invariants` | `src/confchange/changer.rs` | 5 — Proofs | ✅ Done | Joint consensus config transitions. All 26 propositions proved (0 `sorry`). Helper lemmas: `applyOne_outgoing_unchanged`, `applyAll_outgoing_unchanged`, `leaveJoint_isJoint`. See `FVSquad/ConfChanger.lean`. |
-| 26 | `to_conf_change_single` + `restore` | `src/confchange/restore.rs` | 3 — Lean Spec | 🔄 In progress | ConfState→change-list translator + restore-from-scratch. Informal spec + 12 Lean propositions (0 `sorry`): outgoing/incoming structure, length, IDs, joint/non-joint dispatch. See `FVSquad/ConfChangeRestore.lean`. |
+| 26 | `to_conf_change_single` + `restore` | `src/confchange/restore.rs` | 4 — Implementation | 🔄 In progress | ConfState→change-list translator + restore-from-scratch. Informal spec + 12 Lean propositions (0 `sorry`) + 4 phase-4 bridge lemmas (2 `sorry`): outgoing/incoming structure, round-trip skeleton. See `FVSquad/ConfChangeRestore.lean`. |
+| 27 | `is_local_msg` + `is_response_msg` + `vote_resp_msg_type` | `src/raw_node.rs`, `src/raft.rs` | 3 — Lean Spec | 🔄 In progress | MessageType classification: local/response classification + vote request→response mapping. 13 propositions, all proved by `decide`. See `FVSquad/MsgType.lean`. |
 
 ## Phase Legend
 
