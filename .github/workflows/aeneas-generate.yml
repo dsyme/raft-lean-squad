@@ -30,6 +30,7 @@ jobs:
           CHARON_PIN=$(cat aeneas/charon-pin 2>/dev/null || echo main)
           git clone https://github.com/AeneasVerif/charon /tmp/charon
           cd /tmp/charon && git checkout "$CHARON_PIN"
+          eval $(opam env)
           opam install . --deps-only -y
           make
 
@@ -38,6 +39,7 @@ jobs:
         run: |
           git clone https://github.com/AeneasVerif/aeneas /tmp/aeneas
           cd /tmp/aeneas
+          eval $(opam env)
           opam install . --deps-only -y
           make
 
