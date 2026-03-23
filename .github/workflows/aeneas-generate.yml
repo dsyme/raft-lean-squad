@@ -53,7 +53,10 @@ jobs:
           ln -s /tmp/charon /tmp/aeneas/charon
 
       - name: Install Aeneas deps
-        run: opam install /tmp/aeneas --deps-only -y
+        run: |
+          opam install -y \
+            ppx_deriving visitors easy_logging zarith yojson core_unix \
+            ocamlgraph menhir ocamlformat unionFind progress domainslib
 
       - name: Build Aeneas
         run: |
