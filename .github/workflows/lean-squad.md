@@ -30,7 +30,6 @@ network:
     - "leanprover-community.github.io"
     - "release.leanlang.org"
     - ocaml
-    - "opam.ocaml.org"
     - "releaseassets.githubusercontent.com"
 
 tools:
