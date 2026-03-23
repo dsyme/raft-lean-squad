@@ -1,0 +1,83 @@
+name: Aeneas Generate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  aeneas-generate:
+    name: Generate Aeneas Lean output
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Install OCaml + opam
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "5.3"
+
+      # 2. Clone & build Charon (pinned to the commit in aeneas/charon-pin)
+      - name: Build Charon
+        run: |
+          CHARON_PIN=$(cat aeneas/charon-pin 2>/dev/null || echo main)
+          git clone https://github.com/AeneasVerif/charon /tmp/charon
+          cd /tmp/charon && git checkout "$CHARON_PIN"
+          opam install ./charon-ml/charon-ml.opam --deps-only -y
+          make
+
+      # 3. Clone & build Aeneas
+      - name: Build Aeneas
+        run: |
+          git clone https://github.com/AeneasVerif/aeneas /tmp/aeneas
+          cd /tmp/aeneas
+          opam install . --deps-only -y
+          make
+
+      # 4. Extract LLBC from raft-rs
+      - name: Run Charon
+        run: |
+          rustup toolchain install nightly-2026-02-07 \
+            --component rustc-dev,rust-src,llvm-tools-preview
+          PATH="/tmp/charon/bin:$PATH" \
+            charon cargo --preset=aeneas --features aeneas
+
+      # 5. Generate Lean from LLBC
+      - name: Run Aeneas
+        run: |
+          /tmp/aeneas/bin/aeneas -backend lean -split-files raft.llbc \
+            -dest formal-verification/lean/FVSquad/Aeneas/Generated
+
+      # 6. Open a PR if the generated files changed
+      - name: Create PR for generated Lean files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="aeneas-generated/${{ github.run_id }}"
+          git checkout -b "$BRANCH"
+          git add formal-verification/lean/FVSquad/Aeneas/Generated/
+
+          if git diff --cached --quiet; then
+            echo "No changes in generated Lean files — skipping PR."
+            exit 0
+          fi
+
+          git commit -m "chore: regenerate Aeneas Lean output (run ${{ github.run_id }})"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "chore: regenerate Aeneas Lean output" \
+            --body "Automated regeneration of Lean files produced by the Charon → Aeneas pipeline. Triggered by: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }} Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --base main \
+            --head "$BRANCH" \
+            --label "automation"
