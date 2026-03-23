@@ -35,8 +35,8 @@
 | 28 | `get_priority` | `src/raft.rs` | 5 — Proofs | ✅ Done | Priority selection with u64→i64 overflow-safe fallback. 10 propositions, 0 `sorry`. See `FVSquad/GetPriority.lean`. |
 | 29 | `vote_commitment` | `src/raft.rs` | 5 — Proofs | ✅ Done | Raft vote-commitment invariant: at most one vote per term. 15 propositions, 0 `sorry`. See `FVSquad/VoteCommitment.lean`. |
 | 31 | `bcast_append` / `maybe_send_append` / `prepare_send_entries` | `src/raft.rs`, `src/tracker/progress.rs` | 5 — Proofs | ✅ Done | Flow-control, progress state machine, MsgAppend fields. 11+ theorems, 0 `sorry`. See `FVSquad/BcastAppend.lean`. |
-| 32 | `handle_heartbeat_response` | `src/raft.rs` | 4 — Implementation | 🔄 In progress | Progress unblocking, catch-up trigger, ReadIndex quorum. Full `handleHeartbeatResponse` pure model + 8 end-to-end theorems, 0 `sorry`. See `FVSquad/HandleHeartbeatResponse.lean`. |
-| 33 | `handle_vote` (MsgRequestVote / MsgRequestPreVote) | `src/raft.rs` | 2 — Informal Spec | 🔄 In progress | Vote grant conditions, at-most-one-vote, log up-to-date, priority fairness, lease protection. See `specs/handle_vote_informal.md`. |
+| 32 | `handle_heartbeat_response` | `src/raft.rs` | 5 — Proofs | ✅ Done | Progress unblocking, catch-up trigger, ReadIndex quorum. Full `handleHeartbeatResponse` pure model + 8 end-to-end theorems, 0 `sorry`. See `FVSquad/HandleHeartbeatResponse.lean`. |
+| 33 | `handle_vote` (MsgRequestVote / MsgRequestPreVote) | `src/raft.rs` | 4 — Implementation | 🔄 In progress | Vote grant conditions (`canVote`, `isUpToDate`, `priorityOk`), 19 theorems, 0 `sorry`. Full pure model + proofs. See `FVSquad/HandleVote.lean`. |
 
 ## Phase Legend
 
