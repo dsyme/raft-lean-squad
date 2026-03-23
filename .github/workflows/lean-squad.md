@@ -17,7 +17,7 @@ description: |
   Outputs are pull requests (specs, proofs) and issues (bugs, status).
 
 on:
-  schedule: every 3h
+  schedule: every 8h
   workflow_dispatch:
 
 permissions: read-all
