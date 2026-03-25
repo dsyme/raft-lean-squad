@@ -1,0 +1,8 @@
+[charon]
+# Treat `slog` as opaque: `slog::Logger` appears in raft's public API but its
+# internals use `dyn SendSyncRefUnwindSafeDrain<Ok=(), Err=Never>` — a dyn
+# trait with associated types that triggers an assertion in Charon's
+# pretty-printer under the `--preset=aeneas` / `lift_associated_types="*"` pass.
+# Making the whole `slog` crate opaque avoids that panic while still letting
+# Charon see `slog::Logger` as an opaque type in translated function signatures.
+opaque = ["slog"]
