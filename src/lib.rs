@@ -27,6 +27,7 @@ use raft::{
     storage::MemStorage,
     raw_node::RawNode,
 };
+#[cfg(not(feature = "aeneas"))]
 use slog::{Drain, o};
 
 // Select some defaults, then change what we need.
@@ -488,6 +489,7 @@ This process is a two-phase process, during the midst of it the peer group's lea
 // same time. And reassignment can be optimized by compiler.
 #![allow(clippy::field_reassign_with_default)]
 
+#[cfg(not(feature = "aeneas"))]
 macro_rules! fatal {
     ($logger:expr, $msg:expr) => {{
         let owned_kv = ($logger).list();
@@ -501,6 +503,51 @@ macro_rules! fatal {
     ($logger:expr, $fmt:expr, $($arg:tt)+) => {{
         fatal!($logger, format_args!($fmt, $($arg)+))
     }};
+}
+
+#[cfg(feature = "aeneas")]
+macro_rules! fatal {
+    ($logger:expr, $msg:expr) => {{
+        let _ = &$logger;
+        panic!("{}", $msg)
+    }};
+    ($logger:expr, $fmt:expr, $($arg:tt)+) => {{
+        fatal!($logger, format_args!($fmt, $($arg)+))
+    }};
+}
+
+// When building for Aeneas (without slog), provide no-op logging macros
+// and a dummy Logger type so the crate compiles without slog.
+#[cfg(feature = "aeneas")]
+pub(crate) type Logger = ();
+
+#[cfg(feature = "aeneas")]
+macro_rules! info {
+    ($($arg:tt)*) => { () };
+}
+#[cfg(feature = "aeneas")]
+macro_rules! debug {
+    ($($arg:tt)*) => { () };
+}
+#[cfg(feature = "aeneas")]
+macro_rules! warn {
+    ($($arg:tt)*) => { () };
+}
+#[cfg(feature = "aeneas")]
+macro_rules! error {
+    ($($arg:tt)*) => { () };
+}
+#[cfg(feature = "aeneas")]
+macro_rules! trace {
+    ($($arg:tt)*) => { () };
+}
+#[cfg(feature = "aeneas")]
+macro_rules! crit {
+    ($($arg:tt)*) => { () };
+}
+#[cfg(feature = "aeneas")]
+macro_rules! o {
+    ($($arg:tt)*) => { () };
 }
 
 mod confchange;

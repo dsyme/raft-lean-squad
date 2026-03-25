@@ -17,8 +17,13 @@
 use std::cmp;
 use std::fmt::{Display, Formatter};
 
+#[cfg(not(feature = "aeneas"))]
 use slog::warn;
+#[cfg(not(feature = "aeneas"))]
 use slog::Logger;
+#[cfg(feature = "aeneas")]
+use crate::Logger;
+#[cfg(not(feature = "aeneas"))]
 use slog::{debug, info, trace};
 
 use crate::config::Config;
@@ -621,9 +626,12 @@ impl<T: Storage> RaftLog<T> {
         while lo < hi {
             let ents = self.slice(lo, hi, page_size, context)?;
             if ents.is_empty() {
+                #[cfg(not(feature = "aeneas"))]
                 return Err(Error::Store(StorageError::Other(
                     format!("got 0 entries in [{lo}, {hi})").into(),
                 )));
+                #[cfg(feature = "aeneas")]
+                panic!("got 0 entries in [{lo}, {hi})");
             }
             lo += ents.len() as u64;
             if !v(ents) {

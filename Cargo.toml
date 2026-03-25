@@ -16,12 +16,12 @@ edition = "2021"
 members = ["proto", "harness", "datadriven"]
 
 [features]
-default = ["protobuf-codec", "default-logger"]
+default = ["protobuf-codec", "default-logger", "thiserror"]
 # Enable failpoints
 failpoints = ["fail/failpoints"]
 protobuf-codec = ["raft-proto/protobuf-codec", "bytes"]
 prost-codec = ["raft-proto/prost-codec"]
-default-logger = ["slog-stdlog", "slog-envlogger", "slog-term"]
+default-logger = ["slog", "slog-stdlog", "slog-envlogger", "slog-term"]
 # Replace unsafe stack-array optimisations with safe equivalents so that
 # Aeneas (the Rust→Lean translation tool) can process the codebase.
 # This feature has no effect on semantics; it only trades a minor stack-
@@ -35,10 +35,10 @@ bytes = {  version = "1.11", optional = true }
 fxhash = "0.2.1"
 fail = { version = "0.4", optional = true }
 getset = "0.1.1"
-thiserror = "1.0"
+thiserror = { version = "1.0", optional = true }
 raft-proto = { path = "proto", version = "0.7.0", default-features = false }
 rand = "0.8"
-slog = "2.2"
+slog = { version = "2.2", optional = true }
 slog-envlogger = { version = "2.1.0", optional = true }
 slog-stdlog = { version = "4", optional = true }
 slog-term = { version = "2.4.0", optional = true }

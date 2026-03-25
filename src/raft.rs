@@ -24,11 +24,15 @@ use crate::eraftpb::{
 use raft_proto::protocompat::*;
 use raft_proto::ConfChangeI;
 use rand::Rng;
+#[cfg(not(feature = "aeneas"))]
 use slog::Logger;
+#[cfg(feature = "aeneas")]
+use crate::Logger;
 
 #[cfg(feature = "failpoints")]
 use fail::fail_point;
 use getset::Getters;
+#[cfg(not(feature = "aeneas"))]
 use slog::{debug, error, info, o, trace, warn};
 
 use super::errors::{Error, Result, StorageError};
@@ -246,7 +250,7 @@ pub struct RaftCore<T: Storage> {
     max_election_timeout: usize,
 
     /// The logger for the raft structure.
-    pub(crate) logger: slog::Logger,
+    pub(crate) logger: Logger,
 
     /// The election priority of this node.
     pub priority: i64,
@@ -321,7 +325,10 @@ impl<T: Storage> Raft<T> {
     #[allow(clippy::new_ret_no_self)]
     pub fn new(c: &Config, store: T, logger: &Logger) -> Result<Self> {
         c.validate()?;
+        #[cfg(not(feature = "aeneas"))]
         let logger = logger.new(o!("raft_id" => c.id));
+        #[cfg(feature = "aeneas")]
+        let logger = *logger;
         let raft_state = store.initial_state()?;
         let conf_state = &raft_state.conf_state;
         let voters = &conf_state.voters;

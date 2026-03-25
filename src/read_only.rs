@@ -16,7 +16,10 @@
 
 use std::collections::VecDeque;
 
+#[cfg(not(feature = "aeneas"))]
 use slog::Logger;
+#[cfg(feature = "aeneas")]
+use crate::Logger;
 
 use crate::eraftpb::Message;
 use crate::{HashMap, HashSet};

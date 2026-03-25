@@ -24,7 +24,10 @@ use std::{collections::VecDeque, mem};
 
 use raft_proto::protocompat::*;
 use raft_proto::ConfChangeI;
+#[cfg(not(feature = "aeneas"))]
 use slog::Logger;
+#[cfg(feature = "aeneas")]
+use crate::Logger;
 
 use crate::eraftpb::{ConfState, Entry, EntryType, HardState, Message, MessageType, Snapshot};
 use crate::errors::{Error, Result};
@@ -32,6 +35,7 @@ use crate::read_only::ReadState;
 use crate::{config::Config, StateRole};
 use crate::{storage::GetEntriesFor, GetEntriesContext, Raft, SoftState, Status, Storage};
 
+#[cfg(not(feature = "aeneas"))]
 use slog::info;
 
 #[cfg(feature = "protobuf-codec")]

@@ -4,14 +4,17 @@
 // Copyright 2019 TiKV Project Authors. Licensed under Apache-2.0.
 
 use std::fmt;
+#[cfg(not(feature = "aeneas"))]
 use std::fmt::Write;
 
+#[cfg(not(feature = "aeneas"))]
 use slog::{OwnedKVList, Record, KV};
 
 use crate::eraftpb::{Entry, Message};
 use crate::HashSet;
 use raft_proto::protocompat::*;
 
+#[cfg(not(feature = "aeneas"))]
 use slog::{b, record_static};
 
 /// A number to represent that there is no limit.
@@ -83,10 +86,12 @@ pub fn is_continuous_ents(msg: &Message, ents: &[Entry]) -> bool {
     true
 }
 
+#[cfg(not(feature = "aeneas"))]
 struct FormatKeyValueList {
     pub buffer: String,
 }
 
+#[cfg(not(feature = "aeneas"))]
 impl slog::Serializer for FormatKeyValueList {
     fn emit_arguments(&mut self, key: slog::Key, val: &fmt::Arguments) -> slog::Result {
         if !self.buffer.is_empty() {
@@ -98,6 +103,7 @@ impl slog::Serializer for FormatKeyValueList {
     }
 }
 
+#[cfg(not(feature = "aeneas"))]
 pub(crate) fn format_kv_list(kv_list: &OwnedKVList) -> String {
     let mut formatter = FormatKeyValueList {
         buffer: "".to_owned(),

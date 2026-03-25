@@ -18,7 +18,10 @@
 
 use crate::eraftpb::{Entry, Snapshot};
 use crate::util::entry_approximate_size;
+#[cfg(not(feature = "aeneas"))]
 use slog::Logger;
+#[cfg(feature = "aeneas")]
+use crate::Logger;
 
 /// Unstable contains "unstable" log entries and snapshot state that has
 /// not yet been written to Storage.
