@@ -37,12 +37,12 @@
 | 31 | `bcast_append` / `maybe_send_append` / `prepare_send_entries` | `src/raft.rs`, `src/tracker/progress.rs` | 5 — Proofs | ✅ Done | Flow-control, progress state machine, MsgAppend fields. 11+ theorems, 0 `sorry`. See `FVSquad/BcastAppend.lean`. |
 | 32 | `handle_heartbeat_response` | `src/raft.rs` | 5 — Proofs | ✅ Done | Progress unblocking, catch-up trigger, ReadIndex quorum. Full `handleHeartbeatResponse` pure model + 8 end-to-end theorems, 0 `sorry`. See `FVSquad/HandleHeartbeatResponse.lean`. |
 | 33 | `handle_vote` (MsgRequestVote / MsgRequestPreVote) | `src/raft.rs` | 5 — Proofs | ✅ Done | Vote grant conditions (`canVote`, `isUpToDate`, `priorityOk`), 19 theorems, 0 `sorry`. Full pure model + proofs. See `FVSquad/HandleVote.lean`. |
-| 34 | `handle_append_entries` | `src/raft.rs` | 4 — Implementation | 🔄 In progress | 3 paths: snapshot-pending, stale, accept/reject. 14 theorems, 0 `sorry`. Informal spec + full Lean spec. See `FVSquad/HandleAppendEntries.lean`. |
-| 35 | `tick_election` | `src/raft.rs` | 3 — Lean Spec | 🔄 In progress | Election timer logic: 10 theorems, 0 `sorry`. Pure model + full proofs of P1–P8. See `FVSquad/TickElection.lean`. |
-| 36 | `maybe_commit_by_vote` | `src/raft.rs` | 2 — Informal Spec | 🔄 In progress | Fast-forward commit during election; 8 candidate propositions; config-change step-down safety. See `specs/maybe_commit_by_vote_informal.md`. |
+| 34 | `handle_append_entries` | `src/raft.rs` | 5 — Proofs | ✅ Done | 3 paths: snapshot-pending, stale, accept/reject. 14 theorems, 0 `sorry`. See `FVSquad/HandleAppendEntries.lean`. |
+| 35 | `tick_election` | `src/raft.rs` | 5 — Proofs | ✅ Done | Election timer logic: 10+ theorems, 0 `sorry`. Pure model + full proofs P1–P8 + derived. See `FVSquad/TickElection.lean`. |
+| 36 | `maybe_commit_by_vote` | `src/raft.rs` | 5 — Proofs | ✅ Done | Fast-forward commit during election. 15 theorems, 0 `sorry`. commit_monotone, stepdown safety, idempotency. See `FVSquad/MaybeCommitByVote.lean`. |
 | 37 | `handle_append_response` | `src/raft.rs` | 1 — Research | ⬜ Not started | Leader-side handling of MsgAppendResponse: progress tracking, backtracking optimisation, commit advancement, leadership transfer. |
 | 38 | `restore` (node-level) | `src/raft.rs` | 1 — Research | ⬜ Not started | Snapshot restore: guards, log restoration, config restore via `confchange::restore`, progress tracker update. |
-| 39 | `handle_snapshot_status` | `src/raft.rs` | 1 — Research | ⬜ Not started | Snapshot success/failure: Snapshot→Probe progress transition, pause semantics, pending_request_snapshot reset. |
+| 39 | `handle_snapshot_status` | `src/raft.rs` | 5 — Proofs | ✅ Done | Snapshot→Probe transition: 13 theorems, 0 `sorry`. Success/failure paths, next_idx correctness, pause semantics. See `FVSquad/HandleSnapshotStatus.lean`. |
 
 ## Phase Legend
 
