@@ -7,8 +7,8 @@ correspondence level, known divergences, and the impact on any proofs that rely 
 definition.
 
 ## Last Updated
-- **Date**: 2026-03-26 19:00 UTC
-- **Commit**: `6d88bf60986287d9ad1967df86e7d001db974a88`
+- **Date**: 2026-03-26 20:30 UTC
+- **Commit**: `0ebbf48bfad3dd111b9ea32afdcec01cca1f796e`
 
 ---
 
@@ -139,9 +139,108 @@ Theorems in `MajorityVote.lean` prove properties about `voteResult`. The main ca
 
 ---
 
-## Known Mismatches
+## `formal-verification/lean/FVSquad/JointVote.lean`
 
-No mismatches found. All three Lean models are sound abstractions of their Rust counterparts.
+### Target: `Configuration::vote_result` (joint) — `src/quorum/joint.rs`
+
+Rust source: [`src/quorum/joint.rs#L63`](../src/quorum/joint.rs#L63)
+
+#### Lean definitions
+
+| Lean name | Rust name | Rust location | Correspondence | Notes |
+|-----------|-----------|---------------|----------------|-------|
+| `combineVotes` | *(match expression)* | `src/quorum/joint.rs#L68–75` | Exact | Directly mirrors the four-arm `match (i, o)` pattern. Semantically identical. |
+| `jointVoteResult` | `Configuration::vote_result` | `src/quorum/joint.rs#L63` | Abstraction | See divergences below. |
+
+#### Known divergences (Abstraction-level)
+
+1. **Voter representation** — Rust `Configuration` holds `incoming: MajorityConfig` and
+   `outgoing: MajorityConfig`, each backed by a `HashSet<u64>`. Lean represents these
+   as `List Nat` parameters passed directly to `jointVoteResult`, abstracting the struct wrapper.
+
+2. **`outgoing` default** — In a single-group (non-joint) configuration, Rust leaves
+   `outgoing` as `MajorityConfig::default()` (empty). Lean's theorem `J4` proves that
+   `jointVoteResult incoming [] check = voteResult incoming check`, confirming the
+   non-joint case is handled correctly.
+
+3. **Check function sharing** — Rust passes `&check` to `incoming.vote_result` and
+   `check` (by move) to `outgoing.vote_result`. In Lean the same `check : Nat → Option Bool`
+   function is passed to both calls. This is equivalent because the function is pure.
+
+4. **Numeric types and voter IDs** — Same as `MajorityVote.lean`: `u64` → `Nat`, no overflow.
+
+#### Impact on proofs
+
+- `JointVote.lean` directly reuses the `voteResult` function and all lemmas from
+  `MajorityVote.lean`. Its 14 theorems (CL1–CL4, J1–J10) are sound given the
+  `MajorityVote.lean` model.
+- The `combineVotes` function is a direct structural translation of the Rust `match`; no
+  approximation is needed.
+- Theorems about symmetry (J9, J10) have no direct Rust counterpart but are natural
+  corollaries of the structure.
+
+**Assessment**: The Lean model is a sound abstraction of the joint `vote_result`. The
+14 proved theorems fully characterise the joint quorum decision rule.
+
+---
+
+## `formal-verification/lean/FVSquad/CommittedIndex.lean`
+
+### Target: `Configuration::committed_index` — `src/quorum/majority.rs`
+
+Rust source: [`src/quorum/majority.rs#L163`](../src/quorum/majority.rs#L163)
+
+#### Lean definitions
+
+| Lean name | Rust name | Rust location | Correspondence | Notes |
+|-----------|-----------|---------------|----------------|-------|
+| `sortDesc` | *(Vec sort — `sort_by(b.cmp(a))`)* | `src/quorum/majority.rs#L172` | Exact | Lean uses `List.mergeSort (≥)`; semantically identical descending sort. |
+| `sortedAcked` | *(mapped and sorted `matched` vec)* | `src/quorum/majority.rs#L168–175` | Abstraction | Rust collects into a stack array then sorts in-place. Lean maps then sorts. Same output. |
+| `committedIndex` | `Configuration::committed_index` | `src/quorum/majority.rs#L163` | Abstraction | Non-group-commit path only. See divergences below. |
+| `countGe` | *(no direct counterpart — auxiliary)* | — | — | Declarative characterisation; used in proofs of safety/maximality. |
+
+#### Known divergences (Abstraction-level)
+
+1. **Group-commit path omitted** — Rust has a `use_group_commit = true` branch
+   (lines 177–186 of `majority.rs`) that uses group IDs for committed-index computation.
+   This branch is **not modelled**. All proved theorems apply to the `use_group_commit = false` path only.
+
+2. **Empty-config return value** — Rust returns `u64::MAX` for an empty voter set
+   (so that `min(u64::MAX, x) = x` in joint quorums). Lean returns `0` to stay in `Nat`.
+   The divergence is documented in `committedIndex_empty_contract`. Joint-quorum callers
+   must handle the empty case separately.
+
+3. **Stack-array optimisation** — The Rust implementation uses an unsafe inline array for
+   small voter sets. This is a performance optimisation only; the output is identical to
+   a heap-allocated sort. Lean models the heap path (`List`).
+
+4. **Types** — Voter IDs are `u64` → `Nat`; acked indices are `u64` → `Nat`. Overflow not
+   modelled. The `AckedIndexer` trait is abstracted as a pure `Nat → Nat` function
+   (mapping `None` → `0` via Rust's `unwrap_or_default()`).
+
+5. **Voter list vs. set** — Rust uses an implicit `HashSet`-backed deduplication. Lean uses
+   `List Nat` (duplicates assumed absent where they matter for theorems about majority counts).
+
+#### Impact on proofs
+
+All 13 theorems proved in `CommittedIndex.lean` are:
+
+- **sortDesc_length**, **sortDesc_perm**, **sortDesc_pairwise**: structural properties of the sort. Exact correspondence.
+- **sortedAcked_length**, **sortedAcked_perm**: structural properties. Exact correspondence.
+- **CI1** (`committedIndex_empty`) and **CI1-contract**: correctly capture the 0 vs `u64::MAX` divergence.
+- **CI2** (`committedIndex_singleton`): exact for a single voter.
+- **CI3–CI7**: properties of `countGe`; sound abstract characterisation.
+- **CI8** (`committedIndex_all_zero`): holds under the Lean model.
+- **CI-Safety**, **CI-Maximality**: prove that `committedIndex` is the largest index acknowledged by a majority. These are the key correctness properties; they hold for the non-group-commit path.
+- **CI-Monotonicity**: acked-index non-decrease → committed-index non-decrease. Key liveness property.
+
+**Assessment**: The Lean model is a sound abstraction of `Configuration::committed_index`
+for the non-group-commit path. The Safety and Maximality theorems provide meaningful
+confidence in the sort-then-index algorithm's correctness. No mismatches found.
+
+---
+
+No mismatches found. All five Lean models are sound abstractions of their Rust counterparts.
 
 ---
 
@@ -151,4 +250,6 @@ No mismatches found. All three Lean models are sound abstractions of their Rust 
 |-----------|-------------|---------------------|-----------------|------|
 | `LimitSize.lean` | `src/util.rs` `limit_size` | Abstraction | 12 | Overflow not modelled (safe) |
 | `ConfigValidate.lean` | `src/config.rs` `Config::validate` | Abstraction | 10 | Error messages not captured (by design) |
-| `MajorityVote.lean` | `src/quorum/majority.rs` `vote_result` | Abstraction | 15 | Duplicates in voter list not excluded by type |
+| `MajorityVote.lean` | `src/quorum/majority.rs` `vote_result` | Abstraction | 21 | Duplicates in voter list not excluded by type |
+| `JointVote.lean` | `src/quorum/joint.rs` `vote_result` | Abstraction | 14 | Struct wrapper abstracted; non-joint degeneration proved (J4) |
+| `CommittedIndex.lean` | `src/quorum/majority.rs` `committed_index` | Abstraction | 13 | group-commit path omitted; empty→0 (Rust→MAX) documented |
