@@ -69,6 +69,7 @@ safe-outputs:
     labels: [automation, lean-squad]
     max: 2
     protected-files: fallback-to-issue
+    draft: false
   push-to-pull-request-branch:
     target: "*"
     title-prefix: "[Lean Squad] "
