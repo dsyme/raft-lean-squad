@@ -1,281 +1,88 @@
 {
   "last_run": "2026-03-26",
-  "run_id": "23594566127",
+  "run_id": "23596842437",
   "fv_tool": "Lean4+Mathlib",
   "lake_project": "formal-verification/lean/",
   "targets": [
     {
       "id": "vote_result",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/MajorityQuorum.lean",
-      "notes": "COMPLETE. All 11 theorems proved, no sorry."
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/quorum/majority.rs Configuration::vote_result. High tractability."
     },
     {
       "id": "committed_index",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/CommittedIndex.lean",
-      "notes": "COMPLETE. All theorems proved, 0 sorry."
-    },
-    {
-      "id": "limit_size",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/LimitSize.lean",
-      "notes": "COMPLETE. All theorems proved, 0 sorry."
-    },
-    {
-      "id": "unstable_log",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/UnstableLog.lean",
-      "notes": "COMPLETE. 30+ theorems proved, 0 sorry."
-    },
-    {
-      "id": "inflights",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/Inflights.lean",
-      "notes": "COMPLETE. Abstract model + concrete ring-buffer. 20+ theorems, 0 sorry."
-    },
-    {
-      "id": "progress",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/Progress.lean",
-      "notes": "COMPLETE. ~45 theorems proved, 0 sorry."
-    },
-    {
-      "id": "joint_quorum",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/JointQuorum.lean",
-      "notes": "COMPLETE. 20+ theorems proved, 0 sorry."
-    },
-    {
-      "id": "log_ordering",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/LogOrdering.lean",
-      "notes": "COMPLETE. 16 theorems. 0 sorry."
-    },
-    {
-      "id": "maybe_append",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/MaybeAppend.lean",
-      "notes": "COMPLETE. 0 sorry."
-    },
-    {
-      "id": "read_only",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/ReadOnly.lean",
-      "notes": "COMPLETE. 30 theorems, 0 sorry."
-    },
-    {
-      "id": "maybe_persist",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/MaybePersist.lean",
-      "notes": "COMPLETE. 16 theorems, 0 sorry."
-    },
-    {
-      "id": "maybe_commit",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/MaybeCommit.lean",
-      "notes": "COMPLETE. 16 theorems, 0 sorry."
-    },
-    {
-      "id": "progress_tracking",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/ProgressTracking.lean",
-      "notes": "COMPLETE. 31 theorems, 0 sorry."
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/quorum/majority.rs Configuration::committed_index. Medium tractability."
     },
     {
       "id": "find_conflict",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/FindConflict.lean",
-      "notes": "COMPLETE. 15 theorems, 0 sorry."
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/raft_log.rs RaftLog::find_conflict. High tractability."
     },
     {
-      "id": "quorum_recently_active",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/QuorumRecentlyActive.lean",
-      "notes": "COMPLETE. 15 theorems, 0 sorry."
+      "id": "maybe_append",
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/raft_log.rs RaftLog::maybe_append. Depends on find_conflict."
     },
     {
-      "id": "next_entries_since",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/NextEntries.lean",
-      "notes": "COMPLETE. 20+ theorems, 0 sorry."
+      "id": "inflights",
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/tracker/inflights.rs ring buffer. Medium tractability."
     },
     {
-      "id": "raftlog_slice",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/RaftLogSlice.lean",
-      "notes": "COMPLETE. 35+ theorems, 0 sorry."
+      "id": "progress",
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/tracker/progress.rs state machine. Medium tractability."
     },
     {
-      "id": "raftlog_append",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/RaftLogAppend.lean",
-      "notes": "COMPLETE. 14 theorems, 0 sorry."
+      "id": "joint_quorum",
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/quorum/joint.rs. Depends on vote_result and committed_index."
     },
     {
-      "id": "raftlog_entries",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/RaftLogEntries.lean",
-      "notes": "COMPLETE. 18 theorems, 0 sorry."
+      "id": "limit_size",
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/util.rs limit_size. Very high tractability - good first target."
+    },
+    {
+      "id": "uncommitted_size",
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/raft.rs maybe_increase/reduce_uncommitted_size. High tractability."
     },
     {
       "id": "config_validate",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/ConfigValidate.lean",
-      "notes": "COMPLETE. 18 theorems, 0 sorry."
-    },
-    {
-      "id": "uncommitted_state",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/UncommittedState.lean",
-      "notes": "COMPLETE. 28 theorems, 0 sorry."
-    },
-    {
-      "id": "raftlog_term",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/RaftLogTerm.lean",
-      "notes": "COMPLETE. 18 theorems, 0 sorry."
-    },
-    {
-      "id": "tally_votes",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/TallyVotes.lean",
-      "notes": "COMPLETE. 27 theorems, 0 sorry."
-    },
-    {
-      "id": "raftlog_restore",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/RaftLogRestore.lean",
-      "notes": "COMPLETE. 12 theorems, 0 sorry."
-    },
-    {
-      "id": "union_utils",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/UnionUtils.lean",
-      "notes": "COMPLETE. 20 theorems, 0 sorry."
-    },
-    {
-      "id": "confchange_changer",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/ConfChanger.lean",
-      "notes": "COMPLETE. All 26 theorems, 0 sorry."
-    },
-    {
-      "id": "msg_type_semantics",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/MsgType.lean",
-      "notes": "COMPLETE. 13 propositions, 0 sorry."
-    },
-    {
-      "id": "confchange_restore",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/ConfChangeRestore.lean",
-      "notes": "COMPLETE. 0 sorry."
-    },
-    {
-      "id": "get_priority",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/GetPriority.lean",
-      "notes": "COMPLETE. 10 propositions, 0 sorry."
-    },
-    {
-      "id": "vote_commitment",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/VoteCommitment.lean",
-      "notes": "COMPLETE. 15 theorems, 0 sorry."
-    },
-    {
-      "id": "state_transitions",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/StateTransitions.lean",
-      "notes": "COMPLETE. 31 theorems, 0 sorry."
-    },
-    {
-      "id": "bcast_append",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/BcastAppend.lean",
-      "notes": "COMPLETE. 11+ theorems, 0 sorry."
-    },
-    {
-      "id": "handle_heartbeat_response",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/HandleHeartbeatResponse.lean",
-      "notes": "COMPLETE. 8 end-to-end theorems + full handler model, 0 sorry."
-    },
-    {
-      "id": "handle_vote",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/HandleVote.lean",
-      "notes": "COMPLETE. Phase 5. 19 theorems, 0 sorry."
-    },
-    {
-      "id": "handle_append_entries",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/HandleAppendEntries.lean",
-      "notes": "COMPLETE. 14 theorems, 0 sorry."
-    },
-    {
-      "id": "tick_election",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/TickElection.lean",
-      "notes": "COMPLETE. 10+ theorems, 0 sorry."
-    },
-    {
-      "id": "maybe_commit_by_vote",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/MaybeCommitByVote.lean",
-      "notes": "COMPLETE. 15 theorems, 0 sorry."
-    },
-    {
-      "id": "handle_snapshot_status",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/HandleSnapshotStatus.lean",
-      "notes": "COMPLETE. 13 theorems, 0 sorry."
-    },
-    {
-      "id": "handle_append_response",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/HandleAppendResponse.lean",
-      "notes": "COMPLETE. Run-73. 15 theorems, 0 sorry."
-    },
-    {
-      "id": "restore_node",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/RestoreNode.lean",
-      "notes": "COMPLETE. Run-74. 20 theorems, 0 sorry."
-    },
-    {
-      "id": "has_ready",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/HasReady.lean",
-      "notes": "COMPLETE. 20 theorems, 0 sorry."
-    },
-    {
-      "id": "commit_to_current_term",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/CommitCurrentTerm.lean",
-      "notes": "COMPLETE. Run-76. 17 theorems, 0 sorry. applyImpliesCommit key theorem."
-    },
-    {
-      "id": "reset",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/Reset.lean",
-      "notes": "COMPLETE. Run-77. 23 theorems, 0 sorry. Full clean-slate reset model. No-double-vote proof. PR branch: lean-squad/run77-reset-phase2-5-20260326."
+      "phase": 1,
+      "lean_file": null,
+      "notes": "Identified. src/config.rs Config::validate. Very high tractability."
     }
   ],
   "next_steps": [
-    "All 42 targets now at phase 5.",
-    "Consider Task 6 (Correspondence Review) and Task 7 (Critique) for next runs.",
-    "Consider identifying new targets from remaining untouched Rust modules.",
-    "StateTransitions.lean has raftReset which overlaps with Reset.lean - note for correspondence review."
+    "Run Task 2: informal spec for limit_size or vote_result (easiest entry points).",
+    "Run Task 3: Lean spec for limit_size (very tractable, good first Lean file).",
+    "lean-ci.yml now exists - will verify proofs in CI once Lean files are added.",
+    "Aeneas targets: vote_result and committed_index have #[cfg(feature=aeneas)] versions."
   ],
-  "build_note": "Lean toolchain install blocked by network firewall. Proofs validated by following established omega/simp/decide/rcases/split_ifs patterns from prior files.",
+  "build_note": "Lean toolchain install blocked by network firewall. Tasks 3-5 require working elan.",
   "open_prs": [
     {
-      "branch": "lean-squad/run77-reset-phase2-5-20260326",
-      "description": "PR run77: Reset (23 theorems, 0 sorry) + CommitCurrentTerm from run76."
+      "branch": "lean-squad/run78-research-ci-20260326",
+      "description": "PR run78: RESEARCH.md + TARGETS.md (10 targets) + lean-ci.yml"
     }
   ],
-  "status_issue": "Open issue #21: [Lean Squad] Formal Verification Status",
-  "conflicts_noted": "Prior PRs had unrelated histories (grafted clone). Workaround: use git show to extract files from PR branches."
+  "status_issue": "To be created run78",
+  "ci_status": {
+    "lean_ci_yml": "created run78",
+    "aeneas_generate_yml": "pre-existing",
+    "last_lean_ci_run": null
+  },
+  "conflicts_noted": "Prior run memory (runs 1-77) was stale - repo had single grafted commit with no FV content. Starting fresh from run 78."
 }
