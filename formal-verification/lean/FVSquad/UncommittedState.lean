@@ -1,3 +1,7 @@
+import Mathlib.Tactic
+import Mathlib.Data.List.Basic
+import Mathlib.Data.List.Lemmas
+
 /-!
 # UncommittedState — Lean 4 Specification and Implementation Model
 
@@ -33,10 +37,6 @@ and an **underflow guard** on reduction (clamp to 0 rather than wrapping).
 
 🔬 *Lean Squad — auto-generated formal specification and implementation model.*
 -/
-
-import Mathlib.Tactic
-import Mathlib.Data.List.Basic
-import Mathlib.Data.List.Lemmas
 
 namespace FVSquad.UncommittedState
 

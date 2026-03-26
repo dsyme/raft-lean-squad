@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # TickElection — Lean 4 Specification, Implementation, and Proofs
 
@@ -37,8 +39,6 @@ pub fn pass_election_timeout(&self) -> bool {
 
 🔬 *Lean Squad — automated formal verification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.TickElection
 

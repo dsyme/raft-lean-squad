@@ -1,3 +1,8 @@
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
+import Mathlib.Tactic
+import FVSquad.MajorityQuorum
+
 /-!
 # TallyVotes and HasQuorum — Lean 4 Specification
 
@@ -20,11 +25,6 @@ infrastructure from `MajorityQuorum.lean`.
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Card
-import Mathlib.Tactic
-import FVSquad.MajorityQuorum
 
 namespace FVSquad.TallyVotes
 

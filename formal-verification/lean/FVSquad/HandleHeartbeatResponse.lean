@@ -1,3 +1,9 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Data.Finset.Basic
+import Mathlib.Tactic
+import FVSquad.Inflights
+import FVSquad.Progress
+
 /-!
 # HandleHeartbeatResponse — Lean 4 Specification
 
@@ -39,12 +45,6 @@ It has three sequential concerns:
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Data.Finset.Basic
-import Mathlib.Tactic
-import FVSquad.Inflights
-import FVSquad.Progress
 
 namespace FVSquad.HandleHeartbeatResponse
 

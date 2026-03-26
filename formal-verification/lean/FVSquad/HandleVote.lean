@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # HandleVote — Lean 4 Specification and Implementation (Phase 3 + 4)
 
@@ -54,8 +56,6 @@ this file extends that with the full three-condition decision and pre-vote seman
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.HandleVote
 

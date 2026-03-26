@@ -1,3 +1,6 @@
+import Mathlib.Data.Nat.Basic
+import Mathlib.Tactic
+
 /-!
 # CommitToCurrentTerm — Lean 4 Specification, Implementation, and Proofs
 
@@ -82,9 +85,6 @@ Decidability coverage (P17):
 
 🔬 *Lean Squad — automated formal verification.*
 -/
-
-import Mathlib.Data.Nat.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.CommitToCurrentTerm
 

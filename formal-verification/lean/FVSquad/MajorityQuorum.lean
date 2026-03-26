@@ -1,3 +1,7 @@
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
+import Mathlib.Tactic
+
 /-!
 # Majority Quorum — Lean 4 Specification
 
@@ -17,10 +21,6 @@ from `raft-rs` (`src/util.rs` and `src/quorum/majority.rs`).
 🔬 *Lean Squad — auto-generated formal specification.*
 
 -/
-
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Card
-import Mathlib.Tactic
 
 namespace FVSquad.MajorityQuorum
 

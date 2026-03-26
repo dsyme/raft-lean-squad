@@ -1,3 +1,6 @@
+import Mathlib.Data.Nat.Basic
+import Mathlib.Tactic
+
 /-!
 # RestoreNode — Lean 4 Specification, Implementation, and Proofs
 
@@ -58,9 +61,6 @@ pub fn restore(&mut self, snap: Snapshot) -> bool {
 
 🔬 *Lean Squad — auto-generated formal specification, implementation model, and proofs.*
 -/
-
-import Mathlib.Data.Nat.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.RestoreNode
 

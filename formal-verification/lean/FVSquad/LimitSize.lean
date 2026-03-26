@@ -1,3 +1,7 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Data.List.Lemmas
+import Mathlib.Tactic
+
 /-!
 # LimitSize — Lean 4 Specification and Implementation Model
 
@@ -25,10 +29,6 @@ serialised byte-size fits within a given budget, subject to a minimum-one guaran
 
 🔬 *Lean Squad — auto-generated formal specification and implementation model.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Data.List.Lemmas
-import Mathlib.Tactic
 
 namespace FVSquad.LimitSize
 

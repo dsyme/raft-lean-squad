@@ -1,3 +1,8 @@
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
+import Mathlib.Tactic
+import FVSquad.MajorityQuorum
+
 /-!
 # Quorum Recently Active — Lean 4 Specification
 
@@ -34,11 +39,6 @@ The function:
 🔬 *Lean Squad — auto-generated formal specification.*
 
 -/
-
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Card
-import Mathlib.Tactic
-import FVSquad.MajorityQuorum
 
 namespace FVSquad.QuorumRecentlyActive
 

@@ -1,3 +1,6 @@
+import Mathlib.Data.Nat.Basic
+import Mathlib.Tactic
+
 /-!
 # MaybeAppend — Lean 4 Specification and Implementation Model
 
@@ -19,9 +22,6 @@ from `raft-rs` (`src/raft_log.rs`).
 🔬 *Lean Squad — auto-generated formal specification.*
 
 -/
-
-import Mathlib.Data.Nat.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.MaybeAppend
 

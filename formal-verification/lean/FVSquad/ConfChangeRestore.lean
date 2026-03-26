@@ -1,3 +1,7 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Data.Finset.Basic
+import Mathlib.Tactic
+
 /-!
 # ConfChange Restore — Lean 4 Specification
 
@@ -20,10 +24,6 @@ Formal specification of `to_conf_change_single` and `restore` from
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Data.Finset.Basic
-import Mathlib.Tactic
 
 -- Reuse types from ConfChanger
 open FVSquad.ConfChanger

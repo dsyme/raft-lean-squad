@@ -1,3 +1,8 @@
+import Mathlib.Data.Finmap
+import Mathlib.Tactic
+import FVSquad.Aeneas.UtilRefinements
+import FVSquad.Aeneas.HashSetModel
+
 /-!
 # Aeneas Integration: Lean 4 model for Rust's `HashMap<u64, V>` (Step 6 of Epic #46)
 
@@ -46,11 +51,6 @@ via `simp [Finmap.lookup_insert]` and `omega` (following the same pattern as
 🔧 **Skeleton**: All definitions are real (no `axiom`).  Key property theorems carry
 `sorry` proofs to be filled in once Aeneas output is available.
 -/
-
-import Mathlib.Data.Finmap
-import Mathlib.Tactic
-import FVSquad.Aeneas.UtilRefinements
-import FVSquad.Aeneas.HashSetModel
 
 namespace FVSquad.Aeneas.HashMapModel
 

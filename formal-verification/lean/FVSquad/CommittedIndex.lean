@@ -1,3 +1,9 @@
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
+import Mathlib.Data.List.Sort
+import Mathlib.Tactic
+import FVSquad.MajorityQuorum
+
 /-!
 # CommittedIndex — Lean 4 Specification and Implementation Model
 
@@ -24,12 +30,6 @@ path). This is one of the most safety-critical computations in Raft.
 
 🔬 *Lean Squad — auto-generated formal specification and implementation model.*
 -/
-
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Card
-import Mathlib.Data.List.Sort
-import Mathlib.Tactic
-import FVSquad.MajorityQuorum
 
 namespace FVSquad.CommittedIndex
 

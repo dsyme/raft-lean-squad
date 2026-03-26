@@ -1,3 +1,6 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Tactic
+
 /-!
 # Progress — Lean 4 Specification
 
@@ -23,9 +26,6 @@ send).
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.Progress
 

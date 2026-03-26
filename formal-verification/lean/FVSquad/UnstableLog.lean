@@ -1,3 +1,8 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Data.List.Lemmas
+import Mathlib.Data.Option.Basic
+import Mathlib.Tactic
+
 /-!
 # UnstableLog — Lean 4 Specification
 
@@ -23,11 +28,6 @@ stable storage, plus an optional incoming snapshot.
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Data.List.Lemmas
-import Mathlib.Data.Option.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.UnstableLog
 

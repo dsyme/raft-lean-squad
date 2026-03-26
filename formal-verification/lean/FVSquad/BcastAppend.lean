@@ -1,3 +1,8 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Tactic
+import FVSquad.Inflights
+import FVSquad.Progress
+
 /-!
 # BcastAppend — Lean 4 Specification
 
@@ -44,11 +49,6 @@ Formal specification of the log-replication dispatch logic from `src/raft.rs`:
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Tactic
-import FVSquad.Inflights
-import FVSquad.Progress
 
 namespace FVSquad.BcastAppend
 

@@ -1,3 +1,7 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Data.Finset.Basic
+import Mathlib.Tactic
+
 /-!
 # ReadOnly — Lean 4 Specification and Implementation Model
 
@@ -23,10 +27,6 @@ requests in FIFO order once a quorum is reached.
 
 🔬 *Lean Squad — auto-generated formal specification and implementation model.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Data.Finset.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.ReadOnly
 

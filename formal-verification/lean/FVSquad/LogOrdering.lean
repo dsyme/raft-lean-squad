@@ -1,3 +1,6 @@
+import Mathlib.Data.Nat.Basic
+import Mathlib.Tactic
+
 /-!
 # Log Ordering — Lean 4 Specification
 
@@ -21,9 +24,6 @@ from `raft-rs` (`src/raft_log.rs`).
 🔬 *Lean Squad — auto-generated formal specification.*
 
 -/
-
-import Mathlib.Data.Nat.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.LogOrdering
 

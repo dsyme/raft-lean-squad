@@ -1,3 +1,8 @@
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
+import Mathlib.Tactic
+import FVSquad.MajorityQuorum
+
 /-!
 # Joint Quorum — Lean 4 Specification
 
@@ -21,11 +26,6 @@ from `raft-rs` (`src/quorum/joint.rs`).
 🔬 *Lean Squad — auto-generated formal specification.*
 
 -/
-
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Card
-import Mathlib.Tactic
-import FVSquad.MajorityQuorum
 
 namespace FVSquad.JointQuorum
 

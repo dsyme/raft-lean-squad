@@ -1,3 +1,7 @@
+import Mathlib.Tactic
+import FVSquad.MajorityQuorum
+import FVSquad.LimitSize
+
 /-!
 # Aeneas Integration: Refinement Theorems for `src/util.rs`
 
@@ -30,10 +34,6 @@ Replace the `axiom` declarations in the `AeneasGenerated` section with the actua
 (replacing `sorry` with real proofs).  See `formal-verification/AENEAS_SETUP.md`.
 
 -/
-
-import Mathlib.Tactic
-import FVSquad.MajorityQuorum
-import FVSquad.LimitSize
 
 namespace FVSquad.Aeneas.UtilRefinements
 

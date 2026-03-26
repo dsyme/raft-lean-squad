@@ -1,3 +1,7 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Data.Option.Basic
+import Mathlib.Tactic
+
 /-!
 # MaybeCommit — Lean 4 Specification and Implementation Model
 
@@ -26,10 +30,6 @@ must not be independently proposed.
 
 🔬 *Lean Squad — auto-generated formal specification and implementation model.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Data.Option.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.MaybeCommit
 

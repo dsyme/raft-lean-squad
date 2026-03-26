@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # ConfigValidate — Lean 4 Specification and Implementation Model
 
@@ -35,8 +37,6 @@ returns `Ok(())` if all constraints pass, or `Err(...)` on the first violation
 
 🔬 *Lean Squad — auto-generated formal specification and implementation model.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.ConfigValidate
 

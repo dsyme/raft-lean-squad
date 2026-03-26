@@ -1,3 +1,6 @@
+import Mathlib.Data.Nat.Basic
+import Mathlib.Tactic
+
 /-!
 # RaftLogRestore — Lean 4 Specification and Implementation Model
 
@@ -28,9 +31,6 @@ which delegates to `Unstable::restore` (`src/log_unstable.rs`).
 
 🔬 *Lean Squad — auto-generated formal specification and implementation model.*
 -/
-
-import Mathlib.Data.Nat.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.RaftLogRestore
 

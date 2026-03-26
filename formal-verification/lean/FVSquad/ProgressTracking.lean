@@ -1,3 +1,6 @@
+import Mathlib.Data.Nat.Defs
+import Mathlib.Tactic
+
 /-!
 # ProgressTracking — Lean 4 Specification and Implementation Model
 
@@ -25,9 +28,6 @@ methods are the primary ways the leader updates that view during normal operatio
 
 🔬 *Lean Squad — auto-generated formal specification and implementation model.*
 -/
-
-import Mathlib.Data.Nat.Defs
-import Mathlib.Tactic
 
 namespace FVSquad.ProgressTracking
 

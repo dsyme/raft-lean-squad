@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # HasReady — Lean 4 Specification, Implementation, and Proofs
 
@@ -57,8 +59,6 @@ pub fn has_ready(&self) -> bool {
 
 🔬 *Lean Squad — automated formal verification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.HasReady
 

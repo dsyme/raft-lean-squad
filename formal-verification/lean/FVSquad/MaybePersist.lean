@@ -1,3 +1,7 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Data.Option.Basic
+import Mathlib.Tactic
+
 /-!
 # MaybePersist — Lean 4 Specification and Implementation Model
 
@@ -23,10 +27,6 @@ stable storage.  It advances `self.persisted` to `index` iff the proposed index 
 
 🔬 *Lean Squad — auto-generated formal specification and implementation model.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Data.Option.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.MaybePersist
 

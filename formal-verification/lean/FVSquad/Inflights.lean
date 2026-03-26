@@ -1,3 +1,7 @@
+import Mathlib.Data.List.Basic
+import Mathlib.Data.List.Lemmas
+import Mathlib.Tactic
+
 /-!
 # Inflights — Lean 4 Specification
 
@@ -24,10 +28,6 @@ indices, enforcing a cap on unacknowledged messages per peer.
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Data.List.Basic
-import Mathlib.Data.List.Lemmas
-import Mathlib.Tactic
 
 namespace FVSquad.Inflights
 

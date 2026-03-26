@@ -1,3 +1,7 @@
+import Mathlib.Tactic
+import FVSquad.UnstableLog
+import FVSquad.Aeneas.UtilRefinements  -- for AResult, AUsize, AU64
+
 /-!
 # Aeneas Integration: Refinement Theorems for `src/log_unstable.rs`  (Step 4)
 
@@ -38,10 +42,6 @@ safe subset.  Run `charon cargo` (without `--features aeneas`) to extract it.
 See `formal-verification/AENEAS_SETUP.md` for setup instructions.
 
 -/
-
-import Mathlib.Tactic
-import FVSquad.UnstableLog
-import FVSquad.Aeneas.UtilRefinements  -- for AResult, AUsize, AU64
 
 namespace FVSquad.Aeneas.LogUnstableRefinements
 

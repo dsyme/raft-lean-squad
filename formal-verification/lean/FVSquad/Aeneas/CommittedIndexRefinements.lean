@@ -1,3 +1,9 @@
+import Mathlib.Tactic
+import FVSquad.MajorityQuorum
+import FVSquad.CommittedIndex
+import FVSquad.Aeneas.UtilRefinements  -- for AResult, AUsize, AU64
+import FVSquad.Aeneas.HashSetModel     -- for AHashSet (= Finset ℕ)
+
 /-!
 # Aeneas Integration: Refinement Theorems for `MajorityConfig::committed_index`
 
@@ -37,12 +43,6 @@ Aeneas `def` output once the tool has been run.  The `sorry` proofs become real 
 by unfolding the Aeneas-generated definitions.  See `AENEAS_SETUP.md`.
 
 -/
-
-import Mathlib.Tactic
-import FVSquad.MajorityQuorum
-import FVSquad.CommittedIndex
-import FVSquad.Aeneas.UtilRefinements  -- for AResult, AUsize, AU64
-import FVSquad.Aeneas.HashSetModel     -- for AHashSet (= Finset ℕ)
 
 namespace FVSquad.Aeneas.CommittedIndexRefinements
 

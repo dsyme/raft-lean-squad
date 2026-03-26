@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # Vote Commitment — Lean 4 Specification and Implementation
 
@@ -44,8 +46,6 @@ succeeds only for the candidate already recorded (repeat-vote branch).
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.VoteCommitment
 

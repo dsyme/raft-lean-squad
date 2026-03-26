@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # Message Priority Selection — Lean 4 Specification
 
@@ -33,8 +35,6 @@ backward-compatibility mechanism: new nodes set `priority`; old nodes set
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.GetPriority
 

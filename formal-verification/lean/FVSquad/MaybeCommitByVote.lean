@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # MaybeCommitByVote — Lean 4 Specification, Implementation, and Proofs
 
@@ -49,8 +51,6 @@ fn maybe_commit_by_vote(&mut self, m: &Message) {
 
 🔬 *Lean Squad — automated formal verification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.MaybeCommitByVote
 

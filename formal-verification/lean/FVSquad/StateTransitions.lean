@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # State Role Transitions — Lean 4 Specification and Proofs
 
@@ -35,8 +37,6 @@ Enforced transitively:
 
 🔬 *Lean Squad — automated formal verification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.StateTransitions
 

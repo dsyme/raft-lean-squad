@@ -1,3 +1,7 @@
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
+import Mathlib.Tactic
+
 /-!
 # ConfChange Changer — Lean 4 Specification
 
@@ -21,10 +25,6 @@ Formal specification of `Changer::enter_joint`, `Changer::leave_joint`,
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Card
-import Mathlib.Tactic
 
 namespace FVSquad.ConfChanger
 

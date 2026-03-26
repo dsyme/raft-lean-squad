@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # MessageType Classification — Lean 4 Specification
 
@@ -24,8 +26,6 @@ all predicates are decidable). No `sorry`.
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.MsgType
 

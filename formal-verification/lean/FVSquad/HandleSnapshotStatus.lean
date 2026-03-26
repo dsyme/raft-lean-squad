@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # HandleSnapshotStatus — Lean 4 Specification, Implementation, and Proofs
 
@@ -47,8 +49,6 @@ pub fn become_probe(&mut self) {
 
 🔬 *Lean Squad — automated formal verification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.HandleSnapshotStatus
 

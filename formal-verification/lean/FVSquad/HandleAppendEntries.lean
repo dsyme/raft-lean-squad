@@ -1,3 +1,5 @@
+import Mathlib.Tactic
+
 /-!
 # HandleAppendEntries — Lean 4 Specification and Implementation (Phases 3 + 4)
 
@@ -57,8 +59,6 @@ pub fn handle_append_entries(&mut self, m: &Message) {
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Tactic
 
 namespace FVSquad.HandleAppendEntries
 

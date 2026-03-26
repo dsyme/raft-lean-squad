@@ -1,3 +1,6 @@
+import Mathlib.Data.Nat.Basic
+import Mathlib.Tactic
+
 /-!
 # HandleAppendResponse — Lean 4 Specification (Phases 3 + 4 + 5)
 
@@ -61,9 +64,6 @@ fn handle_append_response(&mut self, m: &Message) {
 
 🔬 *Lean Squad — auto-generated formal specification.*
 -/
-
-import Mathlib.Data.Nat.Basic
-import Mathlib.Tactic
 
 namespace FVSquad.HandleAppendResponse
 

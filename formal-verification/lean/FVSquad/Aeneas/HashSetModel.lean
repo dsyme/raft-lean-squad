@@ -1,3 +1,9 @@
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
+import Mathlib.Data.List.Nodup
+import Mathlib.Tactic
+import FVSquad.Aeneas.UtilRefinements
+
 /-!
 # Aeneas Integration: Lean 4 model for Rust's `HashSet<u64>` (Step 6 of Epic #46)
 
@@ -41,12 +47,6 @@ see `HashMapModel.lean` for the `HashMap<u64, V>` model and the deferral rationa
 The only `sorry` is in `ofList_card_le`, which needs `List.toFinset_card_le_length`
 from Mathlib (available in recent versions; replace `sorry` with `List.toFinset_card_le_length`).
 -/
-
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Card
-import Mathlib.Data.List.Nodup
-import Mathlib.Tactic
-import FVSquad.Aeneas.UtilRefinements
 
 namespace FVSquad.Aeneas.HashSetModel
 
