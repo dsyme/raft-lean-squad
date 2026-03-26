@@ -2,6 +2,7 @@
 description: |
   Lean Squad: an optimistic multi-phase system that progressively applies
   Lean 4 formal verification to your codebase, one target at a time.
+  Can also be triggered on-demand via '/lean-squad <instructions>' to perform specific tasks.
 
   Each run selects tasks weighted to current FV progress:
   1. Research — survey codebase, identify FV-amenable targets, document approach
@@ -11,6 +12,8 @@ description: |
   5. Proof Assistance — attempt proofs, find counterexamples, report bugs
   6. Correspondence Review — document how the Lean implementation model corresponds to the Rust source
   7. Proof Utility Critique — assess the value and coverage of what has been proven so far
+  8. Aeneas Extraction (optional, Rust only) — use Charon+Aeneas to auto-generate Lean from Rust
+  9. CI Automation — set up and maintain CI workflows that verify proofs on every PR
 
   Phases are sequentially weighted: Task 1 dominates until research is done,
   then Task 2 rises, and so on up to proofs. Each run builds on prior runs
@@ -20,6 +23,9 @@ description: |
 on:
   schedule: every 8h
   workflow_dispatch:
+  slash_command:
+    name: lean-squad
+  reaction: "eyes"
 
 permissions: read-all
 
@@ -46,7 +52,7 @@ tools:
 safe-outputs:
   create-issue:
     title-prefix: "[Lean Squad] "
-    labels: [automation, lean-squad]
+    labels: [automation, lean-squad, aeneas-bug]
     max: 4
   update-issue:
     target: "*"
@@ -72,6 +78,13 @@ steps:
       # Count Lean files, excluding the .lake build cache
       find . -name "*.lean" 2>/dev/null | grep -cv "\.lake/" > /tmp/gh-aw/lean_count.txt || echo 0 > /tmp/gh-aw/lean_count.txt
 
+      # Count Rust source files (for Aeneas eligibility)
+      find . -name "*.rs" -not -path "./target/*" 2>/dev/null | wc -l > /tmp/gh-aw/rust_count.txt || echo 0 > /tmp/gh-aw/rust_count.txt
+
+      # Detect CI workflows for FV
+      [ -f ".github/workflows/lean-ci.yml" ] && echo 1 > /tmp/gh-aw/has_lean_ci.txt || echo 0 > /tmp/gh-aw/has_lean_ci.txt
+      [ -f ".github/workflows/aeneas-generate.yml" ] && echo 1 > /tmp/gh-aw/has_aeneas_ci.txt || echo 0 > /tmp/gh-aw/has_aeneas_ci.txt
+
       # Detect formal-verification directory
       [ -d "formal-verification" ] && echo 1 > /tmp/gh-aw/fv_dir.txt || echo 0 > /tmp/gh-aw/fv_dir.txt
 
@@ -94,8 +107,11 @@ steps:
       python3 - << 'EOF'
       import json, os, random
 
-      lean_count = int(open('/tmp/gh-aw/lean_count.txt').read().strip() or 0)
-      fv_dir     = int(open('/tmp/gh-aw/fv_dir.txt').read().strip() or 0)
+      lean_count   = int(open('/tmp/gh-aw/lean_count.txt').read().strip() or 0)
+      rust_count   = int(open('/tmp/gh-aw/rust_count.txt').read().strip() or 0)
+      has_lean_ci  = int(open('/tmp/gh-aw/has_lean_ci.txt').read().strip() or 0)
+      has_aeneas_ci = int(open('/tmp/gh-aw/has_aeneas_ci.txt').read().strip() or 0)
+      fv_dir       = int(open('/tmp/gh-aw/fv_dir.txt').read().strip() or 0)
       fv_docs    = int(open('/tmp/gh-aw/fv_docs.txt').read().strip() or 0)
       fv_issues  = json.load(open('/tmp/gh-aw/fv_issues.json'))
       fv_prs     = json.load(open('/tmp/gh-aw/fv_prs.json'))
@@ -111,6 +127,8 @@ steps:
           5: 'Proof Assistance',
           6: 'Correspondence Review',
           7: 'Proof Utility Critique',
+          8: 'Aeneas Extraction (Rust only)',
+          9: 'CI Automation',
       }
 
       # Phase progress heuristics derived from repo state
@@ -120,6 +138,8 @@ steps:
       has_lean_specs = lean_count >= 1
       has_impl       = lean_count >= 3
       has_proofs     = lean_count >= 6
+      has_rust       = rust_count >= 1
+      has_ci         = bool(has_lean_ci)
 
       weights = {
           1: 10.0  if not has_research  else 2.0,
@@ -129,6 +149,8 @@ steps:
           5: (6.0  if not has_proofs     else 2.0) if has_impl        else 0.1,
           6: 3.0 if has_impl else 0.5,   # correspondence review: useful once impl exists
           7: 3.0 if has_proofs else 0.0, # critique: only meaningful once proofs exist
+          8: (3.0 if has_lean_specs else 1.0) if (has_rust and has_research) else 0.0,  # aeneas: only for Rust codebases with research done
+          9: 12.0 if (has_lean_specs and not has_ci) else 2.0,  # CI: critical when lean files exist but no CI; regular check otherwise
       }
 
       run_id = int(os.environ.get('GITHUB_RUN_ID', '0'))
@@ -147,12 +169,14 @@ steps:
 
       print('=== Lean Squad Task Selection ===')
       print(f'Lean files    : {lean_count}')
+      print(f'Rust files    : {rust_count}')
       print(f'FV dir        : {bool(fv_dir)}')
       print(f'FV docs       : {fv_docs}')
       print(f'Open issues   : {n_issues}')
       print(f'Open FV PRs   : {n_prs}')
       print(f'Phase flags   : research={has_research}, inf_specs={has_inf_specs}, '
-            f'lean_specs={has_lean_specs}, impl={has_impl}, proofs={has_proofs}')
+            f'lean_specs={has_lean_specs}, impl={has_impl}, proofs={has_proofs}, '
+            f'rust={has_rust}, ci={has_ci}')
       print()
       print('Task weights:')
       for t, w in weights.items():
@@ -162,7 +186,8 @@ steps:
       print(f'Selected tasks: {chosen} = {[task_names[t] for t in chosen]}')
 
       result = {
-          'lean_count': lean_count, 'fv_dir': bool(fv_dir), 'fv_docs': fv_docs,
+          'lean_count': lean_count, 'rust_count': rust_count,
+          'fv_dir': bool(fv_dir), 'fv_docs': fv_docs,
           'n_issues': n_issues, 'n_prs': n_prs,
           'phase_flags': {
               'has_research':   has_research,
@@ -170,6 +195,8 @@ steps:
               'has_lean_specs': has_lean_specs,
               'has_impl':       has_impl,
               'has_proofs':     has_proofs,
+              'has_rust':       has_rust,
+              'has_ci':         has_ci,
           },
           'task_names': task_names,
           'weights': {str(k): round(v, 2) for k, v in weights.items()},
@@ -183,6 +210,14 @@ source: githubnext/agentics/workflows/lean-squad.md@851905c06e905bf362a9f6cc54f9
 ---
 
 # Lean Squad
+
+## Command Mode
+
+Take heed of **instructions**: "${{ steps.sanitized.outputs.text }}"
+
+If these are non-empty (not ""), then you have been triggered via `/lean-squad <instructions>`. Follow the user's instructions instead of the normal scheduled workflow. Focus exclusively on those instructions. Apply all the same guidelines (read AGENTS.md, install Lean toolchain, run `lake build`, use 🔬 Lean Squad AI disclosure). Skip the weighted task selection and Task Final status issue update, and instead directly do what the user requested. If no specific instructions were provided (empty or blank), proceed with the normal scheduled workflow below.
+
+Then exit — do not run the normal workflow after completing the instructions.
 
 ## Preamble
 
@@ -335,6 +370,10 @@ or
 Never use language like "All proofs follow patterns validated across prior files" as a
 substitute for actual `lake build` verification. If Lean is not available, say so
 explicitly and unambiguously.
+
+## CI Workflow Setup
+
+CI automation is handled by **Task 9**. When creating PRs that include `.lean` files, Task 9 will ensure the `lean-ci.yml` workflow exists. If Task 9 has not yet run, the agent performing Tasks 3–5 should check for CI and trigger Task 9 logic inline if no CI exists — proofs must be checked in CI before relying on them.
 
 ## Repository Layout for FV Artifacts
 
@@ -511,6 +550,296 @@ This is a reflective task. The goal is not to prove more things, but to evaluate
    - **Positive findings**: highlight any case where FV revealed or confirmed something non-obvious.
 6. Create a PR with the updated CRITIQUE.md.
 7. Update memory: record the critique findings, flag high-priority gaps for future runs.
+
+---
+
+### Task 8: Aeneas Extraction *(optional — Rust codebases only)*
+
+**Goal**: Use the [Charon](https://github.com/AeneasVerif/charon) + [Aeneas](https://github.com/AeneasVerif/aeneas) toolchain to automatically generate Lean 4 code from Rust source, providing a mechanically-derived functional model whose correspondence to the Rust is guaranteed by construction.
+
+> **Applicability gate**: This task is only applicable when the codebase contains Rust source files (`has_rust` is true in `task_selection.json`). If the codebase is not Rust, skip this task entirely and substitute the most logically prior incomplete task.
+
+> **Reliability warning**: The Aeneas toolchain is experimental and has bugs. Extraction frequently fails on complex Rust patterns (trait objects, async, complex lifetime bounds, certain macros). This is expected. Work incrementally — target **one small module or function at a time**, not the whole crate.
+
+#### 8.1 Install the Charon + Aeneas toolchain
+
+```bash
+# --- OCaml + opam (required for Aeneas) ---
+if ! command -v opam &>/dev/null; then
+  echo "=== Lean Squad: installing opam ==="
+  sudo apt-get update && sudo apt-get install -y opam
+  opam init -y --disable-sandboxing
+  eval $(opam env)
+fi
+
+# --- Clone and build Charon ---
+CHARON_PIN=$(cat aeneas/charon-pin 2>/dev/null || echo main)
+git clone https://github.com/AeneasVerif/charon /tmp/charon
+cd /tmp/charon && git checkout "$CHARON_PIN"
+
+# Install charon-ml (OCaml library)
+opam install /tmp/charon -y
+
+# Build the Charon Rust binary
+cd /tmp/charon/charon
+cargo build --release
+mkdir -p /tmp/charon/bin
+cp target/release/charon /tmp/charon/bin/
+cp target/release/charon-driver /tmp/charon/bin/
+
+# --- Clone and build Aeneas ---
+git clone https://github.com/AeneasVerif/aeneas /tmp/aeneas
+ln -s /tmp/charon /tmp/aeneas/charon
+
+opam install -y \
+  ppx_deriving visitors easy_logging zarith yojson core_unix \
+  ocamlgraph menhir ocamlformat unionFind progress domainslib
+
+opam exec -- bash -c "cd /tmp/aeneas/src && dune build"
+mkdir -p /tmp/aeneas/bin
+cp /tmp/aeneas/src/_build/default/main.exe /tmp/aeneas/bin/aeneas
+
+# --- Verify ---
+if [ -x /tmp/aeneas/bin/aeneas ] && [ -x /tmp/charon/bin/charon ]; then
+  echo "AENEAS_AVAILABLE=true" > /tmp/aeneas_status.txt
+  echo "=== Lean Squad: Charon + Aeneas toolchain ready ==="
+else
+  echo "AENEAS_AVAILABLE=false" > /tmp/aeneas_status.txt
+  echo "=== Lean Squad: Aeneas toolchain build FAILED ==="
+fi
+```
+
+If `AENEAS_AVAILABLE=false`, skip the rest of this task. Document the failure in the status issue and memory.
+
+#### 8.2 Extract LLBC and generate Lean — incrementally
+
+Work on **one small target at a time** (a single module, file, or function). Do not attempt to extract the entire crate at once — Aeneas will likely fail on parts of it, and a single failure blocks the whole run.
+
+1. Choose a target from TARGETS.md or memory — preferably one that already has an informal spec or hand-written Lean spec, so you can compare.
+2. If a `Charon.toml` exists in the repo root, read it — it may contain configuration hints or feature flags needed for extraction.
+3. Run Charon to produce an LLBC file, scoping to the target where possible:
+
+```bash
+# Determine the Charon-required Rust toolchain
+CHARON_TOOLCHAIN=$(grep 'channel' /tmp/charon/charon/rust-toolchain | cut -d '"' -f 2)
+
+# Run Charon — adjust cargo features as needed for the crate
+PATH="/tmp/charon/bin:$PATH" RUSTUP_TOOLCHAIN="$CHARON_TOOLCHAIN" \
+  charon cargo --preset=aeneas \
+    -- --no-default-features --features <relevant-features>
+```
+
+4. Run Aeneas to generate Lean from the LLBC:
+
+```bash
+/tmp/aeneas/bin/aeneas -backend lean -split-files <crate>.llbc \
+  -dest formal-verification/lean/FVSquad/Aeneas/Generated
+```
+
+5. If extraction **succeeds**:
+   - Review the generated Lean files. They will be verbose and mechanical — this is expected.
+   - Check that they compile: run `lake build` on the generated output.
+   - If `lake build` fails on generated code, this is likely an Aeneas bug — see §8.3.
+   - Place generated files under `formal-verification/lean/FVSquad/Aeneas/Generated/` (keep them separate from hand-written specs and proofs).
+   - Create a PR with the generated files. Note which Rust modules were extracted and any Aeneas warnings.
+
+6. If extraction **fails** (Charon or Aeneas errors out):
+   - Read the error output carefully. Common failure modes:
+     - Unsupported Rust features (trait objects, `dyn`, async, complex generics)
+     - Missing or incompatible crate features
+     - Charon panics on specific syntax patterns
+   - Try narrowing the scope: extract a smaller module or add exclusions in `Charon.toml`.
+   - Document the failure in memory. If the error looks like a toolchain bug, see §8.3.
+
+#### 8.3 Investigate and report Aeneas/Charon bugs
+
+When Charon or Aeneas produces an error that appears to be a toolchain bug (panic, ICE, incorrect output, unsound generated code):
+
+1. **Minimise**: try to isolate the smallest Rust input that triggers the bug.
+2. **Investigate**: check the Aeneas and Charon issue trackers for known issues. Search for the error message.
+3. **Document**: Open a GitHub issue **in this repository** (not upstream) with:
+   - Title: `[Lean Squad] Aeneas/Charon bug: <short description>`
+   - Labels: `automation`, `lean-squad`, `aeneas-bug`
+   - Body:
+     - The Rust code that triggers the failure (minimised where possible)
+     - The exact error message or incorrect output
+     - Charon commit (from `aeneas/charon-pin` or `main`)
+     - Aeneas commit (from the cloned repo)
+     - Analysis of the likely cause if you can determine it
+     - Suggested fix if apparent
+     - Link to any related upstream issue if one exists
+4. Record the bug in memory so future runs can avoid the same extraction target until it is fixed.
+
+#### 8.4 Using generated code alongside hand-written specs
+
+Aeneas-generated Lean and hand-written Lean specs serve different purposes and should coexist:
+
+- **Generated code** (`Aeneas/Generated/`): provides a mechanically-faithful functional model of the Rust. Its correspondence to the Rust source is automatic — no manual CORRESPONDENCE.md entry needed for generated definitions. However, the generated code is verbose, uses Aeneas primitive types, and may be hard to reason about directly.
+- **Hand-written specs** (`FVSquad/<Name>.lean`): provide clean, readable specifications and proofs at the right level of abstraction.
+
+The most valuable use of Aeneas output is to **bridge** between them:
+- Write theorems proving that the hand-written Lean model is equivalent to (or a sound abstraction of) the Aeneas-generated model.
+- This closes the correspondence gap: hand-written spec ↔ generated model ↔ Rust source.
+- Even partial equivalence results (on specific operations or specific inputs) are valuable.
+
+Update `formal-verification/CORRESPONDENCE.md` to note which targets have Aeneas-generated models and whether bridging theorems exist.
+
+#### 8.5 Update memory
+
+Record in memory:
+- Which modules/functions were successfully extracted
+- Which failed, with the error class (so future runs don't retry the same failures)
+- Any Aeneas bugs filed
+- Whether bridging theorems between generated and hand-written models exist
+
+---
+
+### Task 9: CI Automation
+
+**Goal**: Set up, maintain, and verify that CI workflows exist to automatically check Lean proofs and (for Rust codebases) Aeneas extraction on every PR and push. This task is **critical** when no CI exists yet and **ongoing** to ensure CI stays healthy.
+
+> **Priority**: This task receives very high weight when Lean files exist but no `lean-ci.yml` is present. Once CI is established, it still runs periodically to audit CI health and apply fixes.
+
+#### 9.1 Set up Lean CI (if missing)
+
+If `.github/workflows/lean-ci.yml` does not exist and Lean files are present under `formal-verification/lean/`, create it:
+
+```bash
+if [ ! -f .github/workflows/lean-ci.yml ]; then
+  mkdir -p .github/workflows
+  cat > .github/workflows/lean-ci.yml << 'CIEOF'
+name: Lean CI
+
+on:
+  pull_request:
+    paths:
+      - 'formal-verification/lean/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'formal-verification/lean/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Verify Lean Proofs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: formal-verification/lean
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> $GITHUB_PATH
+
+      - name: Install Lean toolchain
+        run: elan toolchain install $(cat lean-toolchain)
+
+      - name: Show Lean version
+        run: lean --version
+
+      # Cache the compiled Mathlib oleans — keyed on lake-manifest.json hash.
+      # A stale key triggers a fresh download of pre-built Mathlib binaries via `lake build`.
+      - name: Compute cache key
+        id: cache-key
+        run: echo "manifest_hash=$(sha256sum lake-manifest.json | cut -c1-16)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache .lake build artefacts
+        uses: actions/cache@v4
+        with:
+          path: formal-verification/lean/.lake
+          key: lean-lake-${{ steps.cache-key.outputs.manifest_hash }}
+          restore-keys: lean-lake-
+
+      - name: Resolve dependencies (lake update)
+        run: lake update
+
+      - name: Build and verify all proofs
+        run: |
+          echo "=== lake build starting ==="
+          lake build 2>&1 | tee /tmp/lake_build.log
+          BUILD_EXIT=${PIPESTATUS[0]}
+          SORRY_COUNT=$(grep -c 'sorry' /tmp/lake_build.log || true)
+          echo ""
+          echo "=== lake build exit code: $BUILD_EXIT ==="
+          echo "=== 'sorry' occurrences in build output: $SORRY_COUNT ==="
+          exit $BUILD_EXIT
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lake-build-log
+          path: /tmp/lake_build.log
+CIEOF
+  echo "=== Lean Squad: created .github/workflows/lean-ci.yml ==="
+else
+  echo "=== Lean Squad: lean-ci.yml already exists — skipping ==="
+fi
+```
+
+Include the new `lean-ci.yml` in a PR (can be combined with the first PR that adds `.lean` files). Ensure `formal-verification/lean/lean-toolchain` also exists so CI knows which Lean version to install.
+
+#### 9.2 Set up Aeneas CI (if applicable and missing)
+
+For Rust codebases that use Aeneas extraction (Task 8), check whether `.github/workflows/aeneas-generate.yml` exists. If not, and if Aeneas-generated files already exist under `formal-verification/lean/FVSquad/Aeneas/Generated/`, create an Aeneas regeneration workflow. Use the existing `aeneas-generate.yml` in the repository as a template if present, or create one following the Charon + Aeneas build steps from Task 8.
+
+The Aeneas CI workflow should:
+- Trigger on pushes to `main` that modify `src/**` (Rust source)
+- Install OCaml/opam, build Charon and Aeneas from pinned commits
+- Run Charon to extract LLBC, then Aeneas to generate Lean
+- Open a PR if the generated Lean files changed
+
+#### 9.3 Audit CI health
+
+When CI workflows already exist, verify they are actually working:
+
+1. **Check recent CI runs**: use `gh run list` to inspect the last several runs of `lean-ci.yml` and (if present) `aeneas-generate.yml`.
+
+```bash
+echo "=== Lean CI recent runs ==="
+gh run list --workflow=lean-ci.yml --limit 5 --json status,conclusion,createdAt,event \
+  2>/dev/null || echo "No lean-ci.yml workflow found"
+
+echo ""
+echo "=== Aeneas Generate recent runs ==="
+gh run list --workflow=aeneas-generate.yml --limit 5 --json status,conclusion,createdAt,event \
+  2>/dev/null || echo "No aeneas-generate.yml workflow found"
+```
+
+2. **Verify proofs are actually being checked**: look at recent successful CI runs — do they actually run `lake build`? A CI that passes without building anything is worse than no CI at all. Check the logs if any run looks suspiciously fast.
+
+3. **Check for persistent failures**: if CI has been failing on `main` for multiple runs, investigate and fix the root cause. Common issues:
+   - Lean toolchain version drift (update `lean-toolchain`)
+   - Mathlib version incompatibility (update `lake-manifest.json` via `lake update`)
+   - New `sorry`-free proofs that regressed
+   - Missing dependencies or changed paths
+
+4. **Verify CI triggers are correct**: ensure the workflow triggers on PR and push events for the right paths (`formal-verification/lean/**`). If Lean files exist outside that path, update the trigger paths.
+
+5. **Check cache effectiveness**: look at CI run times. If builds consistently take a very long time, the Mathlib cache may not be working — verify the cache key matches `lake-manifest.json`.
+
+#### 9.4 Fix CI issues
+
+If CI is broken or misconfigured:
+
+1. Diagnose the issue from run logs (use `gh run view <run-id> --log`).
+2. Fix the workflow file, `lean-toolchain`, `lakefile.toml`, or `lake-manifest.json` as needed.
+3. Create a PR with the fix. Test by checking that the PR's own CI passes.
+4. If the fix requires updating Mathlib or the Lean toolchain, run `lake update` locally and include the updated manifest.
+
+#### 9.5 Update memory
+
+Record in memory:
+- Whether `lean-ci.yml` and `aeneas-generate.yml` exist and are passing
+- Last known CI status and any persistent failures
+- Any fixes applied this run
 
 ---
 

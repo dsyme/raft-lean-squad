@@ -22,6 +22,7 @@
 #
 # Lean Squad: an optimistic multi-phase system that progressively applies
 # Lean 4 formal verification to your codebase, one target at a time.
+# Can also be triggered on-demand via '/lean-squad <instructions>' to perform specific tasks.
 # 
 # Each run selects tasks weighted to current FV progress:
 # 1. Research — survey codebase, identify FV-amenable targets, document approach
@@ -31,6 +32,8 @@
 # 5. Proof Assistance — attempt proofs, find counterexamples, report bugs
 # 6. Correspondence Review — document how the Lean implementation model corresponds to the Rust source
 # 7. Proof Utility Critique — assess the value and coverage of what has been proven so far
+# 8. Aeneas Extraction (optional, Rust only) — use Charon+Aeneas to auto-generate Lean from Rust
+# 9. CI Automation — set up and maintain CI workflows that verify proofs on every PR
 # 
 # Phases are sequentially weighted: Task 1 dominates until research is done,
 # then Task 2 rises, and so on up to proofs. Each run builds on prior runs
@@ -39,13 +42,38 @@
 #
 # Source: githubnext/agentics/workflows/lean-squad.md@851905c06e905bf362a9f6cc54f912e3df747d55
 #
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"ab535fafdae6371b4f5c1d6ca30baa69e2c55557ca96351203e3524681b63819","compiler_version":"v0.64.0","strict":true,"agent_id":"copilot"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"de57088817f828615ad0669b4f1e261f1e5b65f6078a5437df1d8f51949ccfe1","compiler_version":"v0.64.0","strict":true,"agent_id":"copilot"}
 
 name: "Lean Squad"
 "on":
+  discussion:
+    types:
+    - created
+    - edited
+  discussion_comment:
+    types:
+    - created
+    - edited
+  issue_comment:
+    types:
+    - created
+    - edited
+  issues:
+    types:
+    - opened
+    - edited
+    - reopened
+  pull_request:
+    types:
+    - opened
+    - edited
+    - reopened
+  pull_request_review_comment:
+    types:
+    - created
+    - edited
   schedule:
   - cron: "20 */8 * * *"
-    # Friendly format: every 8h (scattered)
   workflow_dispatch:
     inputs:
       aw_context:
@@ -57,21 +85,31 @@ name: "Lean Squad"
 permissions: {}
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}"
+  group: "gh-aw-${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}"
 
 run-name: "Lean Squad"
 
 jobs:
   activation:
+    needs: pre_activation
+    if: "needs.pre_activation.outputs.activated == 'true' && ((github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment') && (github.event_name == 'issues' && (startsWith(github.event.issue.body, '/lean-squad ') || startsWith(github.event.issue.body, '/lean-squad\n') || github.event.issue.body == '/lean-squad') || github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') && github.event.issue.pull_request == null || github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') && github.event.issue.pull_request != null || github.event_name == 'pull_request_review_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') || github.event_name == 'pull_request' && (startsWith(github.event.pull_request.body, '/lean-squad ') || startsWith(github.event.pull_request.body, '/lean-squad\n') || github.event.pull_request.body == '/lean-squad') || github.event_name == 'discussion' && (startsWith(github.event.discussion.body, '/lean-squad ') || startsWith(github.event.discussion.body, '/lean-squad\n') || github.event.discussion.body == '/lean-squad') || github.event_name == 'discussion_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad')) || (!(github.event_name == 'issues')) && (!(github.event_name == 'issue_comment')) && (!(github.event_name == 'pull_request')) && (!(github.event_name == 'pull_request_review_comment')) && (!(github.event_name == 'discussion')) && (!(github.event_name == 'discussion_comment')))"
     runs-on: ubuntu-slim
     permissions:
       contents: read
+      discussions: write
+      issues: write
+      pull-requests: write
     outputs:
-      comment_id: ""
-      comment_repo: ""
+      body: ${{ steps.sanitized.outputs.body }}
+      comment_id: ${{ steps.add-comment.outputs.comment-id }}
+      comment_repo: ${{ steps.add-comment.outputs.comment-repo }}
+      comment_url: ${{ steps.add-comment.outputs.comment-url }}
       lockdown_check_failed: ${{ steps.generate_aw_info.outputs.lockdown_check_failed == 'true' }}
       model: ${{ steps.generate_aw_info.outputs.model }}
       secret_verification_result: ${{ steps.validate-secret.outputs.verification_result }}
+      slash_command: ${{ needs.pre_activation.outputs.matched_command }}
+      text: ${{ steps.sanitized.outputs.text }}
+      title: ${{ steps.sanitized.outputs.title }}
     steps:
       - name: Setup Scripts
         uses: github/gh-aw-actions/setup@51c65948c64ab6752536ead71fba1fc2c20ed0bc # v0.64.0
@@ -103,6 +141,19 @@ jobs:
             setupGlobals(core, github, context, exec, io);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/generate_aw_info.cjs');
             await main(core, context);
+      - name: Add eyes reaction for immediate feedback
+        id: react
+        if: github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.id == github.repository_id
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          GH_AW_REACTION: "eyes"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('${{ runner.temp }}/gh-aw/actions/add_reaction.cjs');
+            await main();
       - name: Validate COPILOT_GITHUB_TOKEN secret
         id: validate-secret
         run: ${RUNNER_TEMP}/gh-aw/actions/validate_multi_secret.sh COPILOT_GITHUB_TOKEN 'GitHub Copilot CLI' https://github.github.com/gh-aw/reference/engines/#github-copilot-default
@@ -127,10 +178,32 @@ jobs:
             setupGlobals(core, github, context, exec, io);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/check_workflow_timestamp_api.cjs');
             await main();
+      - name: Compute current body text
+        id: sanitized
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('${{ runner.temp }}/gh-aw/actions/compute_text.cjs');
+            await main();
+      - name: Add comment with workflow run link
+        id: add-comment
+        if: github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.id == github.repository_id
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          GH_AW_WORKFLOW_NAME: "Lean Squad"
+        with:
+          script: |
+            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('${{ runner.temp }}/gh-aw/actions/add_workflow_run_comment.cjs');
+            await main();
       - name: Create prompt with built-in context
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_SAFE_OUTPUTS: ${{ runner.temp }}/gh-aw/safeoutputs/outputs.jsonl
+          GH_AW_EXPR_13821551: ${{ steps.cache-key.outputs.manifest_hash }}
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_EVENT_COMMENT_ID: ${{ github.event.comment.id }}
           GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: ${{ github.event.discussion.number }}
@@ -140,6 +213,8 @@ jobs:
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_SERVER_URL: ${{ github.server_url }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
+          GH_AW_IS_PR_COMMENT: ${{ github.event.issue.pull_request && 'true' || '' }}
+          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
           GH_AW_WIKI_NOTE: ${{ '' }}
         # poutine:ignore untrusted_checkout_exec
         run: |
@@ -190,6 +265,9 @@ jobs:
           
           GH_AW_PROMPT_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
+          if [ "$GITHUB_EVENT_NAME" = "issue_comment" ] && [ -n "$GH_AW_IS_PR_COMMENT" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review_comment" ] || [ "$GITHUB_EVENT_NAME" = "pull_request_review" ]; then
+            cat "${RUNNER_TEMP}/gh-aw/prompts/pr_context_prompt.md"
+          fi
           cat << 'GH_AW_PROMPT_EOF'
           </system>
           GH_AW_PROMPT_EOF
@@ -204,6 +282,8 @@ jobs:
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_SERVER_URL: ${{ github.server_url }}
+          GH_AW_EXPR_13821551: ${{ steps.cache-key.outputs.manifest_hash }}
+          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -214,6 +294,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
+          GH_AW_EXPR_13821551: ${{ steps.cache-key.outputs.manifest_hash }}
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
           GH_AW_GITHUB_EVENT_COMMENT_ID: ${{ github.event.comment.id }}
           GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: ${{ github.event.discussion.number }}
@@ -223,11 +304,15 @@ jobs:
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_SERVER_URL: ${{ github.server_url }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
+          GH_AW_IS_PR_COMMENT: ${{ github.event.issue.pull_request && 'true' || '' }}
           GH_AW_MEMORY_BRANCH_NAME: 'memory/lean-squad'
           GH_AW_MEMORY_CONSTRAINTS: "\n\n**Constraints:**\n- **Max File Size**: 10240 bytes (0.01 MB) per file\n- **Max File Count**: 100 files per commit\n- **Max Patch Size**: 102400 bytes (100 KB) total per push (max: 100 KB)\n"
           GH_AW_MEMORY_DESCRIPTION: ''
           GH_AW_MEMORY_DIR: '/tmp/gh-aw/repo-memory/default/'
           GH_AW_MEMORY_TARGET_REPO: ' of the current repository'
+          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: ${{ needs.pre_activation.outputs.activated }}
+          GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND: ${{ needs.pre_activation.outputs.matched_command }}
+          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
           GH_AW_WIKI_NOTE: ''
         with:
           script: |
@@ -240,6 +325,7 @@ jobs:
             return await substitutePlaceholders({
               file: process.env.GH_AW_PROMPT,
               substitutions: {
+                GH_AW_EXPR_13821551: process.env.GH_AW_EXPR_13821551,
                 GH_AW_GITHUB_ACTOR: process.env.GH_AW_GITHUB_ACTOR,
                 GH_AW_GITHUB_EVENT_COMMENT_ID: process.env.GH_AW_GITHUB_EVENT_COMMENT_ID,
                 GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER: process.env.GH_AW_GITHUB_EVENT_DISCUSSION_NUMBER,
@@ -249,11 +335,15 @@ jobs:
                 GH_AW_GITHUB_RUN_ID: process.env.GH_AW_GITHUB_RUN_ID,
                 GH_AW_GITHUB_SERVER_URL: process.env.GH_AW_GITHUB_SERVER_URL,
                 GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
+                GH_AW_IS_PR_COMMENT: process.env.GH_AW_IS_PR_COMMENT,
                 GH_AW_MEMORY_BRANCH_NAME: process.env.GH_AW_MEMORY_BRANCH_NAME,
                 GH_AW_MEMORY_CONSTRAINTS: process.env.GH_AW_MEMORY_CONSTRAINTS,
                 GH_AW_MEMORY_DESCRIPTION: process.env.GH_AW_MEMORY_DESCRIPTION,
                 GH_AW_MEMORY_DIR: process.env.GH_AW_MEMORY_DIR,
                 GH_AW_MEMORY_TARGET_REPO: process.env.GH_AW_MEMORY_TARGET_REPO,
+                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED,
+                GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_MATCHED_COMMAND,
+                GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: process.env.GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT,
                 GH_AW_WIKI_NOTE: process.env.GH_AW_WIKI_NOTE
               }
             });
@@ -281,8 +371,6 @@ jobs:
     needs: activation
     runs-on: ubuntu-latest
     permissions: read-all
-    concurrency:
-      group: "gh-aw-copilot-${{ github.workflow }}"
     env:
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
       GH_AW_ASSETS_ALLOWED_EXTS: ""
@@ -325,7 +413,7 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
         name: Assess FV state and compute task weights
-        run: "mkdir -p /tmp/gh-aw\n\n# Count Lean files, excluding the .lake build cache\nfind . -name \"*.lean\" 2>/dev/null | grep -cv \"\\.lake/\" > /tmp/gh-aw/lean_count.txt || echo 0 > /tmp/gh-aw/lean_count.txt\n\n# Detect formal-verification directory\n[ -d \"formal-verification\" ] && echo 1 > /tmp/gh-aw/fv_dir.txt || echo 0 > /tmp/gh-aw/fv_dir.txt\n\n# Count markdown docs inside formal-verification/\nfind . \\( -path \"*/formal-verification/*.md\" -o -path \"*/formal-verification/specs/*.md\" \\) 2>/dev/null \\\n  | wc -l > /tmp/gh-aw/fv_docs.txt || echo 0 > /tmp/gh-aw/fv_docs.txt\n\n# Fetch open FV Squad issues\ngh issue list --state open --label lean-squad --json number 2>/dev/null \\\n  > /tmp/gh-aw/fv_issues.json || echo \"[]\" > /tmp/gh-aw/fv_issues.json\n\n# Fetch open FV Squad PRs\ngh pr list --state open --limit 50 --json number,title 2>/dev/null \\\n  | python3 -c \"\nimport json, sys\nd = json.load(sys.stdin)\nprint(json.dumps([x for x in d if x['title'].startswith('[Lean Squad]')]))\" \\\n  > /tmp/gh-aw/fv_prs.json || echo \"[]\" > /tmp/gh-aw/fv_prs.json\n\npython3 - << 'EOF'\nimport json, os, random\n\nlean_count = int(open('/tmp/gh-aw/lean_count.txt').read().strip() or 0)\nfv_dir     = int(open('/tmp/gh-aw/fv_dir.txt').read().strip() or 0)\nfv_docs    = int(open('/tmp/gh-aw/fv_docs.txt').read().strip() or 0)\nfv_issues  = json.load(open('/tmp/gh-aw/fv_issues.json'))\nfv_prs     = json.load(open('/tmp/gh-aw/fv_prs.json'))\n\nn_issues = len(fv_issues)\nn_prs    = len(fv_prs)\n\ntask_names = {\n    1: 'Research & Target Identification',\n    2: 'Informal Spec Extraction',\n    3: 'Formal Spec Writing (Lean 4)',\n    4: 'Implementation Extraction',\n    5: 'Proof Assistance',\n    6: 'Correspondence Review',\n    7: 'Proof Utility Critique',\n}\n\n# Phase progress heuristics derived from repo state\n# The agent refines these using repo-memory at runtime\nhas_research   = bool(fv_dir) and (fv_docs >= 1 or n_issues >= 1 or lean_count >= 1)\nhas_inf_specs  = fv_docs >= 2 or lean_count >= 1\nhas_lean_specs = lean_count >= 1\nhas_impl       = lean_count >= 3\nhas_proofs     = lean_count >= 6\n\nweights = {\n    1: 10.0  if not has_research  else 2.0,\n    2: (8.0  if not has_inf_specs  else 2.0) if has_research   else 0.5,\n    3: (8.0  if not has_lean_specs else 2.0) if has_inf_specs   else 0.3,\n    4: (6.0  if not has_impl       else 2.0) if has_lean_specs  else 0.2,\n    5: (6.0  if not has_proofs     else 2.0) if has_impl        else 0.1,\n    6: 3.0 if has_impl else 0.5,   # correspondence review: useful once impl exists\n    7: 3.0 if has_proofs else 0.0, # critique: only meaningful once proofs exist\n}\n\nrun_id = int(os.environ.get('GITHUB_RUN_ID', '0'))\nrng    = random.Random(run_id)\n\nnon_main  = list(weights.keys())\nnm_weights = list(weights.values())\n\nchosen, seen = [], set()\nfor t in rng.choices(non_main, weights=nm_weights, k=30):\n    if t not in seen:\n        seen.add(t)\n        chosen.append(t)\n    if len(chosen) == 2:\n        break\n\nprint('=== Lean Squad Task Selection ===')\nprint(f'Lean files    : {lean_count}')\nprint(f'FV dir        : {bool(fv_dir)}')\nprint(f'FV docs       : {fv_docs}')\nprint(f'Open issues   : {n_issues}')\nprint(f'Open FV PRs   : {n_prs}')\nprint(f'Phase flags   : research={has_research}, inf_specs={has_inf_specs}, '\n      f'lean_specs={has_lean_specs}, impl={has_impl}, proofs={has_proofs}')\nprint()\nprint('Task weights:')\nfor t, w in weights.items():\n    tag = ' <-- SELECTED' if t in chosen else ''\n    print(f'  Task {t} ({task_names[t]}): weight {w:.1f}{tag}')\nprint()\nprint(f'Selected tasks: {chosen} = {[task_names[t] for t in chosen]}')\n\nresult = {\n    'lean_count': lean_count, 'fv_dir': bool(fv_dir), 'fv_docs': fv_docs,\n    'n_issues': n_issues, 'n_prs': n_prs,\n    'phase_flags': {\n        'has_research':   has_research,\n        'has_inf_specs':  has_inf_specs,\n        'has_lean_specs': has_lean_specs,\n        'has_impl':       has_impl,\n        'has_proofs':     has_proofs,\n    },\n    'task_names': task_names,\n    'weights': {str(k): round(v, 2) for k, v in weights.items()},\n    'selected_tasks': chosen,\n}\nwith open('/tmp/gh-aw/task_selection.json', 'w') as f:\n    json.dump(result, f, indent=2)\nEOF\n"
+        run: "mkdir -p /tmp/gh-aw\n\n# Count Lean files, excluding the .lake build cache\nfind . -name \"*.lean\" 2>/dev/null | grep -cv \"\\.lake/\" > /tmp/gh-aw/lean_count.txt || echo 0 > /tmp/gh-aw/lean_count.txt\n\n# Count Rust source files (for Aeneas eligibility)\nfind . -name \"*.rs\" -not -path \"./target/*\" 2>/dev/null | wc -l > /tmp/gh-aw/rust_count.txt || echo 0 > /tmp/gh-aw/rust_count.txt\n\n# Detect CI workflows for FV\n[ -f \".github/workflows/lean-ci.yml\" ] && echo 1 > /tmp/gh-aw/has_lean_ci.txt || echo 0 > /tmp/gh-aw/has_lean_ci.txt\n[ -f \".github/workflows/aeneas-generate.yml\" ] && echo 1 > /tmp/gh-aw/has_aeneas_ci.txt || echo 0 > /tmp/gh-aw/has_aeneas_ci.txt\n\n# Detect formal-verification directory\n[ -d \"formal-verification\" ] && echo 1 > /tmp/gh-aw/fv_dir.txt || echo 0 > /tmp/gh-aw/fv_dir.txt\n\n# Count markdown docs inside formal-verification/\nfind . \\( -path \"*/formal-verification/*.md\" -o -path \"*/formal-verification/specs/*.md\" \\) 2>/dev/null \\\n  | wc -l > /tmp/gh-aw/fv_docs.txt || echo 0 > /tmp/gh-aw/fv_docs.txt\n\n# Fetch open FV Squad issues\ngh issue list --state open --label lean-squad --json number 2>/dev/null \\\n  > /tmp/gh-aw/fv_issues.json || echo \"[]\" > /tmp/gh-aw/fv_issues.json\n\n# Fetch open FV Squad PRs\ngh pr list --state open --limit 50 --json number,title 2>/dev/null \\\n  | python3 -c \"\nimport json, sys\nd = json.load(sys.stdin)\nprint(json.dumps([x for x in d if x['title'].startswith('[Lean Squad]')]))\" \\\n  > /tmp/gh-aw/fv_prs.json || echo \"[]\" > /tmp/gh-aw/fv_prs.json\n\npython3 - << 'EOF'\nimport json, os, random\n\nlean_count   = int(open('/tmp/gh-aw/lean_count.txt').read().strip() or 0)\nrust_count   = int(open('/tmp/gh-aw/rust_count.txt').read().strip() or 0)\nhas_lean_ci  = int(open('/tmp/gh-aw/has_lean_ci.txt').read().strip() or 0)\nhas_aeneas_ci = int(open('/tmp/gh-aw/has_aeneas_ci.txt').read().strip() or 0)\nfv_dir       = int(open('/tmp/gh-aw/fv_dir.txt').read().strip() or 0)\nfv_docs    = int(open('/tmp/gh-aw/fv_docs.txt').read().strip() or 0)\nfv_issues  = json.load(open('/tmp/gh-aw/fv_issues.json'))\nfv_prs     = json.load(open('/tmp/gh-aw/fv_prs.json'))\n\nn_issues = len(fv_issues)\nn_prs    = len(fv_prs)\n\ntask_names = {\n    1: 'Research & Target Identification',\n    2: 'Informal Spec Extraction',\n    3: 'Formal Spec Writing (Lean 4)',\n    4: 'Implementation Extraction',\n    5: 'Proof Assistance',\n    6: 'Correspondence Review',\n    7: 'Proof Utility Critique',\n    8: 'Aeneas Extraction (Rust only)',\n    9: 'CI Automation',\n}\n\n# Phase progress heuristics derived from repo state\n# The agent refines these using repo-memory at runtime\nhas_research   = bool(fv_dir) and (fv_docs >= 1 or n_issues >= 1 or lean_count >= 1)\nhas_inf_specs  = fv_docs >= 2 or lean_count >= 1\nhas_lean_specs = lean_count >= 1\nhas_impl       = lean_count >= 3\nhas_proofs     = lean_count >= 6\nhas_rust       = rust_count >= 1\nhas_ci         = bool(has_lean_ci)\n\nweights = {\n    1: 10.0  if not has_research  else 2.0,\n    2: (8.0  if not has_inf_specs  else 2.0) if has_research   else 0.5,\n    3: (8.0  if not has_lean_specs else 2.0) if has_inf_specs   else 0.3,\n    4: (6.0  if not has_impl       else 2.0) if has_lean_specs  else 0.2,\n    5: (6.0  if not has_proofs     else 2.0) if has_impl        else 0.1,\n    6: 3.0 if has_impl else 0.5,   # correspondence review: useful once impl exists\n    7: 3.0 if has_proofs else 0.0, # critique: only meaningful once proofs exist\n    8: (3.0 if has_lean_specs else 1.0) if (has_rust and has_research) else 0.0,  # aeneas: only for Rust codebases with research done\n    9: 12.0 if (has_lean_specs and not has_ci) else 2.0,  # CI: critical when lean files exist but no CI; regular check otherwise\n}\n\nrun_id = int(os.environ.get('GITHUB_RUN_ID', '0'))\nrng    = random.Random(run_id)\n\nnon_main  = list(weights.keys())\nnm_weights = list(weights.values())\n\nchosen, seen = [], set()\nfor t in rng.choices(non_main, weights=nm_weights, k=30):\n    if t not in seen:\n        seen.add(t)\n        chosen.append(t)\n    if len(chosen) == 2:\n        break\n\nprint('=== Lean Squad Task Selection ===')\nprint(f'Lean files    : {lean_count}')\nprint(f'Rust files    : {rust_count}')\nprint(f'FV dir        : {bool(fv_dir)}')\nprint(f'FV docs       : {fv_docs}')\nprint(f'Open issues   : {n_issues}')\nprint(f'Open FV PRs   : {n_prs}')\nprint(f'Phase flags   : research={has_research}, inf_specs={has_inf_specs}, '\n      f'lean_specs={has_lean_specs}, impl={has_impl}, proofs={has_proofs}, '\n      f'rust={has_rust}, ci={has_ci}')\nprint()\nprint('Task weights:')\nfor t, w in weights.items():\n    tag = ' <-- SELECTED' if t in chosen else ''\n    print(f'  Task {t} ({task_names[t]}): weight {w:.1f}{tag}')\nprint()\nprint(f'Selected tasks: {chosen} = {[task_names[t] for t in chosen]}')\n\nresult = {\n    'lean_count': lean_count, 'rust_count': rust_count,\n    'fv_dir': bool(fv_dir), 'fv_docs': fv_docs,\n    'n_issues': n_issues, 'n_prs': n_prs,\n    'phase_flags': {\n        'has_research':   has_research,\n        'has_inf_specs':  has_inf_specs,\n        'has_lean_specs': has_lean_specs,\n        'has_impl':       has_impl,\n        'has_proofs':     has_proofs,\n        'has_rust':       has_rust,\n        'has_ci':         has_ci,\n    },\n    'task_names': task_names,\n    'weights': {str(k): round(v, 2) for k, v in weights.items()},\n    'selected_tasks': chosen,\n}\nwith open('/tmp/gh-aw/task_selection.json', 'w') as f:\n    json.dump(result, f, indent=2)\nEOF\n"
 
       # Repo memory git-based storage configuration from frontmatter processed below
       - name: Clone repo-memory branch (default)
@@ -387,7 +475,7 @@ jobs:
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
           cat > ${RUNNER_TEMP}/gh-aw/safeoutputs/config.json << 'GH_AW_SAFE_OUTPUTS_CONFIG_EOF'
-          {"add_comment":{"max":3,"target":"*"},"create_issue":{"labels":["automation","lean-squad"],"max":4,"title_prefix":"[Lean Squad] "},"create_pull_request":{"labels":["automation","lean-squad"],"max":2,"max_patch_size":1024,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS"],"protected_path_prefixes":[".github/",".agents/"],"title_prefix":"[Lean Squad] "},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"push_repo_memory":{"memories":[{"dir":"/tmp/gh-aw/repo-memory/default","id":"default","max_file_count":100,"max_file_size":10240,"max_patch_size":102400}]},"update_issue":{"allow_body":true,"max":1,"target":"*","title_prefix":"[Lean Squad] "}}
+          {"add_comment":{"max":3,"target":"*"},"create_issue":{"labels":["automation","lean-squad","aeneas-bug"],"max":4,"title_prefix":"[Lean Squad] "},"create_pull_request":{"labels":["automation","lean-squad"],"max":2,"max_patch_size":1024,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS"],"protected_path_prefixes":[".github/",".agents/"],"title_prefix":"[Lean Squad] "},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"push_repo_memory":{"memories":[{"dir":"/tmp/gh-aw/repo-memory/default","id":"default","max_file_count":100,"max_file_size":10240,"max_patch_size":102400}]},"update_issue":{"allow_body":true,"max":1,"target":"*","title_prefix":"[Lean Squad] "}}
           GH_AW_SAFE_OUTPUTS_CONFIG_EOF
       - name: Write Safe Outputs Tools
         run: |
@@ -395,7 +483,7 @@ jobs:
           {
             "description_suffixes": {
               "add_comment": " CONSTRAINTS: Maximum 3 comment(s) can be added. Target: *.",
-              "create_issue": " CONSTRAINTS: Maximum 4 issue(s) can be created. Title will be prefixed with \"[Lean Squad] \". Labels [\"automation\" \"lean-squad\"] will be automatically added.",
+              "create_issue": " CONSTRAINTS: Maximum 4 issue(s) can be created. Title will be prefixed with \"[Lean Squad] \". Labels [\"automation\" \"lean-squad\" \"aeneas-bug\"] will be automatically added.",
               "create_pull_request": " CONSTRAINTS: Maximum 2 pull request(s) can be created. Title will be prefixed with \"[Lean Squad] \". Labels [\"automation\" \"lean-squad\"] will be automatically added.",
               "update_issue": " CONSTRAINTS: Maximum 1 issue(s) can be updated. Target: *. The target issue title must start with \"[Lean Squad] \"."
             },
@@ -831,6 +919,7 @@ jobs:
           GH_AW_ALLOWED_DOMAINS: "*.githubusercontent.com,api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,arxiv.org,azure.archive.ubuntu.com,codeload.github.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,docs.github.com,erratique.ch,github-cloud.githubusercontent.com,github-cloud.s3.amazonaws.com,github.blog,github.com,github.githubassets.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,leanprover-community.github.io,lfs.github.com,objects.githubusercontent.com,ocaml.org,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,opam.ocaml.org,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,release.lean-lang.org,release.leanlang.org,releaseassets.githubusercontent.com,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com"
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_API_URL: ${{ github.api_url }}
+          GH_AW_COMMAND: lean-squad
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -1053,6 +1142,24 @@ jobs:
             setupGlobals(core, github, context, exec, io);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/handle_create_pr_error.cjs');
             await main();
+      - name: Update reaction comment with completion status
+        id: conclusion
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          GH_AW_AGENT_OUTPUT: ${{ steps.setup-agent-output-env.outputs.GH_AW_AGENT_OUTPUT }}
+          GH_AW_COMMENT_ID: ${{ needs.activation.outputs.comment_id }}
+          GH_AW_COMMENT_REPO: ${{ needs.activation.outputs.comment_repo }}
+          GH_AW_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GH_AW_WORKFLOW_NAME: "Lean Squad"
+          GH_AW_AGENT_CONCLUSION: ${{ needs.agent.result }}
+          GH_AW_DETECTION_CONCLUSION: ${{ needs.detection.outputs.detection_conclusion }}
+        with:
+          github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          script: |
+            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('${{ runner.temp }}/gh-aw/actions/notify_comment_error.cjs');
+            await main();
 
   detection:
     needs: agent
@@ -1119,7 +1226,7 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           WORKFLOW_NAME: "Lean Squad"
-          WORKFLOW_DESCRIPTION: "Lean Squad: an optimistic multi-phase system that progressively applies\nLean 4 formal verification to your codebase, one target at a time.\n\nEach run selects tasks weighted to current FV progress:\n1. Research — survey codebase, identify FV-amenable targets, document approach\n2. Informal Spec Extraction — extract design intentions and informal contracts\n3. Formal Spec Writing — write Lean 4 type signatures and property statements\n4. Implementation Extraction — translate code to a Lean-verifiable functional model\n5. Proof Assistance — attempt proofs, find counterexamples, report bugs\n6. Correspondence Review — document how the Lean implementation model corresponds to the Rust source\n7. Proof Utility Critique — assess the value and coverage of what has been proven so far\n\nPhases are sequentially weighted: Task 1 dominates until research is done,\nthen Task 2 rises, and so on up to proofs. Each run builds on prior runs\n(assumes merged PRs). Notes, targets, choices, and progress live in repo-memory.\nOutputs are pull requests (specs, proofs) and issues (bugs, status)."
+          WORKFLOW_DESCRIPTION: "Lean Squad: an optimistic multi-phase system that progressively applies\nLean 4 formal verification to your codebase, one target at a time.\nCan also be triggered on-demand via '/lean-squad <instructions>' to perform specific tasks.\n\nEach run selects tasks weighted to current FV progress:\n1. Research — survey codebase, identify FV-amenable targets, document approach\n2. Informal Spec Extraction — extract design intentions and informal contracts\n3. Formal Spec Writing — write Lean 4 type signatures and property statements\n4. Implementation Extraction — translate code to a Lean-verifiable functional model\n5. Proof Assistance — attempt proofs, find counterexamples, report bugs\n6. Correspondence Review — document how the Lean implementation model corresponds to the Rust source\n7. Proof Utility Critique — assess the value and coverage of what has been proven so far\n8. Aeneas Extraction (optional, Rust only) — use Charon+Aeneas to auto-generate Lean from Rust\n9. CI Automation — set up and maintain CI workflows that verify proofs on every PR\n\nPhases are sequentially weighted: Task 1 dominates until research is done,\nthen Task 2 rises, and so on up to proofs. Each run builds on prior runs\n(assumes merged PRs). Notes, targets, choices, and progress live in repo-memory.\nOutputs are pull requests (specs, proofs) and issues (bugs, status)."
           HAS_PATCH: ${{ needs.agent.outputs.has_patch }}
         with:
           script: |
@@ -1193,6 +1300,41 @@ jobs:
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
             setupGlobals(core, github, context, exec, io);
             const { main } = require('${{ runner.temp }}/gh-aw/actions/parse_threat_detection_results.cjs');
+            await main();
+
+  pre_activation:
+    if: "(github.event_name == 'issues' || github.event_name == 'issue_comment' || github.event_name == 'pull_request' || github.event_name == 'pull_request_review_comment' || github.event_name == 'discussion' || github.event_name == 'discussion_comment') && (github.event_name == 'issues' && (startsWith(github.event.issue.body, '/lean-squad ') || startsWith(github.event.issue.body, '/lean-squad\n') || github.event.issue.body == '/lean-squad') || github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') && github.event.issue.pull_request == null || github.event_name == 'issue_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') && github.event.issue.pull_request != null || github.event_name == 'pull_request_review_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad') || github.event_name == 'pull_request' && (startsWith(github.event.pull_request.body, '/lean-squad ') || startsWith(github.event.pull_request.body, '/lean-squad\n') || github.event.pull_request.body == '/lean-squad') || github.event_name == 'discussion' && (startsWith(github.event.discussion.body, '/lean-squad ') || startsWith(github.event.discussion.body, '/lean-squad\n') || github.event.discussion.body == '/lean-squad') || github.event_name == 'discussion_comment' && (startsWith(github.event.comment.body, '/lean-squad ') || startsWith(github.event.comment.body, '/lean-squad\n') || github.event.comment.body == '/lean-squad')) || (!(github.event_name == 'issues')) && (!(github.event_name == 'issue_comment')) && (!(github.event_name == 'pull_request')) && (!(github.event_name == 'pull_request_review_comment')) && (!(github.event_name == 'discussion')) && (!(github.event_name == 'discussion_comment'))"
+    runs-on: ubuntu-slim
+    outputs:
+      activated: ${{ steps.check_membership.outputs.is_team_member == 'true' && steps.check_command_position.outputs.command_position_ok == 'true' }}
+      matched_command: ${{ steps.check_command_position.outputs.matched_command }}
+    steps:
+      - name: Setup Scripts
+        uses: github/gh-aw-actions/setup@51c65948c64ab6752536ead71fba1fc2c20ed0bc # v0.64.0
+        with:
+          destination: ${{ runner.temp }}/gh-aw/actions
+      - name: Check team membership for command workflow
+        id: check_membership
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          GH_AW_REQUIRED_ROLES: admin,maintainer,write
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('${{ runner.temp }}/gh-aw/actions/check_membership.cjs');
+            await main();
+      - name: Check command position
+        id: check_command_position
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        env:
+          GH_AW_COMMANDS: "[\"lean-squad\"]"
+        with:
+          script: |
+            const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('${{ runner.temp }}/gh-aw/actions/check_command_position.cjs');
             await main();
 
   push_repo_memory:
@@ -1359,7 +1501,7 @@ jobs:
           GH_AW_ALLOWED_DOMAINS: "*.githubusercontent.com,api.business.githubcopilot.com,api.enterprise.githubcopilot.com,api.github.com,api.githubcopilot.com,api.individual.githubcopilot.com,api.snapcraft.io,archive.ubuntu.com,arxiv.org,azure.archive.ubuntu.com,codeload.github.com,crl.geotrust.com,crl.globalsign.com,crl.identrust.com,crl.sectigo.com,crl.thawte.com,crl.usertrust.com,crl.verisign.com,crl3.digicert.com,crl4.digicert.com,crls.ssl.com,docs.github.com,erratique.ch,github-cloud.githubusercontent.com,github-cloud.s3.amazonaws.com,github.blog,github.com,github.githubassets.com,host.docker.internal,json-schema.org,json.schemastore.org,keyserver.ubuntu.com,leanprover-community.github.io,lfs.github.com,objects.githubusercontent.com,ocaml.org,ocsp.digicert.com,ocsp.geotrust.com,ocsp.globalsign.com,ocsp.identrust.com,ocsp.sectigo.com,ocsp.ssl.com,ocsp.thawte.com,ocsp.usertrust.com,ocsp.verisign.com,opam.ocaml.org,packagecloud.io,packages.cloud.google.com,packages.microsoft.com,ppa.launchpad.net,raw.githubusercontent.com,registry.npmjs.org,release.lean-lang.org,release.leanlang.org,releaseassets.githubusercontent.com,s.symcb.com,s.symcd.com,security.ubuntu.com,telemetry.enterprise.githubcopilot.com,ts-crl.ws.symantec.com,ts-ocsp.ws.symantec.com,www.googleapis.com"
           GITHUB_SERVER_URL: ${{ github.server_url }}
           GITHUB_API_URL: ${{ github.api_url }}
-          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"max\":3,\"target\":\"*\"},\"create_issue\":{\"labels\":[\"automation\",\"lean-squad\"],\"max\":4,\"title_prefix\":\"[Lean Squad] \"},\"create_pull_request\":{\"labels\":[\"automation\",\"lean-squad\"],\"max\":2,\"max_patch_size\":1024,\"protected_files\":[\"package.json\",\"bun.lockb\",\"bunfig.toml\",\"deno.json\",\"deno.jsonc\",\"deno.lock\",\"global.json\",\"NuGet.Config\",\"Directory.Packages.props\",\"mix.exs\",\"mix.lock\",\"go.mod\",\"go.sum\",\"stack.yaml\",\"stack.yaml.lock\",\"pom.xml\",\"build.gradle\",\"build.gradle.kts\",\"settings.gradle\",\"settings.gradle.kts\",\"gradle.properties\",\"package-lock.json\",\"yarn.lock\",\"pnpm-lock.yaml\",\"npm-shrinkwrap.json\",\"requirements.txt\",\"Pipfile\",\"Pipfile.lock\",\"pyproject.toml\",\"setup.py\",\"setup.cfg\",\"Gemfile\",\"Gemfile.lock\",\"uv.lock\",\"CODEOWNERS\",\"AGENTS.md\"],\"protected_path_prefixes\":[\".github/\",\".agents/\"],\"title_prefix\":\"[Lean Squad] \"},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"update_issue\":{\"allow_body\":true,\"max\":1,\"target\":\"*\",\"title_prefix\":\"[Lean Squad] \"}}"
+          GH_AW_SAFE_OUTPUTS_HANDLER_CONFIG: "{\"add_comment\":{\"max\":3,\"target\":\"*\"},\"create_issue\":{\"labels\":[\"automation\",\"lean-squad\",\"aeneas-bug\"],\"max\":4,\"title_prefix\":\"[Lean Squad] \"},\"create_pull_request\":{\"labels\":[\"automation\",\"lean-squad\"],\"max\":2,\"max_patch_size\":1024,\"protected_files\":[\"package.json\",\"bun.lockb\",\"bunfig.toml\",\"deno.json\",\"deno.jsonc\",\"deno.lock\",\"global.json\",\"NuGet.Config\",\"Directory.Packages.props\",\"mix.exs\",\"mix.lock\",\"go.mod\",\"go.sum\",\"stack.yaml\",\"stack.yaml.lock\",\"pom.xml\",\"build.gradle\",\"build.gradle.kts\",\"settings.gradle\",\"settings.gradle.kts\",\"gradle.properties\",\"package-lock.json\",\"yarn.lock\",\"pnpm-lock.yaml\",\"npm-shrinkwrap.json\",\"requirements.txt\",\"Pipfile\",\"Pipfile.lock\",\"pyproject.toml\",\"setup.py\",\"setup.cfg\",\"Gemfile\",\"Gemfile.lock\",\"uv.lock\",\"CODEOWNERS\",\"AGENTS.md\"],\"protected_path_prefixes\":[\".github/\",\".agents/\"],\"title_prefix\":\"[Lean Squad] \"},\"missing_data\":{},\"missing_tool\":{},\"noop\":{\"max\":1,\"report-as-issue\":\"true\"},\"update_issue\":{\"allow_body\":true,\"max\":1,\"target\":\"*\",\"title_prefix\":\"[Lean Squad] \"}}"
           GH_AW_CI_TRIGGER_TOKEN: ${{ secrets.GH_AW_CI_TRIGGER_TOKEN }}
         with:
           github-token: ${{ secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
