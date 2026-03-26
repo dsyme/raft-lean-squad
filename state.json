@@ -1,6 +1,6 @@
 {
   "last_run": "2026-03-26",
-  "run_id": "23622476848",
+  "run_id": "23623177395",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lake_project": "formal-verification/lean/",
   "lean_version": "4.28.0",
@@ -38,16 +38,17 @@
       "notes": "ALL 17 theorems proved (0 sorry). CI1-CI8 + Safety + Maximality + Mono + helpers. PRs #104 and #105 merged."
     },
     {
+      "id": "find_conflict",
+      "phase": 2,
+      "lean_file": null,
+      "informal_spec": "formal-verification/specs/find_conflict_informal.md",
+      "notes": "Informal spec done (run93). 8 postconditions P1-P8. Lean model sketch provided. Open questions: contiguity precondition, term=0 entries, index=0 entries. PR pending merge."
+    },
+    {
       "id": "joint_committed_index",
       "phase": 1,
       "lean_file": null,
       "notes": "Not started. Will need min of two committedIndex values; empty-to-MAX divergence is the main subtlety."
-    },
-    {
-      "id": "find_conflict",
-      "phase": 1,
-      "lean_file": null,
-      "notes": "src/raft_log.rs RaftLog::find_conflict. First term mismatch scan. High priority per CRITIQUE.md."
     },
     {
       "id": "maybe_append",
@@ -79,16 +80,10 @@
     "list_isEmpty": "List.isEmpty is a Bool function. Use 'cases outgoing with | nil => ... | cons h t => ...' to case-split on emptiness, not List.isEmpty_iff_eq_nil or List.not_isEmpty_iff.",
     "sortDesc_get_antitone": "i <= j -> sortDesc(l)[j] <= sortDesc(l)[i]: split eq/lt, use pairwise_ge_antitone for strict"
   },
-  "open_prs": [
-    {
-      "pr": "run92",
-      "branch": "lean-squad/critique-correspondence-run92",
-      "title": "feat(fv): proof utility critique + correspondence update (Tasks 6+7)"
-    }
-  ],
+  "open_prs": [],
   "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Charon.toml exists in repo. Try again when container has sudo access.",
   "status_issue": 94,
-  "next_targets": ["joint_committed_index", "find_conflict", "inflights"],
+  "next_targets": ["find_conflict", "joint_committed_index", "inflights"],
   "ci_workflow": ".github/workflows/lean-ci.yml",
   "ci_status": "HEALTHY - lean-ci.yml exists, uses lean-toolchain pin, runs lake build. Reviewed in runs 89 and 91.",
   "critique_notes": {
@@ -96,5 +91,10 @@
     "main_semantic_gap": "Voter lists use List Nat instead of deduplicated sets - theorems hold for duplicates too, which is semantically wrong",
     "no_bugs_found": true,
     "total_sorry": 0
+  },
+  "find_conflict_notes": {
+    "key_postconditions": ["P1: empty->0", "P2: result is some entry index", "P3: prefix before result all match", "P4: result entry fails matchTerm", "P5: biconditional zero<->all match", "P6: result>=first index", "P7: result<=last index", "P8: minimality"],
+    "lean_model_approach": "abstract log as (Nat -> Nat), LogEntry as {index,term}, findConflict by list induction",
+    "open_questions": ["contiguity precondition formal status", "term=0 input entries", "index=0 entry behaviour"]
   }
 }
