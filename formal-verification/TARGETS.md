@@ -41,7 +41,7 @@
 | 35 | `tick_election` | `src/raft.rs` | 5 — Proofs | ✅ Done | Election timer logic: 10+ theorems, 0 `sorry`. Pure model + full proofs P1–P8 + derived. See `FVSquad/TickElection.lean`. |
 | 36 | `maybe_commit_by_vote` | `src/raft.rs` | 5 — Proofs | ✅ Done | Fast-forward commit during election. 15 theorems, 0 `sorry`. commit_monotone, stepdown safety, idempotency. See `FVSquad/MaybeCommitByVote.lean`. |
 | 37 | `handle_append_response` | `src/raft.rs` | 5 — Proofs | ✅ Done | Leader-side handling of MsgAppendResponse: progress tracking, backtracking optimisation, commit advancement, leadership transfer. 15 theorems, 0 sorry. `FVSquad/HandleAppendResponse.lean` |
-| 38 | `restore` (node-level) | `src/raft.rs` | 1 — Research | ⬜ Not started | Snapshot restore: guards, log restoration, config restore via `confchange::restore`, progress tracker update. |
+| 38 | `restore` (node-level) | `src/raft.rs` | 5 — Proofs | ✅ Done | 20 theorems, 0 `sorry`. 5 paths: StaleSnapshot/NonFollower/NotInConfig/FastForward/FullRestore. Commit-monotone, term-monotone, state-follower, pendingReqSnap cleared. See `FVSquad/RestoreNode.lean`. |
 | 39 | `handle_snapshot_status` | `src/raft.rs` | 5 — Proofs | ✅ Done | Snapshot→Probe transition: 13 theorems, 0 `sorry`. Success/failure paths, next_idx correctness, pause semantics. See `FVSquad/HandleSnapshotStatus.lean`. |
 
 ## Phase Legend
