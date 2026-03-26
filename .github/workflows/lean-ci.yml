@@ -29,7 +29,7 @@ jobs:
           echo "$HOME/.elan/bin" >> $GITHUB_PATH
 
       - name: Install Lean toolchain
-        run: elan toolchain install $(cat lean-toolchain) --no-self-update
+        run: elan toolchain install $(cat lean-toolchain)
 
       - name: Show Lean version
         run: lean --version
