@@ -8,7 +8,7 @@ Prioritised target list. Phases: 1=Research, 2=Informal Spec, 3=Lean Spec, 4=Lea
 |----------|----|------|----------|-------|-------|
 | 1 | `limit_size` | `src/util.rs` | `limit_size` | 5 ✅ | All 12 theorems proved (0 sorry). `FVSquad/LimitSize.lean`. |
 | 2 | `config_validate` | `src/config.rs` | `Config::validate` | 5 ✅ | All 10 theorems proved (0 sorry). `FVSquad/ConfigValidate.lean`. |
-| 3 | `vote_result` | `src/quorum/majority.rs` | `Configuration::vote_result` | 1 | Majority quorum. Aeneas-safe variant available. |
+| 3 | `vote_result` | `src/quorum/majority.rs` | `Configuration::vote_result` | 5 ✅ | 21 theorems proved (0 sorry). `FVSquad/MajorityVote.lean`. |
 | 4 | `committed_index` | `src/quorum/majority.rs` | `Configuration::committed_index` | 1 | Sort-then-index quorum commit. Aeneas-safe variant. |
 | 5 | `find_conflict` | `src/raft_log.rs` | `RaftLog::find_conflict` | 1 | First term mismatch scan. |
 | 6 | `maybe_append` | `src/raft_log.rs` | `RaftLog::maybe_append` | 1 | Depends on `find_conflict`. |
