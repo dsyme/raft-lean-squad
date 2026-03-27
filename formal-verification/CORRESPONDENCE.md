@@ -7,8 +7,8 @@ correspondence level, known divergences, and the impact on any proofs that rely 
 definition.
 
 ## Last Updated
-- **Date**: 2026-03-26 23:09 UTC
-- **Commit**: `e8e2c39`
+- **Date**: 2026-03-27 13:54 UTC
+- **Commit**: `52eb13408ac52e43bf86291953239b7d790236d9`
 
 ---
 
@@ -245,7 +245,143 @@ confidence in the sort-then-index algorithm's correctness. No mismatches found.
 
 ---
 
-No mismatches found. All five Lean models are sound abstractions of their Rust counterparts.
+No mismatches found. All six Lean models are sound abstractions of their Rust counterparts.
+
+---
+
+## `formal-verification/lean/FVSquad/FindConflict.lean`
+
+### Target: `RaftLog::find_conflict` — `src/raft_log.rs`
+
+Rust source: [`src/raft_log.rs#L195`](../src/raft_log.rs#L195)
+
+#### Lean definitions
+
+| Lean name | Rust name | Rust location | Correspondence | Notes |
+|-----------|-----------|---------------|----------------|-------|
+| `LogEntry` | `Entry` (protobuf) | `proto/eraftpb.proto` | Abstraction | Lean captures only `index` and `term`; payload bytes are not modelled. |
+| `LogTerm` | *(combined `RaftLog` stable + unstable store)* | `src/raft_log.rs` | Abstraction | Rust splits log storage across `RaftLog.store` and `RaftLog.unstable`; Lean abstracts both as a single `Nat → Option Nat` (index → term) function. |
+| `matchTerm` | `RaftLog::match_term` | `src/raft_log.rs#L248` | Abstraction | Rust: `term(idx).map_or(false, |t| t == term)`. Lean: `match log idx with | some t => t == term | none => false`. Semantically identical (both return `false` for out-of-range indices). |
+| `findConflict` | `RaftLog::find_conflict` | `src/raft_log.rs#L201` | Abstraction | See divergences below. |
+
+#### Known divergences (Abstraction-level)
+
+1. **Entry payload omitted** — Rust `Entry` is a protobuf message carrying `data`, `context`,
+   `entry_type`, etc.  Lean `LogEntry` stores only `index` and `term`.  The `find_conflict`
+   function only inspects `index` and `term` (via `match_term`), so this omission does not
+   affect the semantic correctness of the model.
+
+2. **Log storage split** — The real `RaftLog` stores entries in two regions:
+   `self.store` (stable, via the `Storage` trait) and `self.unstable` (in-memory append
+   buffer).  The Lean model unifies these as a single `LogTerm` function.  The Rust
+   `match_term` method transparently queries both regions; the Lean `matchTerm` mirrors the
+   observable behaviour, not the internal storage layout.
+
+3. **Error handling** — Rust `term(idx)` returns `Result<u64, Error>`.  An `Err` result
+   (e.g., storage I/O failure) causes `match_term` to return `false` via
+   `unwrap_or_default()`.  Lean models this by returning `none` (→ `matchTerm` returns
+   `false`) for any index not present.  Panics or storage errors are not modelled.
+
+4. **Logging side effects** — The Rust implementation logs a diagnostic message when a
+   conflict is found at or below `last_index()`.  This has no semantic effect and is not
+   modelled.
+
+5. **Index type** — Raft indices are `u64` in Rust; Lean uses `Nat` (unbounded). Overflow
+   is not modelled (safe in practice: log indices never exceed ~2^63 in realistic
+   deployments).
+
+6. **Positive-index precondition** — Lean theorems FC4b and FC11 require
+   `∀ e ∈ ents, 0 < e.index` to distinguish the "no conflict" sentinel (0) from a
+   genuine index-0 entry.  Raft log indices start at 1 by convention; this precondition
+   is always satisfied by the Rust caller.  It is an explicit precondition in Lean rather
+   than enforced by a type invariant.
+
+#### Impact on proofs
+
+All 12 theorems in `FindConflict.lean` are:
+
+- **FC1–FC3**: definitional lemmas; exact correspondence.
+- **FC4a / FC4b**: "all match ↔ result is 0" — hold under the stated positive-index
+  precondition.  The precondition is always met by real Raft callers.
+- **FC5+FC6 (combined as `findConflict_nonzero_witness`)**: existence of the first
+  mismatching entry.  Sound under the Abstraction model.
+- **FC7 (`findConflict_first_mismatch`)**: first-mismatch characterisation.  The most
+  precise correctness statement; holds exactly under the Lean model.
+- **FC8 (`findConflict_skip_match_prefix`)**: transparency of a matching prefix.  Sound.
+- **FC9–FC10**: singleton cases.  Exact.
+- **FC11 (`findConflict_zero_iff_all_match`)**: biconditional combining FC4a and FC4b.
+  The most useful single theorem for downstream reasoning.
+- **FC12 (`findConflict_result_in_indices`)**: result is an entry's index.  Sound.
+
+**Assessment**: No mismatches found.  The Lean model is a sound Abstraction of
+`RaftLog::find_conflict`.  The payload and storage-split omissions are appropriate and
+documented.  All 12 theorems are valid under the stated model and preconditions.
+
+---
+
+No mismatches found. All six Lean models are sound abstractions of their Rust counterparts.
+
+---
+
+## Planned Targets (no Lean file yet)
+
+The following targets have been identified (see `TARGETS.md` and `RESEARCH.md`) and have
+informal specs or research notes but no Lean file yet.  The correspondence entries below
+document the *planned* model so that future runs can implement them consistently.
+
+### `joint_committed_index` — `src/quorum/joint.rs#L47`
+
+Rust source: [`src/quorum/joint.rs#L47`](../src/quorum/joint.rs#L47)
+
+```rust
+pub fn committed_index(&self, use_group_commit: bool, l: &impl AckedIndexer) -> (u64, bool) {
+    let (i_idx, i_use_gc) = self.incoming.committed_index(use_group_commit, l);
+    let (o_idx, o_use_gc) = self.outgoing.committed_index(use_group_commit, l);
+    (cmp::min(i_idx, o_idx), i_use_gc && o_use_gc)
+}
+```
+
+**Planned Lean model** (`formal-verification/lean/FVSquad/JointCommittedIndex.lean`):
+
+| Lean name (planned) | Rust name | Rust location | Planned correspondence | Notes |
+|---------------------|-----------|---------------|------------------------|-------|
+| `jointCommittedIndex` | `Configuration::committed_index` (joint) | `src/quorum/joint.rs#L47` | Abstraction | `min(incoming_ci, outgoing_ci)` using `CommittedIndex.committedIndex` |
+
+**Key properties to prove**:
+- `jci_min`: `jointCommittedIndex incoming outgoing acked = min (committedIndex incoming acked) (committedIndex outgoing acked)`
+- `jci_safety`: at least `majority` of voters in *both* `incoming` and `outgoing` have acked ≥ `jointCommittedIndex`
+- `jci_maximality`: no index greater than `jointCommittedIndex` is jointly safe
+- `jci_monotone`: monotone in the `acked` function
+- `jci_degenerate`: when `outgoing = []`, degenerates to the majority `committedIndex`
+
+**Known planned divergences**:
+1. `use_group_commit = false` only — the group-commit boolean is dropped (as in `CommittedIndex.lean`).
+2. Return type: Rust returns `(u64, bool)`; Lean will return just `Nat` (dropping the group-commit bool).
+3. Empty-config sentinel: Rust returns `u64::MAX` for empty incoming/outgoing so that `min` degrades correctly.  The Lean model uses `0` but `jci_degenerate` will document this precisely.
+4. Voter list vs. set: same `List Nat` abstraction as the other models.
+
+**Status**: Phase 3 (informal spec noted in memory; Lean file not yet created).  This is the highest-priority next target — the `Nat.min` structure makes proofs tractable using `by_cases` + `omega`.
+
+---
+
+### `maybe_append` — `src/raft_log.rs#L218`
+
+Rust source: [`src/raft_log.rs#L218`](../src/raft_log.rs#L218)
+
+**Planned Lean model** (`formal-verification/lean/FVSquad/MaybeAppend.lean`):
+
+Lean will model the pure log-mutation logic: if the incoming entries conflict with the
+stored log (detected via `find_conflict`), truncate at the conflict point and append the
+new entries.  The model will build directly on `FindConflict.findConflict` and the
+`FindConflict` theorems.
+
+**Key properties to prove**:
+- `maybeAppend_no_conflict_noop`: if `find_conflict` returns 0, the log is unchanged.
+- `maybeAppend_conflict_truncates`: if `find_conflict` returns `k`, the log is truncated to `k - 1` entries then the new entries are appended.
+- `maybeAppend_prefix_preserved`: the prefix before any conflict point is unchanged.
+- `maybeAppend_result_is_suffix`: the result ends with the supplied `ents` suffix.
+
+**Status**: Phase 1 (identified; no informal spec yet).  Depends on `FindConflict` (now done ✅).
 
 ---
 
@@ -253,8 +389,15 @@ No mismatches found. All five Lean models are sound abstractions of their Rust c
 
 | Lean file | Rust target | Correspondence level | Proved theorems | Gaps |
 |-----------|-------------|---------------------|-----------------|------|
-| `LimitSize.lean` | `src/util.rs` `limit_size` | Abstraction | 17 | Overflow not modelled (safe) |
+| `LimitSize.lean` | `src/util.rs` `limit_size` | Abstraction | 17 | Overflow not modelled (safe); lint clean ✅ |
 | `ConfigValidate.lean` | `src/config.rs` `Config::validate` | Abstraction | 10 | Error messages not captured (by design) |
 | `MajorityVote.lean` | `src/quorum/majority.rs` `vote_result` | Abstraction | 21 | Duplicates in voter list not excluded by type |
 | `JointVote.lean` | `src/quorum/joint.rs` `vote_result` | Abstraction | 14 | Struct wrapper abstracted; non-joint degeneration proved (J4) |
 | `CommittedIndex.lean` | `src/quorum/majority.rs` `committed_index` | Abstraction | 17 | group-commit path omitted; empty→0 (Rust→MAX) documented |
+| `FindConflict.lean` | `src/raft_log.rs` `find_conflict` | Abstraction | 12 | Entry payload omitted; positive-index precondition explicit |
+| `JointCommittedIndex.lean` | `src/quorum/joint.rs` `committed_index` | — (planned) | 0 | Next target — `min(incoming_ci, outgoing_ci)` |
+| `MaybeAppend.lean` | `src/raft_log.rs` `maybe_append` | — (planned) | 0 | Depends on FindConflict (done); log truncate+append |
+
+---
+
+> �� Generated by [Lean Squad](https://github.com/dsyme/fv-squad/actions/runs/23649096928) automated formal verification.
