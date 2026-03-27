@@ -1,6 +1,6 @@
 {
   "last_run": "2026-03-27",
-  "run_id": "23639117595",
+  "run_id": "23649096928",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lake_project": "formal-verification/lean/",
   "lean_version": "4.28.0",
@@ -42,19 +42,19 @@
       "phase": 5,
       "lean_file": "formal-verification/lean/FVSquad/FindConflict.lean",
       "informal_spec": "formal-verification/specs/find_conflict_informal.md",
-      "notes": "ALL 12 theorems proved (0 sorry). FC1-FC12. PR #109 open (not yet merged to main)."
+      "notes": "ALL 12 theorems proved (0 sorry). FC1-FC12. Merged. CRITIQUE and CORRESPONDENCE updated run100."
     },
     {
       "id": "joint_committed_index",
-      "phase": 5,
-      "lean_file": "formal-verification/lean/FVSquad/JointCommittedIndex.lean",
-      "notes": "ALL 14 theorems proved (0 sorry). jci_safety_incoming/outgoing_quorum, jci_joint_maximality, jci_mono all proved. PR open, branch lean-squad/tasks7-6-run98-1743069069."
+      "phase": 3,
+      "lean_file": null,
+      "notes": "14 theorems were proved in prior run (branch lean-squad/tasks7-6-run98-1743069069) but PR was never merged and branch was lost. Need to recreate JointCommittedIndex.lean. High priority next target."
     },
     {
       "id": "maybe_append",
       "phase": 1,
       "lean_file": null,
-      "notes": "Next high-priority target. Depends on find_conflict (done). Models log truncate+append. src/raft_log.rs ~lines 218-240."
+      "notes": "Next after joint_committed_index. Models log truncate+append. src/raft_log.rs ~lines 218-240. Can build on FindConflict theorems."
     },
     {
       "id": "inflights",
@@ -69,7 +69,7 @@
       "notes": "Add List.Nodup precondition to vote_result/committed_index theorems. Closes semantic gap."
     }
   ],
-  "total_theorems_proved": 105,
+  "total_theorems_proved": 91,
   "correspondence_file": "formal-verification/CORRESPONDENCE.md",
   "critique_file": "formal-verification/CRITIQUE.md",
   "lean_stdlib_notes": {
@@ -94,48 +94,17 @@
     "unfold_vs_simp": "For if-then-else definitions, use 'unfold def' before 'cases' - simp may over-simplify",
     "list_get_consecutive": "For Consecutive ents start proof, use 'rw [List.mem_iff_get] at hmem; obtain <(i, hi), heqe> := hmem' then access hcon i hi"
   },
-  "open_prs": [
-    {
-      "number": 107,
-      "branch": "lean-squad/critique-correspondence-run92-b01e53c88e305140",
-      "title": "feat(fv): proof utility critique + correspondence update (Tasks 6+7)",
-      "run_id": "23622476848"
-    },
-    {
-      "number": 108,
-      "branch": "lean-squad/tasks7-2-run93-6bd91dfe438493ff",
-      "title": "feat(fv): informal spec for find_conflict + proof utility critique (Tasks 7+2)",
-      "run_id": "23623177395"
-    },
-    {
-      "number": 109,
-      "branch": "lean-squad/find-conflict-proofs-a7dd4e10ebeab449",
-      "title": "feat(fv): prove all 12 find_conflict theorems (0 sorry)",
-      "run_id": "23623425092"
-    },
-    {
-      "number": 110,
-      "branch": "lean-squad/proof-utility-critique-5b9bb72b453e1ee7",
-      "title": "docs(fv): add proof utility critique (CRITIQUE.md)",
-      "run_id": "23623425092"
-    },
-    {
-      "number": "new",
-      "branch": "lean-squad/tasks7-6-run98-1743069069",
-      "title": "feat(fv): JointCommittedIndex (14 theorems, 0 sorry) + CRITIQUE/CORRESPONDENCE updates (Tasks 7+6)",
-      "run_id": "23639117595"
-    }
-  ],
+  "open_prs": [],
   "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Charon.toml exists in repo.",
   "status_issue": 94,
-  "next_targets": ["maybe_append", "voter_dedup", "inflights"],
+  "next_targets": ["joint_committed_index", "maybe_append", "inflights"],
   "ci_workflow": ".github/workflows/lean-ci.yml",
   "ci_status": "HEALTHY - lean-ci.yml exists, uses lean-toolchain pin, runs lake build.",
   "critique_notes": {
-    "highest_value_proved": ["committedIndex_safety", "committedIndex_maximality", "committedIndex_mono", "jci_safety_incoming_quorum", "jci_safety_outgoing_quorum", "jci_joint_maximality", "jci_mono", "findConflict_first_mismatch", "findConflict_zero_iff_all_match", "configValidate_iff_valid"],
+    "highest_value_proved": ["committedIndex_safety", "committedIndex_maximality", "committedIndex_mono", "findConflict_first_mismatch", "findConflict_zero_iff_all_match", "configValidate_iff_valid"],
     "main_semantic_gap": "Voter lists use List Nat instead of deduplicated Finset/HashSet - theorems hold under implicit Nodup assumption not formally enforced",
     "no_bugs_found": true,
     "total_sorry": 0,
-    "total_public_theorems": 105
+    "total_public_theorems": 91
   }
 }
