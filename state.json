@@ -1,6 +1,6 @@
 {
   "last_run": "2026-03-29",
-  "run_id": "23700658761",
+  "run_id": "23714161005",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lake_project": "formal-verification/lean/",
   "lean_version": "4.29.0",
@@ -63,7 +63,7 @@
       "id": "inflights",
       "phase": 3,
       "lean_file": "formal-verification/lean/FVSquad/Inflights.lean",
-      "notes": "Phase 3 done run111. 15 theorems proved (0 sorry). INF1-INF15: count/cap, add, freeTo (head_gt, all_gt_sorted, sorted, noop), freeFirstOne, reset. PR open. Next: Task 4 (impl model) then Task 5 (stronger proofs).",
+      "notes": "Phase 3 done run111. 15 theorems proved (0 sorry). INF1-INF15. PR #120 open. Next: Task 4 (impl model for ring-buffer) then Task 5 (sortedness-as-invariant proofs).",
       "informal_spec": "formal-verification/specs/inflights_informal.md"
     }
   ],
@@ -74,12 +74,7 @@
     "no_by_contra": "by_contra is 'unknown tactic' in Lean 4.28.0 - use Nat.le_of_not_lt instead",
     "no_push_neg": "push_neg not available without Mathlib - use Nat.not_le.mp or omega",
     "no_split_ifs": "split_ifs not available without Mathlib - use by_cases h : cond",
-    "no_mathlib_tactics": [
-      "split_ifs",
-      "push_neg",
-      "linarith",
-      "by_contra"
-    ],
+    "no_mathlib_tactics": ["split_ifs", "push_neg", "linarith", "by_contra"],
     "use_instead": [
       "omega (replaces linarith)",
       "by_cases h : cond (replaces split_ifs)",
@@ -101,33 +96,35 @@
     "import_placement": "imports MUST be at the very top of the file, before any doc comments or code",
     "theorem_ordering": "Define theorems BEFORE use - cannot forward-reference.",
     "match_vs_if_not": "Use 'match matchTerm s.log idx term with | false => ... | true => ...' instead of 'if !matchTerm ...' for cleaner proofs. simp [f, h] where h : matchTerm ... = true/false cleanly unfolds.",
-    "have_omega_for_neg": "For \u00ac(a >= b) proofs needed in if_neg: use 'have hnotge : \u00ac(a <= b) := by omega' then rw [if_neg hne, if_neg hnotge]",
+    "have_omega_for_neg": "For ¬(a >= b) proofs needed in if_neg: use 'have hnotge : ¬(a <= b) := by omega' then rw [if_neg hne, if_neg hnotge]",
     "simp_handles_if_false": "simp [h] where h : matchTerm ... = true resolves 'if matchTerm ... = false then none else ...' to the else branch. Also resolves prop 'conflict = 0' with hfc.",
     "prop_if_cleaner": "Use Prop equality 'if conflict = 0 then ...' rather than Bool 'if conflict == 0 then ...' for cleaner proofs with if_neg/if_pos",
     "simp_maybe_append_pattern": "simp [maybeAppend, h] resolves match + conflict branches together; then use order lemmas for max/min; for persisted: use have + omega + rw [if_neg]"
   },
   "open_prs": [
-    "inflights-spec (INF1-INF15, PR created run111)"
+    "PR #120: inflights-spec (INF1-INF15, run111)",
+    "PR #TBD: critique-update-r112 (CRITIQUE.md + CORRESPONDENCE.md update)"
   ],
-  "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Charon.toml exists in repo.",
+  "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed run112. Charon.toml exists in repo.",
   "status_issue": 94,
   "next_targets": [
-    "inflights (phase 3->4: Task 4 impl model, dropLeq prefix lemmas)",
-    "progress (phase 1->2: Task 2 informal spec)"
+    "inflights (phase 3->4: ring-buffer impl model, sortedness-as-invariant proofs)",
+    "progress tracker (phase 1->2: Task 2 informal spec - src/tracker/progress.rs)",
+    "Nodup precondition for voter-list theorems (hardening)"
   ],
   "ci_workflow": ".github/workflows/lean-ci.yml",
-  "ci_status": "run109 CI hardening committed to unmerged PR. run110 PR doesn't modify CI workflow.",
+  "ci_status": "CI exists. PR #120 should trigger CI on Inflights.lean.",
   "critique_notes": {
     "highest_value_proved": [
       "committedIndex_safety",
       "committedIndex_maximality",
       "committedIndex_mono",
-      "findConflict_first_mismatch",
-      "findConflict_zero_iff_all_match",
-      "configValidate_iff_valid",
       "jointCommittedIndex_safety_in",
       "jointCommittedIndex_safety_out",
       "jointCommittedIndex_maximality",
+      "findConflict_first_mismatch",
+      "findConflict_zero_iff_all_match",
+      "configValidate_iff_valid",
       "maybeAppend_committed_eq",
       "maybeAppend_log_prefix_preserved",
       "maybeAppend_suffix_applied",
@@ -135,9 +132,10 @@
       "inflights_count_le_cap"
     ],
     "main_semantic_gap": "Voter lists use List Nat instead of deduplicated Finset/HashSet - theorems hold under implicit Nodup assumption not formally enforced",
-    "empty_outgoing_divergence": "jointCommittedIndex empty-config returns 0 in Lean model vs u64::MAX in Rust - documented in JCI9+JCI10 and CORRESPONDENCE.md",
+    "jci_empty_divergence": "JCI9/JCI10: empty-config returns 0 in Lean vs u64::MAX in Rust - may mislead for membership-transition configs",
     "no_bugs_found": true,
     "total_sorry": 0,
-    "total_public_theorems": 147
+    "total_public_theorems": 147,
+    "task7_run112": "CRITIQUE.md updated: added JCI (10), MaybeAppend (18), Inflights (15) theorem tables; updated overall assessment; revised Gaps (removed completed JCI/MaybeAppend; added Inflights phase4, progress tracker, end-to-end safety goals); added Concern 4 (JCI empty divergence)"
   }
 }
