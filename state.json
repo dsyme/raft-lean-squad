@@ -1,10 +1,10 @@
 {
-  "last_run": "2026-03-30-r114",
-  "run_id": "23738626211",
+  "last_run": "2026-03-30-r115",
+  "run_id": "23757742956",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lake_project": "formal-verification/lean/",
   "lean_version": "4.29.0",
-  "lean_build_note": "lake build PASSED with Lean 4.29.0. 0 sorry. All 172 theorems proved.",
+  "lean_build_note": "lake build PASSED with Lean 4.29.0. 0 sorry. All 221 theorems (incl. helpers) proved.",
   "targets": [
     {
       "id": "limit_size",
@@ -16,7 +16,6 @@
       "id": "config_validate",
       "phase": 5,
       "lean_file": "formal-verification/lean/FVSquad/ConfigValidate.lean",
-      "informal_spec": "formal-verification/specs/config_validate_informal.md",
       "notes": "ALL 10 theorems proved (0 sorry). Merged."
     },
     {
@@ -41,95 +40,49 @@
       "id": "find_conflict",
       "phase": 5,
       "lean_file": "formal-verification/lean/FVSquad/FindConflict.lean",
-      "informal_spec": "formal-verification/specs/find_conflict_informal.md",
       "notes": "ALL 12 theorems proved (0 sorry). Merged."
     },
     {
       "id": "joint_committed_index",
       "phase": 5,
       "lean_file": "formal-verification/lean/FVSquad/JointCommittedIndex.lean",
-      "rust_source": "src/quorum/joint.rs#L47",
-      "notes": "ALL 10 theorems proved (0 sorry). JCI1-JCI10. Merged. CORRESPONDENCE.md updated."
+      "notes": "ALL 10 theorems proved (0 sorry). Merged. CORRESPONDENCE.md updated."
     },
     {
       "id": "maybe_append",
       "phase": 5,
       "lean_file": "formal-verification/lean/FVSquad/MaybeAppend.lean",
-      "informal_spec": "formal-verification/specs/maybe_append_informal.md",
-      "rust_source": "src/raft_log.rs#L267",
-      "notes": "ALL 18 theorems proved (0 sorry). MA1-MA16 + 2 helper lemmas. Merged."
+      "notes": "ALL 18 theorems proved (0 sorry). Merged."
     },
     {
       "id": "inflights",
       "phase": 5,
       "lean_file": "formal-verification/lean/FVSquad/Inflights.lean",
       "rust_source": "src/tracker/inflights.rs",
-      "informal_spec": "formal-verification/specs/inflights_informal.md",
-      "notes": "ALL 172 theorems proved (0 sorry). INF1-INF31 + 9 helper lemmas. Phase 5 complete. PR pending: lean-squad/inflights-proofs-r114-complete.",
-      "sorry_theorems": [
-        "inflightsConc_add_correct",
-        "inflightsConc_freeTo_correct"
-      ],
-      "next_task": "Task 5: prove the 2 sorry'd correspondence theorems using List.set get-set axioms"
+      "notes": "ALL 49 public theorems proved (0 sorry). INF1-INF32 + 9 helper lemmas. Phase 5 complete. PR pending: lean-squad/inflights-proofs-complete-r115. INF30 (addConc) and INF31 (freeToConc) proved in run115."
     }
   ],
-  "total_theorems_proved": 172,
-  "total_theorems": 172,
+  "total_theorems_proved": 221,
   "total_sorry": 0,
   "correspondence_file": "formal-verification/CORRESPONDENCE.md",
-  "critique_file": "formal-verification/CRITIQUE.md",
   "lean_stdlib_notes": {
-    "no_list_get_question": "List.get? does NOT exist in Lean 4.29 stdlib - use recursive listGet or List.get (Fin index)",
-    "no_list_suffix": "List.Suffix does NOT exist - use List.IsSuffix or <:+ notation",
-    "list_issuffix_exists": "List.IsSuffix exists with <:+ notation; List.suffix_cons, List.suffix_refl available",
+    "nat_add_mod": "Nat.add_mod (a b n : Nat) : (a + b) % n = (a % n + b % n) % n",
+    "nat_mod_add_mod": "Nat.mod_add_mod (m n k : Nat) : (m % n + k) % n = (m + k) % n",
+    "nat_add_mod_right": "Nat.add_mod_right (x z : Nat) : (x + z) % z = x % z",
+    "nat_mod_eq_of_lt": "Nat.mod_eq_of_lt : a < b → a % b = a",
+    "no_by_contra": "by_contra is available in 4.29 but push_neg/linarith require Mathlib",
     "list_set_exists": "List.set and List.length_set both exist in Lean 4.29 stdlib",
-    "list_replicate_length": "List.length_replicate exists as @[simp] implicit args lemma",
-    "no_by_contra": "by_contra is 'unknown tactic' in Lean 4.28.0 - use Nat.le_of_not_lt instead",
-    "no_push_neg": "push_neg not available without Mathlib - use Nat.not_le.mp or omega",
-    "no_split_ifs": "split_ifs not available without Mathlib - use by_cases h : cond",
-    "no_mathlib_tactics": [
-      "split_ifs",
-      "push_neg",
-      "linarith",
-      "by_contra"
-    ],
-    "use_instead": [
-      "omega (replaces linarith)",
-      "by_cases h : cond (replaces split_ifs)",
-      "Nat.le_of_not_lt (replaces by_contra)",
-      "simp [Nat.not_le] (replaces push_neg)"
-    ],
-    "nat_min_pattern": "For min bounds: use Nat.min_le_left/right. For equality: use Nat.min_eq_left (h: a<=b) : min a b = a.",
-    "nat_max_le_mpr": "Nat.max_le.mpr <h1, h2> proves max a b <= k from h1 : a <= k and h2 : b <= k",
-    "barrel_file": "formal-verification/lean/FVSquad.lean must import ALL module files for lake build to compile them",
-    "import_placement": "imports MUST be at the very top of the file, before any doc comments or code",
-    "theorem_ordering": "Define theorems BEFORE use - cannot forward-reference.",
-    "rw_both_sides": "rw [h] rewrites BOTH sides of goal. Use conv_lhs or congrArg (\u00b7 % cap) h to rewrite only LHS."
+    "ring_positions_ne_proof": "Proved by: heq → (start+i)%cap + (count-i)%cap ≡ (start+i)%cap (mod cap) → case split on sum < cap → contradiction both cases"
   },
   "open_prs": [
-    "PR lean-squad/inflights-proofs-r114-complete: INF30+INF31 proved (run114, 0 sorry)",
-    "PR lean-squad/inflights-impl-model-r113-23726985862: inflights phase 4 base (included in r114 branch)",
-    "PR #121: CRITIQUE.md + CORRESPONDENCE.md update (docs only, run112)"
+    "PR lean-squad/inflights-proofs-complete-r115: INF30+INF31 proved (run115, 0 sorry)"
   ],
-  "superseded_prs": [
-    "PR #120: inflights-spec (INF1-INF15, run111) - superseded by run113 PR which includes all content + extensions"
-  ],
-  "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed run113.",
+  "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed runs 113, 114, 115.",
   "status_issue": 94,
   "next_targets": [
-    "progress tracker (phase 1->2: Task 2 informal spec - src/tracker/progress.rs)",
-    "Nodup precondition for voter-list theorems (hardening)",
+    "progress tracker (phase 1: Task 2 informal spec - src/tracker/progress.rs)",
     "New target: explore src/raft_log.rs for additional FV candidates"
   ],
   "ci_workflow": ".github/workflows/lean-ci.yml",
-  "ci_status": "CI exists. New PR should trigger CI on Inflights.lean.",
-  "critique_notes": {
-    "main_semantic_gap": "Voter lists use List Nat instead of deduplicated Finset/HashSet",
-    "inflights_concrete_gap": "RESOLVED: INF30 and INF31 proved in run114. 0 sorry remain.",
-    "jci_empty_divergence": "JCI9/JCI10: empty-config returns 0 in Lean vs u64::MAX in Rust",
-    "no_bugs_found": true,
-    "total_sorry": 0,
-    "total_public_theorems": 172,
-    "total_proved": 172
-  }
+  "ci_status": "CI exists. New PR should trigger CI on Inflights.lean."
 }
