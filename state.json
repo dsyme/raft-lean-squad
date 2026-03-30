@@ -1,10 +1,10 @@
 {
-  "last_run": "2026-03-30",
-  "run_id": "23726985862",
+  "last_run": "2026-03-30-r114",
+  "run_id": "23738626211",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lake_project": "formal-verification/lean/",
   "lean_version": "4.29.0",
-  "lean_build_note": "lake build PASSED with Lean 4.29.0. 2 sorry (inflightsConc_add_correct, inflightsConc_freeTo_correct).",
+  "lean_build_note": "lake build PASSED with Lean 4.29.0. 0 sorry. All 172 theorems proved.",
   "targets": [
     {
       "id": "limit_size",
@@ -61,18 +61,21 @@
     },
     {
       "id": "inflights",
-      "phase": 4,
+      "phase": 5,
       "lean_file": "formal-verification/lean/FVSquad/Inflights.lean",
       "rust_source": "src/tracker/inflights.rs",
       "informal_spec": "formal-verification/specs/inflights_informal.md",
-      "notes": "Phase 4 done run113. 40 theorems total (38 proved, 2 sorry). Abstract model INF1-INF18 (0 sorry). InflightsConc concrete model INF19-INF32. Sorry: inflightsConc_add_correct (needs List.set get-set), inflightsConc_freeTo_correct (needs ring-buffer loop analysis). PR open: lean-squad/inflights-impl-model-r113-23726985862",
-      "sorry_theorems": ["inflightsConc_add_correct", "inflightsConc_freeTo_correct"],
+      "notes": "ALL 172 theorems proved (0 sorry). INF1-INF31 + 9 helper lemmas. Phase 5 complete. PR pending: lean-squad/inflights-proofs-r114-complete.",
+      "sorry_theorems": [
+        "inflightsConc_add_correct",
+        "inflightsConc_freeTo_correct"
+      ],
       "next_task": "Task 5: prove the 2 sorry'd correspondence theorems using List.set get-set axioms"
     }
   ],
-  "total_theorems_proved": 170,
+  "total_theorems_proved": 172,
   "total_theorems": 172,
-  "total_sorry": 2,
+  "total_sorry": 0,
   "correspondence_file": "formal-verification/CORRESPONDENCE.md",
   "critique_file": "formal-verification/CRITIQUE.md",
   "lean_stdlib_notes": {
@@ -84,7 +87,12 @@
     "no_by_contra": "by_contra is 'unknown tactic' in Lean 4.28.0 - use Nat.le_of_not_lt instead",
     "no_push_neg": "push_neg not available without Mathlib - use Nat.not_le.mp or omega",
     "no_split_ifs": "split_ifs not available without Mathlib - use by_cases h : cond",
-    "no_mathlib_tactics": ["split_ifs", "push_neg", "linarith", "by_contra"],
+    "no_mathlib_tactics": [
+      "split_ifs",
+      "push_neg",
+      "linarith",
+      "by_contra"
+    ],
     "use_instead": [
       "omega (replaces linarith)",
       "by_cases h : cond (replaces split_ifs)",
@@ -95,10 +103,12 @@
     "nat_max_le_mpr": "Nat.max_le.mpr <h1, h2> proves max a b <= k from h1 : a <= k and h2 : b <= k",
     "barrel_file": "formal-verification/lean/FVSquad.lean must import ALL module files for lake build to compile them",
     "import_placement": "imports MUST be at the very top of the file, before any doc comments or code",
-    "theorem_ordering": "Define theorems BEFORE use - cannot forward-reference."
+    "theorem_ordering": "Define theorems BEFORE use - cannot forward-reference.",
+    "rw_both_sides": "rw [h] rewrites BOTH sides of goal. Use conv_lhs or congrArg (\u00b7 % cap) h to rewrite only LHS."
   },
   "open_prs": [
-    "PR lean-squad/inflights-impl-model-r113-23726985862: inflights phase 4, 40 theorems (38 proved, 2 sorry)",
+    "PR lean-squad/inflights-proofs-r114-complete: INF30+INF31 proved (run114, 0 sorry)",
+    "PR lean-squad/inflights-impl-model-r113-23726985862: inflights phase 4 base (included in r114 branch)",
     "PR #121: CRITIQUE.md + CORRESPONDENCE.md update (docs only, run112)"
   ],
   "superseded_prs": [
@@ -107,19 +117,19 @@
   "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed run113.",
   "status_issue": 94,
   "next_targets": [
-    "inflights (phase 4->5: prove inflightsConc_add_correct and inflightsConc_freeTo_correct using List.set get-set)",
     "progress tracker (phase 1->2: Task 2 informal spec - src/tracker/progress.rs)",
-    "Nodup precondition for voter-list theorems (hardening)"
+    "Nodup precondition for voter-list theorems (hardening)",
+    "New target: explore src/raft_log.rs for additional FV candidates"
   ],
   "ci_workflow": ".github/workflows/lean-ci.yml",
   "ci_status": "CI exists. New PR should trigger CI on Inflights.lean.",
   "critique_notes": {
     "main_semantic_gap": "Voter lists use List Nat instead of deduplicated Finset/HashSet",
-    "inflights_concrete_gap": "InflightsConc add_correct and freeTo_correct use sorry - need List.set get-set axioms (INF30, INF31)",
+    "inflights_concrete_gap": "RESOLVED: INF30 and INF31 proved in run114. 0 sorry remain.",
     "jci_empty_divergence": "JCI9/JCI10: empty-config returns 0 in Lean vs u64::MAX in Rust",
     "no_bugs_found": true,
-    "total_sorry": 2,
+    "total_sorry": 0,
     "total_public_theorems": 172,
-    "total_proved": 170
+    "total_proved": 172
   }
 }
