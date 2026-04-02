@@ -19,8 +19,9 @@ Prioritised target list. Phases: 1=Research, 2=Informal Spec, 3=Lean Spec, 4=Lea
 | 11 | `progress_set` | `src/tracker/progress_set.rs` | quorum tracking | 1 | Next target: quorum tracking over the progress map. |
 | 12 | `is_up_to_date` | `src/raft_log.rs` | log freshness comparison | 5 ✅ | 18 theorems proved (0 sorry). Reflexivity, totality, transitivity, antisymmetry of log order. `FVSquad/IsUpToDate.lean`. |
 | 13 | `log_unstable` | `src/log_unstable.rs` | unstable log segment ops | 5 ✅ | 37 theorems proved (0 sorry). All query ops, state transitions, wf invariant, truncate_and_append 3-case analysis. `FVSquad/LogUnstable.lean`. |
+| 14 | `tally_votes` | `src/tracker.rs` | `ProgressTracker::tally_votes` | 5 ✅ | 18 theorems proved (0 sorry). Granted/rejected counting, partition identity, rejection-closes-election safety property, all/none voting lemmas. `FVSquad/TallyVotes.lean`. |
 
 ## Next Steps
 
-1. **Task 3** (Formal Spec for `ProgressTracker`) — vote tallying and quorum tracking in `src/tracker.rs`.
+1. **Task 5** (Proof for joint tally_votes) — extend `TallyVotes` to `JointConfig` using `JointVote` composition.
 2. **Task 8** (Aeneas extraction) — blocked on OCaml/opam in no-new-privileges containers.
