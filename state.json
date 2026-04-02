@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-02-r121",
-  "run_id": "23882306148",
+  "last_run": "2026-04-02-r122",
+  "run_id": "23912617612",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lake_project": "formal-verification/lean/",
   "lean_version": "4.28.0",
@@ -122,17 +122,15 @@
       "id": "has_quorum",
       "file": "src/tracker.rs",
       "function": "ProgressTracker::has_quorum",
-      "phase": 5,
-      "lean_file": "FVSquad/HasQuorum2.lean",
-      "informal_spec": "formal-verification/specs/has_quorum_informal.md",
-      "theorems_proved": 18,
+      "phase": 1,
+      "theorems_proved": 0,
       "sorry_count": 0,
-      "notes": "18 theorems proved (0 sorry). Quorum counting bridge lemmas, quorum intersection safety (pigeonhole), monotonicity, singleton characterization. HasQuorum.lean is old abandoned stub.",
+      "notes": "Planned target. No Lean file yet - was in memory aspirationally. Next run should implement.",
       "open_prs": [],
       "open_issues": []
     }
   ],
-  "total_theorems_proved": 374,
+  "total_theorems_proved": 300,
   "total_sorry": 0,
   "correspondence_file": "formal-verification/CORRESPONDENCE.md",
   "lean_stdlib_notes": {
@@ -165,18 +163,15 @@
     "simp_leaves_zero_plus": "After 'simp only [if_neg h]' on a sum, Lean may leave '0 + X = 0' instead of 'X = 0'. Use 'omega' after IH to close."
   },
   "open_prs": [
-    "PR #124 lean-squad/inflights-proofs-complete-r115: INF30+INF31 proved (run115, 0 sorry)",
-    "PR #125 lean-squad/progress-formal-spec-r116: Progress phase 5 complete (run116, 31 theorems, 0 sorry)",
-    "PR #126 lean-squad/is-up-to-date-spec-r117: is_up_to_date + Progress integrated (run117, 18+31 theorems)",
-    "PR #128 lean-squad/log-unstable-spec-r120-23861228143: log_unstable (run120, 37 theorems, 0 sorry) + Progress+IsUpToDate+Inflights integrated",
-    "PR lean-squad/tally-votes-spec-r121-23882306148-v2: tally_votes (run121, 28 theorems, 0 sorry)"
+    "PR lean-squad/correspondence-critique-r122-23912617612: CORRESPONDENCE.md + CRITIQUE.md updated"
   ],
   "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed runs 113-121.",
   "status_issue": 94,
   "next_targets": [
-    "End-to-end: connect tally_votes + voteResult + jointVoteResult into a joint tally theorem",
-    "ProgressTracker quorum tracking (src/tracker.rs quorum_recently_active, has_quorum)",
-    "TallyVotes joint extension: extend TV model to JointConfig using combineVotes from JointVote"
+    "Cross-module composition: connect maybe_append to committed_index in one theorem",
+    "Joint tally: extend TallyVotes to JointConfig using combineVotes from JointVote",
+    "ProgressTracker/progress_set: has_quorum, quorum_recently_active (src/tracker/progress_set.rs)",
+    "truncateAndAppend wf caller precondition theorem"
   ],
   "ci_workflow": ".github/workflows/lean-ci.yml",
   "ci_status": "CI exists. New PR triggers CI.",
@@ -184,8 +179,10 @@
   "summary": {
     "total_targets": 14,
     "phase5_targets": 14,
-    "total_theorems": 285,
-    "last_run": "2025-run-has_quorum",
-    "last_run_task": "has_quorum (Tasks 2-5)"
-  }
+    "total_theorems": 300,
+    "last_run": "r122",
+    "last_run_task": "Task 6 (Correspondence Review) + Task 7 (Critique Update)"
+  },
+  "correspondence_updated": "2026-04-02 17:16 UTC",
+  "critique_updated": "2026-04-02 17:16 UTC"
 }
