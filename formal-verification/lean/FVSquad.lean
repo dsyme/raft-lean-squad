@@ -8,3 +8,6 @@ import FVSquad.JointCommittedIndex
 import FVSquad.FindConflict
 import FVSquad.MaybeAppend
 import FVSquad.Inflights
+import FVSquad.Progress
+import FVSquad.IsUpToDate
+import FVSquad.LogUnstable

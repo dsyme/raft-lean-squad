@@ -18,8 +18,9 @@ Prioritised target list. Phases: 1=Research, 2=Informal Spec, 3=Lean Spec, 4=Lea
 | 10 | `progress` | `src/tracker/progress.rs` | state machine | 5 ✅ | 31 theorems proved (0 sorry). State machine transitions, `wf` invariant (`matched+1≤next_idx`), `maybeUpdate`, `isPaused`, `maybeDecrTo`. `FVSquad/Progress.lean`. |
 | 11 | `progress_set` | `src/tracker/progress_set.rs` | quorum tracking | 1 | Next target: quorum tracking over the progress map. |
 | 12 | `is_up_to_date` | `src/raft_log.rs` | log freshness comparison | 5 ✅ | 18 theorems proved (0 sorry). Reflexivity, totality, transitivity, antisymmetry of log order. `FVSquad/IsUpToDate.lean`. |
+| 13 | `log_unstable` | `src/log_unstable.rs` | unstable log segment ops | 5 ✅ | 37 theorems proved (0 sorry). All query ops, state transitions, wf invariant, truncate_and_append 3-case analysis. `FVSquad/LogUnstable.lean`. |
 
 ## Next Steps
 
-1. **Task 2** (Informal Spec for `ProgressTracker`) — quorum tracking and vote tallying in `src/tracker.rs`.
+1. **Task 3** (Formal Spec for `ProgressTracker`) — vote tallying and quorum tracking in `src/tracker.rs`.
 2. **Task 8** (Aeneas extraction) — blocked on OCaml/opam in no-new-privileges containers.

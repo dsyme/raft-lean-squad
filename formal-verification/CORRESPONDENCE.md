@@ -570,3 +570,69 @@ All 18 theorems proved (0 sorry). Key results:
 - Election restriction: same-term check implies index ≥
 
 > 🔬 Updated by Lean Squad run [23790628468](https://github.com/dsyme/fv-squad/actions/runs/23790628468).
+
+---
+
+## Target: `log_unstable` — `Unstable` struct in `src/log_unstable.rs`
+
+**Lean file**: `formal-verification/lean/FVSquad/LogUnstable.lean`
+**Rust source**: `src/log_unstable.rs`
+**Phase**: 5 ✅ (37 theorems, 0 sorry)
+**Informal spec**: `formal-verification/specs/log_unstable_informal.md`
+
+### Lean model
+
+```lean
+structure Unstable where
+  offset   : Nat
+  entries  : List Nat         -- terms; entries[i].index = offset + i
+  snapshot : Option (Nat × Nat)  -- some (snap_index, snap_term) or none
+```
+
+### Function mapping
+
+| Lean function | Rust function | Correspondence | Divergences |
+|---|---|---|---|
+| `maybeFirstIndex` | `Unstable::maybe_first_index` | Exact | `Nat` instead of `u64` |
+| `maybeLastIndex` | `Unstable::maybe_last_index` | Exact | `Nat` instead of `u64` |
+| `maybeTerm` | `Unstable::maybe_term` | Abstraction | Entry payloads omitted (only terms tracked) |
+| `stableEntries` | `Unstable::stable_entries` | Abstraction | Pre-condition (non-empty entries with matching term/index) assumed, not checked; panic path omitted |
+| `stableSnap` | `Unstable::stable_snap` | Abstraction | Pre-condition (snapshot present with matching index) assumed |
+| `restore` | `Unstable::restore` | Exact | `Nat` instead of `u64`; `Snapshot` struct flattened to `(index, term)` |
+| `truncateAndAppend` | `Unstable::truncate_and_append` | Abstraction | `entries_size` accounting omitted; `must_check_outofbounds` not modelled |
+| `slice` | `Unstable::slice` | Abstraction | Returns terms only (not full entries); bounds check not modelled |
+
+### Known divergences
+
+1. **Nat vs u64**: All indices/terms are `Nat`. No overflow analysis.
+2. **Entry payloads**: Only terms are stored; entry data bytes are omitted.
+3. **entries_size**: The Rust tracks byte sizes for flow control; the Lean model ignores this field.
+4. **Panic paths**: `stable_entries` panics if entries are empty or the term/index don't match; `stable_snap` panics if no snapshot is present. These pre-conditions are **assumed** in the Lean model (happy path only).
+5. **Logger**: The `logger` field and all fatal! calls are omitted.
+
+### Open question from informal spec
+
+`truncate_and_append` in **Case 2** (`after ≤ offset`) changes the offset but does not check
+that the snapshot is None. The Rust `stable_entries` asserts `snapshot.is_none()` before
+stabilising entries, but `truncate_and_append` does not. The `wf` invariant
+(`snapshot.index < offset`) can be violated in Case 2 if a snapshot is pending.
+Callers appear to guarantee the snapshot is cleared first, but this is not enforced
+by the Rust type system. Captured in `formal-verification/specs/log_unstable_informal.md`.
+
+### Proved theorems summary
+
+All 37 theorems proved (0 sorry). Coverage:
+
+| Group | Theorems | What is proved |
+|-------|---------|----------------|
+| `maybeFirstIndex` | MFI1–MFI2 | None when no snapshot; Some(idx+1) when snapshot present |
+| `maybeLastIndex` | MLI1–MLI3 | None/snapshot/entries correctness |
+| `maybeTerm` | MT1–MT5 | Before-offset (no snap, hit, miss); in-entries hit/miss |
+| `stableEntries` | SE1–SE5 | Offset advances, entries cleared, snapshot preserved, strict monotonicity |
+| `stableSnap` | SS1–SS3 | Snapshot cleared, entries/offset preserved |
+| `restore` | RE1–RE7 | Offset=idx+1, empty entries, snapshot set, maybeLastIndex/FirstIndex, maybeTerm correctness |
+| `truncateAndAppend` | TAA1–TAA7 | Case 1 (append), Case 2 (replace), Case 3 (truncate+append) entries/offset/length; snapshot always preserved |
+| `slice` | SL1 | `(slice u lo hi).length = hi - lo` |
+| Well-formedness | WF1–WF4 | `restore_wf`, `stableEntries_wf`, `stableSnap_wf`, Case-1 wf preservation |
+
+> �� Updated by Lean Squad run [23861228143](https://github.com/dsyme/fv-squad/actions/runs/23861228143).
