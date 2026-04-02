@@ -7,7 +7,7 @@ correspondence level, known divergences, and the impact on any proofs that rely 
 definition.
 
 ## Last Updated
-- **Date**: 2026-03-31 03:45 UTC
+- **Date**: 2026-03-30 17:20 UTC
 - **Commit**: `cfaa3a9` (+ inflights phase 5 proofs)
 
 ---
