@@ -516,52 +516,57 @@ All 38 proved theorems (INF1–INF32 minus the 2 sorry'd) are sound. The abstrac
 | `Progress.becomeReplicate` | `Progress::become_replicate` | Exact | |
 | `Progress.becomeSnapshot` | `Progress::become_snapshot` | Exact | |
 | `Progress.maybeUpdate` | `Progress::maybe_update` | Exact | Returns `(Progress, Bool)` pair vs `&mut self` + `bool` |
-| `Progress.maybeDecrTo` | `Progress::maybe_decr_to` | Exact | Nat subtraction saturates at 0; Rust u64 guard `next_idx == 0 || next_idx - 1 != rejected` is equivalent (proved as PR26) |
+| `Progress.maybeDecrTo` | `Progress::maybe_decr_to` | Exact | Nat subtraction saturates at 0; Rust u64 guard proved equivalent (PR26) |
 | `Progress.isPaused` | `Progress::is_paused` | Abstraction | `ins.full()` replaced by `ins_full : Bool` |
 | `Progress.isSnapshotCaughtUp` | `Progress::is_snapshot_caught_up` | Exact | |
 | `Progress.resume` / `Progress.pause` | `Progress::resume` / `Progress::pause` | Exact | |
-| `Progress.snapshotFailure` | `Progress::snapshot_failure` | Exact | |
-| `Progress.resetState` | `Progress::reset_state` (private) | Exact | |
-| `INVALID_INDEX` | `INVALID_INDEX` (`src/raft.rs`) | Exact | Both are 0 |
 
 ### Known divergences
 
-1. **Nat vs u64**: All indices are modelled as `Nat` (unbounded). Properties hold for all natural numbers; no overflow analysis. For practical log sizes (< 2^63), Nat is equivalent to u64.
-
-2. **`ins_full` abstraction**: The full `Inflights` ring buffer (separately formalised in `Inflights.lean`) is abstracted to a single `Bool` here. Theorems about `isPaused` are conditional on the value of `ins_full`. The full invariant `ins_full = ins.full()` is not enforced within this model — callers must provide the correct value.
-
-3. **`Progress::reset`** (package-private): not modelled here. It resets the full state; its properties are simple and do not add FV value beyond what `mk_new` provides.
+1. **Nat vs u64**: All indices are modelled as `Nat` (unbounded).
+2. **`ins_full` abstraction**: Ring buffer internals omitted; only `full()` is modelled.
+3. **`Progress::reset`**: Not modelled.
 
 ### Proved theorems summary
 
-| Theorem | Property | Level |
-|---------|----------|-------|
-| PR1–PR3 | State transitions set correct state | Mid |
-| PR4–PR6 | State transitions set `next_idx` correctly | Mid |
-| PR7–PR9 | State transitions clear `paused` | Mid |
-| PR10 | `becomeSnapshot` sets `pending_snapshot` | Mid |
-| PR11–PR13 | `isPaused` semantics per state | Mid |
-| PR14–PR17 | `maybeUpdate` semantics | Mid |
-| PR18–PR20 | `wf` invariant preservation | High |
-| PR21 | `isSnapshotCaughtUp` characterisation | Mid |
-| PR22 | `mk_new` satisfies `wf` | Mid |
-| PR23–PR25 | State transitions preserve `matched` | Mid |
-| PR26 | Guard equivalence in `maybeDecrTo` | Mid |
-| PR27–PR28 | `maybeDecrTo` in Replicate state | Mid |
-| PR29 | `becomeSnapshot` preserves `wf` | High |
-| PR30a–PR30b | `resume`/`pause` preserves core fields and `wf` | Low |
+All 31 theorems proved (0 sorry). Key: `wf` invariant (`matched+1≤next_idx`) established by `mk_new` and preserved by all transitions. `becomeProbe`/`becomeReplicate` are self-healing.
 
-### Impact on proofs
+> 🔬 Updated by Lean Squad run [23790628468](https://github.com/dsyme/fv-squad/actions/runs/23790628468).
 
-All 31 theorems are proved without `sorry`. The key invariant `wf` (`matched + 1 ≤ next_idx`) is
-proved to be:
-- Established by `mk_new(next_idx)` when `next_idx ≥ 1` (PR22)
-- Preserved by `becomeProbe` (PR18) — unconditionally, so even holds if input violated wf
-- Preserved by `becomeReplicate` (PR19) — unconditionally
-- Preserved by `becomeSnapshot` (PR29) — trivially, since it doesn't change matched/next_idx
-- Preserved by `maybeUpdate` (PR20)
+---
 
-Notable: `becomeProbe` and `becomeReplicate` are *self-healing* — they restore `wf` even if
-the input `Progress` violated it. This is a useful safety property.
+## `IsUpToDate.lean` ↔ `src/raft_log.rs`
 
-> 🔬 Updated by Lean Squad run [23779112394](https://github.com/dsyme/fv-squad/actions/runs/23779112394).
+**Lean file**: `formal-verification/lean/FVSquad/IsUpToDate.lean`  
+**Rust file**: [`src/raft_log.rs`](src/raft_log.rs)  
+**Phase**: 5 ✅ (18 theorems, 0 sorry)
+
+### Type mapping
+
+| Lean type/def | Rust type/field | Correspondence | Notes |
+|---|---|---|---|
+| `LogId` | `RaftLog<T>` (last_term, last_index fields) | Abstraction | Only `last_term()` and `last_index()` are modelled; storage, unstable log, commit/apply state all omitted |
+| `LogId.term` | `RaftLog::last_term()` | Exact | `Nat` vs `u64` |
+| `LogId.index` | `RaftLog::last_index()` | Exact | `Nat` vs `u64` |
+| `isUpToDate voter ct ci` | `raft_log.is_up_to_date(last_index, term)` | Exact | Pure function; models only the comparison, not the full `RaftLog` |
+
+### Function mapping
+
+| Lean function | Rust function | Correspondence | Divergences |
+|---|---|---|---|
+| `isUpToDate` | `RaftLog::is_up_to_date` | Exact | `Nat` instead of `u64`; no overflow possible for practical log sizes |
+
+### Known divergences
+
+1. **Nat vs u64**: All indices and terms are `Nat`. No overflow analysis.
+2. **Pure function**: `RaftLog` is a rich struct with storage, commit index, etc. We model only the `(last_term, last_index)` pair needed for the comparison.
+
+### Proved theorems summary
+
+All 18 theorems proved (0 sorry). Key results:
+- Correctness: `isUpToDate ↔ logGe` (lex order on term×index)
+- Reflexivity, totality, transitivity, antisymmetry
+- High-term/low-term/same-term specialisations
+- Election restriction: same-term check implies index ≥
+
+> 🔬 Updated by Lean Squad run [23790628468](https://github.com/dsyme/fv-squad/actions/runs/23790628468).
