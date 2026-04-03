@@ -1,10 +1,10 @@
 {
-  "last_run": "2026-04-03-r123",
-  "run_id": "23927847369",
+  "last_run": "2026-04-03-r124",
+  "run_id": "23932446195",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lake_project": "formal-verification/lean/",
   "lean_version": "4.28.0",
-  "lean_build_note": "lake build PASSED with Lean 4.28.0. 0 sorry. 320+ theorems proved.",
+  "lean_build_note": "lake build PASSED with Lean 4.28.0. 0 sorry. 337 theorems across 16 files.",
   "targets": [
     {
       "id": "limit_size",
@@ -124,13 +124,24 @@
       "lean_file": "formal-verification/lean/FVSquad/HasQuorum.lean",
       "informal_spec": "formal-verification/specs/has_quorum_informal.md",
       "rust_source": "src/tracker.rs",
-      "notes": "22 theorems proved (0 sorry). PR open: lean-squad/has-quorum-r123-23927847369. HQ14 quorum_intersection + HQ20 quorum_intersection_mem are the key Raft safety theorems.",
+      "notes": "22 theorems proved (0 sorry). Incorporated from PR #131 into QRA PR lean-squad/qra-r124-23932446195.",
       "theorems_proved": 22,
       "sorry_count": 0,
-      "open_prs": ["lean-squad/has-quorum-r123-23927847369"]
+      "open_prs": ["lean-squad/qra-r124-23932446195"]
+    },
+    {
+      "id": "quorum_recently_active",
+      "phase": 5,
+      "lean_file": "formal-verification/lean/FVSquad/QuorumRecentlyActive.lean",
+      "informal_spec": "formal-verification/specs/quorum_recently_active_informal.md",
+      "rust_source": "src/tracker.rs",
+      "notes": "15 theorems proved (0 sorry). QRA4 leader-always-active, QRA13 singleton-self, QRA12 nil-entries, QRA15 monotonicity. PR open: lean-squad/qra-r124-23932446195. Model abstracts write side-effects.",
+      "theorems_proved": 15,
+      "sorry_count": 0,
+      "open_prs": ["lean-squad/qra-r124-23932446195"]
     }
   ],
-  "total_theorems_proved": 322,
+  "total_theorems_proved": 337,
   "total_sorry": 0,
   "correspondence_file": "formal-verification/CORRESPONDENCE.md",
   "lean_stdlib_notes": {
@@ -162,28 +173,30 @@
     "refine_prod_eq": "refine ⟨?_, ?_, ?_⟩ does NOT work for product-type equality goals (Eq has no explicit fields). Use 'simp only [f, h1, h2, h3]' or compute component-by-component.",
     "simp_leaves_zero_plus": "After 'simp only [if_neg h]' on a sum, Lean may leave '0 + X = 0' instead of 'X = 0'. Use 'omega' after IH to close.",
     "no_nat_ble_iff_le": "Nat.ble_iff_le does NOT exist. Use decide_eq_true_eq with decide-based Bool functions. E.g., 'simp [decide_eq_true_eq]' for 'decide (P) = true ↔ P'.",
-    "bool_if_false_simp": "For 'if s v = true' where h : s v = false, simp may leave 'if false = true then'. Use overlapCount_none_in or similar helper that avoids the Bool→Prop expansion issue."
+    "bool_if_false_simp": "For 'if s v = true' where h : s v = false, simp may leave 'if false = true then'. Use 'simp [h]' (not simp only) to fully reduce Bool ite.",
+    "list_any_eq_true": "List.any_eq_true : l.any p = true ↔ ∃ x ∈ l, p x = true — available in Lean 4.28 stdlib",
+    "overlapCount_active_nil_proof": "Use 'simp [overlapCount_cons, ih]' for inductive step — @[simp] isActive_nil + @[simp] overlapCount_cons close it automatically"
   },
   "open_prs": [
-    "PR lean-squad/has-quorum-r123-23927847369: HasQuorum.lean 22 theorems (0 sorry) + CRITIQUE.md update"
+    "PR lean-squad/qra-r124-23932446195: HasQuorum.lean (22 theorems) + QuorumRecentlyActive.lean (15 theorems) + TARGETS.md"
   ],
-  "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed runs 113-123.",
+  "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed runs 113-124.",
   "status_issue": 94,
   "next_targets": [
-    "Cross-module composition: connect has_quorum to committed_index in one theorem",
-    "quorum_recently_active: theorem connecting to has_quorum + Progress (src/tracker.rs:336)",
+    "Cross-module composition: connect has_quorum + quorum_recently_active + committed_index in one safety theorem",
+    "progress_set: quorum tracking over the progress map (src/tracker/progress_set.rs)",
     "Joint tally: extend TallyVotes to JointConfig using combineVotes from JointVote",
     "truncateAndAppend wf caller precondition theorem"
   ],
   "ci_workflow": ".github/workflows/lean-ci.yml",
   "ci_status": "CI exists. New PR triggers CI.",
-  "fvsquad_lean_note": "FVSquad.lean now imports all 15 targets including HasQuorum",
+  "fvsquad_lean_note": "FVSquad.lean now imports all 16 targets including HasQuorum and QuorumRecentlyActive",
   "summary": {
-    "total_targets": 15,
-    "phase5_targets": 15,
-    "total_theorems": 322,
-    "last_run": "r123",
-    "last_run_task": "Task 5 (has_quorum: 22 theorems, HQ14/HQ20 safety) + Task 7 (CRITIQUE.md update)"
+    "total_targets": 16,
+    "phase5_targets": 16,
+    "total_theorems": 337,
+    "last_run": "r124",
+    "last_run_task": "Task 3+4+5 (quorum_recently_active: 15 theorems, leader-always-active, monotonicity)"
   },
   "critique_updated": "2026-04-03 00:13 UTC"
 }
