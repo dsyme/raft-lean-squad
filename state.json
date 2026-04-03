@@ -1,32 +1,34 @@
 {
-  "last_run": "2026-04-03-r127",
-  "run_id": "23954480524",
+  "last_run": "r128",
+  "run_id": "23962948702",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lake_project": "formal-verification/lean/",
   "lean_version": "4.28.0",
-  "lean_build_note": "lake build PASSED with Lean 4.28.0. 0 sorry. 370 theorems across 19 files.",
+  "lean_build_note": "lake build PASSED with Lean 4.28.0. 5 sorry (all in new files, require message-passing protocol model). 395 theorems across 21 files.",
   "targets": [
-    { "id": "limit_size", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/LimitSize.lean", "notes": "ALL 17 public theorems proved (0 sorry). Merged.", "theorems_proved": 17, "sorry_count": 0 },
-    { "id": "config_validate", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/ConfigValidate.lean", "notes": "ALL 10 theorems proved (0 sorry). Merged.", "theorems_proved": 10, "sorry_count": 0 },
-    { "id": "vote_result", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/MajorityVote.lean", "notes": "ALL 21 theorems proved (0 sorry). Merged.", "theorems_proved": 21, "sorry_count": 0 },
-    { "id": "joint_vote_result", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/JointVote.lean", "notes": "ALL 14 theorems proved (0 sorry). Merged.", "theorems_proved": 14, "sorry_count": 0 },
-    { "id": "committed_index", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/CommittedIndex.lean", "notes": "ALL 17 theorems proved (0 sorry). Safety, maximality, monotonicity all proved. Merged.", "theorems_proved": 17, "sorry_count": 0 },
-    { "id": "find_conflict", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/FindConflict.lean", "notes": "ALL 12 theorems proved (0 sorry). Merged.", "theorems_proved": 12, "sorry_count": 0 },
-    { "id": "joint_committed_index", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/JointCommittedIndex.lean", "notes": "ALL 10 theorems proved (0 sorry). Merged.", "theorems_proved": 10, "sorry_count": 0 },
-    { "id": "maybe_append", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/MaybeAppend.lean", "notes": "ALL 18 theorems proved (0 sorry). Merged.", "theorems_proved": 18, "sorry_count": 0 },
-    { "id": "inflights", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/Inflights.lean", "notes": "ALL 49 public theorems proved (0 sorry). Merged.", "theorems_proved": 49, "sorry_count": 0 },
-    { "id": "progress", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/Progress.lean", "informal_spec": "formal-verification/specs/progress_informal.md", "rust_source": "src/tracker/progress.rs", "notes": "ALL 31 theorems proved (0 sorry). Merged.", "theorems_proved": 31, "sorry_count": 0 },
-    { "id": "is_up_to_date", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/IsUpToDate.lean", "informal_spec": "formal-verification/specs/is_up_to_date_informal.md", "rust_source": "src/raft_log.rs", "notes": "ALL 18 theorems proved (0 sorry). Merged.", "theorems_proved": 18, "sorry_count": 0 },
-    { "id": "log_unstable", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/LogUnstable.lean", "informal_spec": "formal-verification/specs/log_unstable_informal.md", "rust_source": "src/log_unstable.rs", "notes": "ALL 37 theorems proved (0 sorry). Merged.", "theorems_proved": 37, "sorry_count": 0 },
-    { "id": "tally_votes", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/TallyVotes.lean", "informal_spec": "formal-verification/specs/tally_votes_informal.md", "rust_source": "src/tracker.rs", "notes": "ALL 28 theorems proved (0 sorry). Merged.", "theorems_proved": 28, "sorry_count": 0 },
-    { "id": "has_quorum", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/HasQuorum.lean", "informal_spec": "formal-verification/specs/has_quorum_informal.md", "rust_source": "src/tracker.rs", "notes": "22 theorems proved (0 sorry). Merged PR #131.", "theorems_proved": 22, "sorry_count": 0 },
-    { "id": "quorum_recently_active", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/QuorumRecentlyActive.lean", "informal_spec": "formal-verification/specs/quorum_recently_active_informal.md", "rust_source": "src/tracker.rs", "notes": "15 theorems proved (0 sorry). Merged PR #132.", "theorems_proved": 15, "sorry_count": 0 },
-    { "id": "safety_composition", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/SafetyComposition.lean", "rust_source": "src/quorum/majority.rs+src/tracker.rs", "notes": "9 cross-module theorems proved (0 sorry). SC4 raft_log_safety, SC6 biconditional quorum-iff-committedIndex, SC9 leader-election-safety. Merged PR #133.", "theorems_proved": 9, "sorry_count": 0 },
-    { "id": "joint_tally", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/JointTally.lean", "rust_source": "src/tracker.rs", "notes": "14 theorems proved (0 sorry). JT2 Won-iff, JT3 Lost-iff, JT5 non-joint degeneration, JT14 granted lower bound. Open PR #135.", "theorems_proved": 14, "sorry_count": 0, "open_prs": ["PR #135"] },
-    { "id": "joint_safety_composition", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/JointSafetyComposition.lean", "rust_source": "src/quorum/joint.rs+src/tracker.rs", "notes": "10 theorems proved (0 sorry). JSC7 joint_raft_log_safety — witnesses in BOTH incoming and outgoing halves. Extends SC4 to joint-config. PR open: lean-squad/joint-safety-r127-23954480524-ab3c7f2d.", "theorems_proved": 10, "sorry_count": 0, "open_prs": ["lean-squad/joint-safety-r127-23954480524-ab3c7f2d"] }
+    {"id": "limit_size", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/LimitSize.lean", "notes": "ALL 17 public theorems proved (0 sorry). Merged.", "theorems_proved": 17, "sorry_count": 0},
+    {"id": "config_validate", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/ConfigValidate.lean", "notes": "ALL 10 theorems proved (0 sorry). Merged.", "theorems_proved": 10, "sorry_count": 0},
+    {"id": "vote_result", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/MajorityVote.lean", "notes": "ALL 21 theorems proved (0 sorry). Merged.", "theorems_proved": 21, "sorry_count": 0},
+    {"id": "joint_vote_result", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/JointVote.lean", "notes": "ALL 14 theorems proved (0 sorry). Merged.", "theorems_proved": 14, "sorry_count": 0},
+    {"id": "committed_index", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/CommittedIndex.lean", "notes": "ALL 17 theorems proved (0 sorry). Merged.", "theorems_proved": 17, "sorry_count": 0},
+    {"id": "find_conflict", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/FindConflict.lean", "notes": "ALL 12 theorems proved (0 sorry). Merged.", "theorems_proved": 12, "sorry_count": 0},
+    {"id": "joint_committed_index", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/JointCommittedIndex.lean", "notes": "ALL 10 theorems proved (0 sorry). Merged.", "theorems_proved": 10, "sorry_count": 0},
+    {"id": "maybe_append", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/MaybeAppend.lean", "notes": "ALL 18 theorems proved (0 sorry). Merged.", "theorems_proved": 18, "sorry_count": 0},
+    {"id": "inflights", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/Inflights.lean", "notes": "ALL 49 public theorems proved (0 sorry). Merged.", "theorems_proved": 49, "sorry_count": 0},
+    {"id": "progress", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/Progress.lean", "notes": "ALL 31 theorems proved (0 sorry). Merged.", "theorems_proved": 31, "sorry_count": 0},
+    {"id": "is_up_to_date", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/IsUpToDate.lean", "notes": "ALL 18 theorems proved (0 sorry). Merged.", "theorems_proved": 18, "sorry_count": 0},
+    {"id": "log_unstable", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/LogUnstable.lean", "notes": "37 theorems proved (0 sorry). Merged.", "theorems_proved": 37, "sorry_count": 0},
+    {"id": "tally_votes", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/TallyVotes.lean", "notes": "28 theorems proved (0 sorry). Merged.", "theorems_proved": 28, "sorry_count": 0},
+    {"id": "has_quorum", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/HasQuorum.lean", "notes": "22 theorems proved (0 sorry). Merged PR #131.", "theorems_proved": 22, "sorry_count": 0},
+    {"id": "quorum_recently_active", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/QuorumRecentlyActive.lean", "notes": "15 theorems proved (0 sorry). Merged PR #132.", "theorems_proved": 15, "sorry_count": 0},
+    {"id": "safety_composition", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/SafetyComposition.lean", "notes": "9 cross-module theorems proved (0 sorry). SC4 raft_log_safety, SC6 biconditional, SC9 leader-election-safety. Merged PR #133.", "theorems_proved": 9, "sorry_count": 0},
+    {"id": "joint_tally", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/JointTally.lean", "notes": "14 theorems proved (0 sorry). Merged PR #135.", "theorems_proved": 14, "sorry_count": 0},
+    {"id": "joint_safety_composition", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/JointSafetyComposition.lean", "notes": "10 theorems proved (0 sorry). JSC7 joint_raft_log_safety. Merged.", "theorems_proved": 10, "sorry_count": 0},
+    {"id": "raft_safety", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/RaftSafety.lean", "notes": "12 theorems: 9 proved, 3 sorry. RSS1 raft_state_machine_safety, RSS6 raft_cluster_safety (end-to-end), RSS7 raft_joint_cluster_safety. Open PR: lean-squad/raft-safety-r128-23962948702-end2end.", "theorems_proved": 9, "sorry_count": 3, "open_prs": ["lean-squad/raft-safety-r128-23962948702-end2end"]},
+    {"id": "cross_module_composition", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/CrossModuleComposition.lean", "notes": "7 theorems: 5 proved, 2 sorry. CMC3 maybe_append_committed_bounded (key cross-module bridge). Open PR: lean-squad/raft-safety-r128-23962948702-end2end.", "theorems_proved": 5, "sorry_count": 2, "open_prs": ["lean-squad/raft-safety-r128-23962948702-end2end"]}
   ],
-  "total_theorems_proved": 370,
-  "total_sorry": 0,
+  "total_theorems_proved": 395,
+  "total_sorry": 5,
   "correspondence_file": "formal-verification/CORRESPONDENCE.md",
   "lean_stdlib_notes": {
     "nat_add_mod": "Nat.add_mod (a b n : Nat) : (a + b) % n = (a % n + b % n) % n",
@@ -46,30 +48,42 @@
     "calc_chain_for_nat_le": "Use calc chains with ≤ and = steps (mixing is fine in Lean 4) to avoid omega/linarith issues",
     "overlapCount_eq_filter_length": "overlapCount voters s = (voters.filter s).length. Proof: induction; cons case: 'cases h : s v <;> simp [ih] <;> omega'",
     "SC1_bridge": "SC1_overlapCount_eq_countGe: overlapCount voters (fun v => decide (acked v >= k)) = countGe voters acked k. Used for cross-module quorum reasoning.",
-    "open_namespace_not_available": "JointVote and TallyVotes have no namespace declarations. Their definitions (combineVotes, jointVoteResult, yesCount, noCount, tallyVotes, etc.) are in the root namespace. Do NOT use 'open FVSquad.JointVote'.",
+    "open_namespace_not_available": "JointVote, TallyVotes, HasQuorum have no namespace declarations. Their definitions are in the root namespace. Do NOT use 'open FVSquad.JointVote' or 'open FVSquad.HasQuorum'.",
     "nat_le_min": "Nat.le_min : k ≤ min a b ↔ k ≤ a ∧ k ≤ b — available in Lean 4.28/4.29 stdlib. Use 'unfold jointCommittedIndex; exact Nat.le_min' for joint CI iff.",
-    "committedIndex_singleton": "committedIndex_singleton (v : Nat) (acked : AckedFn) : committedIndex [v] acked = acked v — proved by 'simp [committedIndex, sortedAcked, sortDesc, majority]'"
+    "committedIndex_singleton": "committedIndex_singleton (v : Nat) (acked : AckedFn) : committedIndex [v] acked = acked v — proved by 'simp [committedIndex, sortedAcked, sortDesc, majority]'",
+    "nat_max_le": "Nat.max_le : Nat.max a b ≤ c ↔ a ≤ c ∧ b ≤ c — use 'simp only [Nat.max_le]; exact ⟨h1, h2⟩'",
+    "option_some_inj": "Option.some.inj works in Lean 4.28+ for some e1 = some e2 → e1 = e2",
+    "voter_logs_type": "VoterLogs E := Nat → Nat → Option E (voter → index → entry). Defined in FVSquad.RaftSafety namespace.",
+    "hcert_pattern": "RSS6/RSS7 take hcert : ∀ v k e, nodeHasApplied cs v k e → isQuorumCommitted cs.voters cs.logs k e as key hypothesis for end-to-end safety"
   },
   "open_prs": [
-    "PR #135: JointTally.lean (14 theorems) — joint-quorum tally_votes",
-    "PR #134: CRITIQUE.md update — QuorumRecentlyActive + SafetyComposition",
-    "PR lean-squad/joint-safety-r127-23954480524-ab3c7f2d: JointSafetyComposition.lean (10 theorems) — joint Raft log safety"
+    "lean-squad/raft-safety-r128-23962948702-end2end: RaftSafety.lean (12 theorems) + CrossModuleComposition.lean (7 theorems) + CRITIQUE.md update"
   ],
-  "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed runs 113-127.",
+  "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed runs 113-128.",
   "status_issue": 94,
   "next_targets": [
-    "progress_set: quorum tracking over the progress map (src/tracker/progress_set.rs) — formalise quorum_active and voter iteration",
-    "raft_log_append: RaftLog::append correctness (src/raft_log.rs) — append monotonicity, prefix preservation, slice invariants"
+    "raft_protocol: Define RaftTransition type (AppendEntries + RequestVote) — unblocks RSS3, RSS4, RSS8",
+    "log_matching: Prove log_matching_property (RSS3) from protocol transition invariant",
+    "leader_completeness: Prove raft_leader_completeness (RSS5-full) connecting isUpToDate to election quorum"
   ],
   "ci_workflow": ".github/workflows/lean-ci.yml",
   "ci_status": "CI exists. New PR triggers CI.",
-  "fvsquad_lean_note": "FVSquad.lean now imports all 19 targets including JointSafetyComposition",
+  "fvsquad_lean_note": "FVSquad.lean now imports all 21 targets including RaftSafety and CrossModuleComposition",
   "summary": {
-    "total_targets": 19,
-    "phase5_targets": 19,
-    "total_theorems": 370,
-    "last_run": "r127",
-    "last_run_task": "Tasks 3+1: JointSafetyComposition (10 JSC theorems, joint Raft log safety), TARGETS.md update"
+    "total_targets": 21,
+    "phase5_targets": 21,
+    "total_theorems": 395,
+    "total_sorry": 5,
+    "last_run": "r128",
+    "last_run_task": "Instructions: address critique.md gaps, write state-machine level theorems. Added RaftSafety (RSS1-RSS7 proved, RSS3/RSS4/RSS8 sorry) and CrossModuleComposition (CMC1-CMC3/CMC5/CMC7 proved, CMC4/CMC6 sorry). First end-to-end cluster safety theorems."
   },
-  "critique_updated": "2026-04-03 16:08 UTC"
+  "critique_updated": "2026-04-03 21:32 UTC",
+  "trajectory_to_completion": {
+    "step1": "Define RaftProtocol.lean with RaftTransition type (AppendEntries + RequestVote messages)",
+    "step2": "Prove log_matching_property (RSS3) from protocol transition invariant",
+    "step3": "Prove raft_leader_completeness (RSS5-full) using isUpToDate model",
+    "step4": "Define reachable and prove hcert as inductive invariant",
+    "step5": "Close raft_end_to_end_safety_full (RSS8) via steps 1-4",
+    "step6": "Close CMC6 acked-to-entry bridge"
+  }
 }
