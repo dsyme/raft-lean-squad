@@ -227,7 +227,7 @@ steps:
           json.dump(result, f, indent=2)
       EOF
 
-source: githubnext/agentics/workflows/lean-squad.md@e1ecf341a90b7bc2021e77c58685d7e269e20b99
+source: githubnext/agentics/workflows/lean-squad.md@4ea8c81959909f40373e2a5c2b7fdb54ea19e0a5
 ---
 
 # Lean Squad
