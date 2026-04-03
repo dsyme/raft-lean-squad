@@ -1,10 +1,10 @@
 {
   "last_run": "2026-04-03-r126",
-  "run_id": "23952831373",
+  "run_id": "23952834274",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lake_project": "formal-verification/lean/",
-  "lean_version": "4.28.0",
-  "lean_build_note": "lake build PASSED with Lean 4.28.0. 0 sorry. 346 theorems across 17 files.",
+  "lean_version": "4.29.0",
+  "lean_build_note": "lake build PASSED with Lean 4.29.0. 0 sorry. 360 theorems across 18 files.",
   "targets": [
     { "id": "limit_size", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/LimitSize.lean", "notes": "ALL 17 public theorems proved (0 sorry). Merged.", "theorems_proved": 17, "sorry_count": 0 },
     { "id": "config_validate", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/ConfigValidate.lean", "notes": "ALL 10 theorems proved (0 sorry). Merged.", "theorems_proved": 10, "sorry_count": 0 },
@@ -18,12 +18,13 @@
     { "id": "progress", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/Progress.lean", "informal_spec": "formal-verification/specs/progress_informal.md", "rust_source": "src/tracker/progress.rs", "notes": "ALL 31 theorems proved (0 sorry). Merged.", "theorems_proved": 31, "sorry_count": 0 },
     { "id": "is_up_to_date", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/IsUpToDate.lean", "informal_spec": "formal-verification/specs/is_up_to_date_informal.md", "rust_source": "src/raft_log.rs", "notes": "ALL 18 theorems proved (0 sorry). Merged.", "theorems_proved": 18, "sorry_count": 0 },
     { "id": "log_unstable", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/LogUnstable.lean", "informal_spec": "formal-verification/specs/log_unstable_informal.md", "rust_source": "src/log_unstable.rs", "notes": "ALL 37 theorems proved (0 sorry). Merged.", "theorems_proved": 37, "sorry_count": 0 },
-    { "id": "tally_votes", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/TallyVotes.lean", "informal_spec": "formal-verification/specs/tally_votes_informal.md", "rust_source": "src/tracker.rs", "notes": "ALL 28 theorems proved (0 sorry). Merged. TV12 rejection-closes-election.", "theorems_proved": 28, "sorry_count": 0 },
-    { "id": "has_quorum", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/HasQuorum.lean", "informal_spec": "formal-verification/specs/has_quorum_informal.md", "rust_source": "src/tracker.rs", "notes": "22 theorems proved (0 sorry). HQ14/HQ20 quorum_intersection_mem. Merged.", "theorems_proved": 22, "sorry_count": 0 },
-    { "id": "quorum_recently_active", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/QuorumRecentlyActive.lean", "informal_spec": "formal-verification/specs/quorum_recently_active_informal.md", "rust_source": "src/tracker.rs", "notes": "15 theorems proved (0 sorry). QRA4 leader-always-active, QRA13 singleton-self, QRA15 monotonicity. Merged. Model abstracts write side-effects.", "theorems_proved": 15, "sorry_count": 0 },
-    { "id": "safety_composition", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/SafetyComposition.lean", "rust_source": "src/quorum/majority.rs+src/tracker.rs", "notes": "9 cross-module theorems proved (0 sorry). SC4 raft_log_safety, SC6 biconditional quorum-iff-committedIndex, SC9 leader-election-safety. Merged. Imports CommittedIndex + QuorumRecentlyActive.", "theorems_proved": 9, "sorry_count": 0 }
+    { "id": "tally_votes", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/TallyVotes.lean", "informal_spec": "formal-verification/specs/tally_votes_informal.md", "rust_source": "src/tracker.rs", "notes": "ALL 28 theorems proved (0 sorry). PR open: lean-squad/qra-r124-23932446195-de78b749bdf565f1. TV12 rejection-closes-election.", "theorems_proved": 28, "sorry_count": 0 },
+    { "id": "has_quorum", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/HasQuorum.lean", "informal_spec": "formal-verification/specs/has_quorum_informal.md", "rust_source": "src/tracker.rs", "notes": "22 theorems proved (0 sorry). Merged PR #131.", "theorems_proved": 22, "sorry_count": 0 },
+    { "id": "quorum_recently_active", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/QuorumRecentlyActive.lean", "informal_spec": "formal-verification/specs/quorum_recently_active_informal.md", "rust_source": "src/tracker.rs", "notes": "15 theorems proved (0 sorry). Merged PR #132.", "theorems_proved": 15, "sorry_count": 0 },
+    { "id": "safety_composition", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/SafetyComposition.lean", "rust_source": "src/quorum/majority.rs+src/tracker.rs", "notes": "9 cross-module theorems proved (0 sorry). SC4 raft_log_safety, SC6 biconditional quorum-iff-committedIndex, SC9 leader-election-safety. Merged PR #133.", "theorems_proved": 9, "sorry_count": 0 },
+    { "id": "joint_tally", "phase": 5, "lean_file": "formal-verification/lean/FVSquad/JointTally.lean", "rust_source": "src/tracker.rs", "notes": "14 theorems proved (0 sorry). JT2 Won-iff, JT3 Lost-iff, JT5 non-joint degeneration, JT14 granted lower bound. PR open: lean-squad/joint-safety-tally-r126-23952834274.", "theorems_proved": 14, "sorry_count": 0, "open_prs": ["lean-squad/joint-safety-tally-r126-23952834274"] }
   ],
-  "total_theorems_proved": 346,
+  "total_theorems_proved": 360,
   "total_sorry": 0,
   "correspondence_file": "formal-verification/CORRESPONDENCE.md",
   "lean_stdlib_notes": {
@@ -43,27 +44,28 @@
     "committedIndex_safety_needs_hn": "committedIndex_safety (voters : List Nat) (acked : AckedFn) (hn : 0 < voters.length) : majority ... ≤ countGe ... — requires explicit non-empty proof",
     "calc_chain_for_nat_le": "Use calc chains with ≤ and = steps (mixing is fine in Lean 4) to avoid omega/linarith issues",
     "overlapCount_eq_filter_length": "overlapCount voters s = (voters.filter s).length. Proof: induction; cons case: 'cases h : s v <;> simp [ih] <;> omega'",
-    "SC1_bridge": "SC1_overlapCount_eq_countGe: overlapCount voters (fun v => decide (acked v >= k)) = countGe voters acked k. Used for cross-module quorum reasoning."
+    "SC1_bridge": "SC1_overlapCount_eq_countGe: overlapCount voters (fun v => decide (acked v >= k)) = countGe voters acked k. Used for cross-module quorum reasoning.",
+    "open_namespace_not_available": "JointVote and TallyVotes have no namespace declarations. Their definitions (combineVotes, jointVoteResult, yesCount, noCount, tallyVotes, etc.) are in the root namespace. Do NOT use 'open FVSquad.JointVote'."
   },
   "open_prs": [
-    "PR lean-squad/critique-r126-23952831373: CRITIQUE.md update (QRA + SafetyComposition sections, Gaps refresh)"
+    "PR lean-squad/joint-safety-tally-r126-23952834274: JointTally.lean (14 theorems) — joint-quorum tally_votes"
   ],
   "aeneas_status": "BLOCKED - no-new-privileges container prevents opam/sudo install. Confirmed runs 113-126.",
   "status_issue": 94,
   "next_targets": [
-    "Joint safety composition: extend SafetyComposition to JointConfig using JointVote + JointCommittedIndex",
-    "Cross-module log-append: MaybeAppend -> CommittedIndex theorem",
-    "Joint tally composition: extend TallyVotes to JointConfig using combineVotes from JointVote"
+    "Joint safety composition with JointConfig: extend SafetyComposition to JointCommittedIndex — show two joint committed indices share a witness voter across both quorums",
+    "RaftLog append/slice properties: src/raft_log.rs — append correctness, slice invariants",
+    "progress_set: quorum tracking over the progress map (src/tracker.rs progress map)"
   ],
   "ci_workflow": ".github/workflows/lean-ci.yml",
-  "ci_status": "CI healthy. stdlib-only project (no lake update needed). lean-ci.yml uses actions @v4. Last audited r126.",
-  "fvsquad_lean_note": "FVSquad.lean now imports all 17 targets including SafetyComposition",
+  "ci_status": "CI exists. New PR triggers CI.",
+  "fvsquad_lean_note": "FVSquad.lean now imports all 18 targets including JointTally",
   "summary": {
-    "total_targets": 17,
-    "phase5_targets": 17,
-    "total_theorems": 346,
+    "total_targets": 18,
+    "phase5_targets": 18,
+    "total_theorems": 360,
     "last_run": "r126",
-    "last_run_task": "Task 7 (CRITIQUE.md update) + Task 9 (CI audit — healthy, no issues)"
+    "last_run_task": "Tasks 3+4 (joint_tally: 14 theorems for JointConfig tally_votes — JT1-JT14 all proved)"
   },
-  "critique_updated": "2026-04-03 16:08 UTC"
+  "critique_updated": "2026-04-03 00:13 UTC"
 }
