@@ -16,3 +16,5 @@ import FVSquad.HasQuorum
 import FVSquad.QuorumRecentlyActive
 import FVSquad.SafetyComposition
 import FVSquad.JointTally
+
+import FVSquad.JointSafetyComposition
