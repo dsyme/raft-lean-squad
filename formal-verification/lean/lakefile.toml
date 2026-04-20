@@ -9,3 +9,4 @@ relaxedAutoImplicit = false
 
 [[lean_lib]]
 name = "FVSquad"
+globs = ["FVSquad.+*"]

@@ -65,6 +65,39 @@ The priority order for future runs, given the critique:
 
 ---
 
+## ER Gap Progress (Run 43+)
+
+**`ElectionReachability.lean`** (new file) bridges abstract election conditions to `CandidateLogCovers`:
+
+| File | Theorems | Status |
+|------|---------|--------|
+| `FVSquad/ElectionReachability.lean` | 12 (ER1–ER12) | ✅ proved, 0 sorry |
+
+The file derives `CandidateLogCovers` from concrete election conditions:
+
+| Theorem | Statement | Chain level |
+|---------|-----------|------------|
+| ER1 | HWM + CandLogMatching → CandLogCoversLastIndex | Foundation |
+| ER2 | HWM + CandLogMatching → HLogConsistency | HLogConsistency bridge |
+| ER3 | HWM + VRC + voterIdx → CandidateLogCovers | CandidateLogCovers bridge |
+| ER4 | HWM + VRC + voterIdx + DecidableEq → leaderCompleteness | End-to-end |
+| ER5 | Extended LMI + hcand_eq → CandLogMatching | LMI → CandLogMatching |
+| ER6 | Shared entry at j ≥ voterIdx → HWM | HWM from agreement |
+| ER7 | LMI + agreement at voterIdx → HWM | LMI → HWM |
+| ER8 | Extended LMI + hcand_eq + HWM + VRC → CandidateLogCovers | Full chain |
+| ER9 | Shared source log R → CandLogCoversLastIndex | Shared-source reduction |
+| ER10 | Shared source → CandidateLogCovers | Shared-source → top |
+| ER11 | Shared source + DecidableEq → leaderCompleteness | End-to-end (shared) |
+| ER12 | AE prefix preservation: prior agreements survive AE step | Inductive invariant |
+
+**Remaining gap**: `hqc_preserved` still needs `CandLogMatching` and the `HWM` condition
+to be derived from the concrete election protocol state. `ER5` and `ER6/ER7` reduce this
+to showing that log-matching holds between the candidate and voters at the vote index.
+
+**lakefile.toml**: added `globs = ["FVSquad.+*"]` so all modules are included in `lake build`.
+
+---
+
 ## A5 Gap Progress (Run 38+)
 
 **`ConcreteProtocolStep.lean`** (new file, this run) provides the A5 bridge:
