@@ -3,17 +3,17 @@
 > 🔬 *Lean Squad — automated formal verification for `dsyme/fv-squad`.*
 
 ## Last Updated
-- **Date**: 2026-04-20 07:25 UTC
-- **Commit**: `7a50906` — Post-merge state: RaftElection.lean (RE1-RE15) merged; LeaderCompleteness.lean (LC1-LC10) in progress
+- **Date**: 2026-04-20 07:57 UTC
+- **Commit**: `1eb4868` — ConcreteTransitions.lean (CT1-CT6, A4 spec) added; 474 theorems, 2 sorry
 
 ---
 
 ## Overall Assessment
 
-The FV project has produced **468+ theorems across 25 Lean files, all machine-checked by
-Lean 4 (version 4.28.0, stdlib only — no Mathlib), with 0 `sorry`**.  A
-**critical gap** identified in the previous run's external critique is being systematically
-closed.
+The FV project has produced **474 theorems across 26 Lean files, all machine-checked by
+Lean 4 (version 4.28.0, stdlib only — no Mathlib), with 2 `sorry`** in the new
+`ConcreteTransitions.lean` A4 spec file. A
+**critical gap** identified in prior critique is being systematically closed.
 
 The `RaftReachable.step` constructor in `RaftTrace.lean` bundles **5 hypotheses as
 axioms** about each protocol transition.  These encode deep Raft correctness properties
@@ -35,16 +35,15 @@ rather than proved facts.
   All theorems are proved (0 sorry); the remaining discharge obligation (`HLogConsistency`)
   is an explicit hypothesis capturing what a concrete protocol model must prove.
 
-**Realistic assessment**: ~75–80% of the components needed for a fully self-contained Raft
-safety proof now exist (up from ~60–70%).  The quorum arithmetic, log operations, safety
-composition, election model, and leader completeness framework are all complete and correct.
-The remaining gap is `HLogConsistency`: proving that if the candidate is log-fresh relative
-to a voter, the candidate's log actually contains the voter's committed entries.  This
-requires concrete AppendEntries modelling (A4/A5 targets).  Closing the gap would require
-approximately 2–3 more Lean files and 50–100 additional theorems.
-composition that would discharge `hqc_preserved`.  Closing the gap would require
-approximately 3–5 new Lean files and 100–200 additional theorems.  This is the hardest
-single remaining part of Raft verification.
+**Realistic assessment**: ~80–85% of the components needed for a fully self-contained Raft
+safety proof now exist (up from ~75–80%).  The quorum arithmetic, log operations, safety
+composition, election model, leader completeness framework, and the A4 concrete AppendEntries
+model are all complete or partially complete and machine-checked.  The new
+`ConcreteTransitions.lean` file provides the formal bridge: CT1 proves that
+`HLogConsistency` follows from `CandLogMatching` + `CandLogCoversLastIndex`, reducing the
+remaining gap to 2 concrete sorry-guarded theorems (CT4: single AE step preserves LMI;
+CT5: leader broadcast → CandLogMatching).  Closing the gap would require approximately
+1–2 more Lean files and 50–100 additional theorems.
 
 The proof hierarchy spans 6 layers: individual data-structure correctness → quorum
 arithmetic → cross-module composition → log-entry safety → conditional end-to-end
@@ -1034,5 +1033,44 @@ stronger than what Raft guarantees).
 
 ---
 
-> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24653583822)
-> automated formal verification. Current state: **468+ theorems, 0 sorry, 25 Lean files**.
+### `ConcreteTransitions.lean` — 6 theorems (CT1-CT6), 2 sorry
+
+| Theorem | Level | Bug-catching potential | Notes |
+|---------|-------|----------------------|-------|
+| `hlc_of_candLogMatching` (CT1) | **High** | **High** | HLogConsistency from CandLogMatching + coverage; 0 sorry |
+| `applyAE_preserves_prefix` (CT2) | Mid | **High** | AppendEntries preserves entries at indices ≤ prevLogIndex; 0 sorry |
+| `applyAE_extends_at_entries` (CT3) | Mid | **High** | AppendEntries writes new entries at expected positions; 0 sorry |
+| `lmi_preserved_single_step` (CT4) | High | **High** | Single AE step preserves LogMatchingInvariantFor; sorry |
+| `candLogMatching_of_broadcast` (CT5) | **High** | **High** | Leader broadcast → CandLogMatching; sorry (A4/A5 gap) |
+| `hlc_from_concrete_protocol` (CT6) | **High** | **High** | Delegates to CT1; 0 sorry |
+
+**Assessment**: This is the A4 formal spec file.  Its primary contribution is **CT1**
+(`hlc_of_candLogMatching`): a clean, machine-checked proof that `HLogConsistency` follows
+from two concrete protocol obligations — `CandLogMatching` (extended log matching for the
+candidate) and `CandLogCoversLastIndex` (the candidate's log agrees with each voter's log
+at the voter's last index).
+
+**CT1 reduces the A4/A5 gap** to two specific obligations that are each more tractable
+than the original `HLogConsistency`:
+- `CandLogCoversLastIndex` follows from isUpToDate + concrete log history (AppendEntries
+  from prior leaders extend the log monotonically).
+- `CandLogMatching` follows from the Log Matching Invariant (LMI) applied to
+  candidate-follower log pairs (CT4 is the key step, currently sorry).
+
+**CT2 and CT3** are fully proved and cover the core properties of `applyAppendEntries`:
+prefix preservation and correct entry placement.  These are directly analogous to the
+`MA5`/`MA6` theorems in `MaybeAppend.lean` (which proved the same for the term-level model).
+
+**Sorries CT4 and CT5** are honest about the gap: CT4 requires a global reachability
+argument (inducting over the entire log history), and CT5 requires a global state model
+tracking all network messages.  Roughly 50–100 additional theorems would close these.
+
+**Positive finding**: the `AppendEntriesMsg` type and `writeEntries`/`applyAppendEntries`
+functions defined here are a clean, entry-typed model of `maybe_append` that can serve as
+the foundation for the remaining A5 work.  The `listGet?` helper avoids stdlib version
+dependencies while remaining provably correct.
+
+---
+
+> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24655086466)
+> automated formal verification. Current state: **474 theorems, 2 sorry, 26 Lean files**.
