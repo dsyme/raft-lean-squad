@@ -221,6 +221,22 @@ Medium for INF-3, INF-4 (require `dropWhile` induction). No difficult arithmetic
 
 We prioritise Targets 1 and 2 first (highest tractability, standalone specs). Targets 3–4 next (Aeneas-compatible). Targets 5–6 after.
 
+## Current Project State (Run 43)
+
+- **30 Lean files**, **483 proved theorems**, **0 sorry**, **Lean 4.28.0**
+- Top-level safety theorem `raftReachable_safe` (RT2) proved.
+- `ConcreteProtocolStep.lean` (CPS1–CPS13) bridges concrete AppendEntries to RT2.
+- `ElectionReachability.lean` (ER1–ER12) bridges abstract election conditions to `CandidateLogCovers`.
+- Remaining gap: `CandLogMatching` + High-Water-Mark must be derived from the concrete
+  election protocol state (candidacy, vote-granting rules, `voterLog`).
+
+### Priority for future runs:
+1. **Derive HWM** from concrete vote-granting rules (voterLog, term, isUpToDate check)
+2. **Derive CandLogMatching** from log-matching invariant + vote condition  
+3. **Close `hqc_preserved`** end-to-end using ER5+ER7+ER3
+4. **Target 11** (`progress_set`) — lower priority
+5. **Aeneas extraction** — still blocked on container privileges
+
 ## Mathlib Modules Expected to Be Useful
 
 - `Mathlib.Data.List.Basic` — list prefix, length, `take`
