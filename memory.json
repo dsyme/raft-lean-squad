@@ -1,9 +1,9 @@
 {
-  "last_run": "r146-task11",
+  "last_run": "24660841722",
   "run_id": "24562328877",
   "fv_tool": "Lean4 (stdlib only, no Mathlib)",
   "lean_version": "4.28.0",
-  "lean_build_note": "lake build PASSED. 0 sorry. 443+ theorems across 23 files. ENTIRE SUITE MACHINE-CHECKED.",
+  "lean_build_note": "lake build PASSED. 0 sorry. 437 theorems across 27 files.",
   "project_status": "COMPLETE",
   "targets": [
     {
@@ -119,6 +119,11 @@
       "phase": 5,
       "lean_file": "FVSquad/RaftTrace.lean",
       "notes": "ALL proved (0 sorry). RT0+RT1+RT2. RaftReachable inductive. Merged r133."
+    },
+    {
+      "id": "concrete_transitions",
+      "phase": 5,
+      "notes": "ALL 11 proved (0 sorry). CT4+CT5 proved. Imported in FVSquad.lean."
     }
   ],
   "total_theorems_proved": 443,
@@ -149,9 +154,10 @@
   "critique_status": "UPDATED r134: Reflects project completion. 0 sorry. RaftProtocol + RaftTrace sections added. RSS8 shown as proved.",
   "report_status": "UPDATED r134. paper.tex created in formal-verification/paper/ (ACM sigconf, 11-page target). PDF compilation skipped (no network).",
   "notes": [
-    "Run 35 (24658213506): Added CommitRule.lean (CR1-CR9, 9 theorems, 0 sorry). CR8=Iff.rfl closes hnew_cert. 485+ theorems, 28 files, 2 sorry (CT4/CT5)."
+    "Run 35 (24658213506): Added CommitRule.lean (CR1-CR9, 9 theorems, 0 sorry). CR8=Iff.rfl closes hnew_cert. 485+ theorems, 28 files, 2 sorry (CT4/CT5).",
+    "Run 36 (24660841722): Proved CT4+CT5 in ConcreteTransitions. Added import to FVSquad.lean. 437 theorems, 27 files, 0 sorry."
   ],
-  "total_theorems": 485,
-  "lean_files": 28,
-  "sorry_count": 2
+  "total_theorems": 437,
+  "lean_files": 27,
+  "sorry_count": 0
 }
