@@ -1,15 +1,15 @@
 {
-  "run_id": "r152",
-  "workflow_run": "24655086466",
-  "date": "2026-04-20T07:57:00Z",
+  "run_id": "r153",
+  "workflow_run": "24655971189",
+  "date": "2026-04-20T08:19:00Z",
   "lean_version": "4.28.0",
-  "total_theorems": 474,
+  "total_theorems": 476,
   "total_sorry": 2,
   "lean_files": 26,
-  "completed_tasks_this_run": ["Task 3 (Formal Spec Writing - A4 ConcreteTransitions)", "Task 7 (Proof Utility Critique update)"],
-  "new_files": ["formal-verification/lean/FVSquad/ConcreteTransitions.lean"],
-  "pr_created": "feat(fv): ConcreteTransitions.lean (A4 spec, CT1-CT6) + critique update (Tasks 3 & 7)",
-  "branch": "lean-squad/concrete-transitions-task3-task7-24655086466",
+  "completed_tasks_this_run": ["Task 5 (Proof Assistance - CT4b+CT5b proved)", "Task 9 (CI Audit - healthy, no changes)"],
+  "new_theorems": ["CT4b: clm_preserved_single_step (proved)", "CT5b: hlc_from_hae (proved)"],
+  "pr_created": "feat(fv): add CT4b + CT5b proved theorems — closer A4 path (Tasks 5 & 9)",
+  "branch": "lean-squad/ct4b-ct5b-task5-task9-24655971189",
   "targets": {
     "limit_size": {"phase": 5, "status": "complete", "theorems": 17},
     "config_validate": {"phase": 5, "status": "complete", "theorems": 10},
@@ -32,24 +32,20 @@
     "raft_safety": {"phase": 5, "status": "complete", "theorems": 8},
     "cross_module_composition": {"phase": 5, "status": "complete", "theorems": 7},
     "raft_protocol": {"phase": 5, "status": "complete", "theorems": 10},
-    "raft_trace": {"phase": 5, "status": "complete_conditional", "theorems": 3, "note": "raftReachable_safe conditional on 5 step hypotheses"},
+    "raft_trace": {"phase": 5, "status": "complete_conditional", "theorems": 3},
     "election_model": {"phase": 5, "status": "complete", "lean_file": "FVSquad/RaftElection.lean", "theorems": 15},
-    "leader_completeness": {"phase": 5, "status": "complete_conditional", "lean_file": "FVSquad/LeaderCompleteness.lean", "theorems": 10, "note": "LC1-LC10; HLogConsistency is explicit hypothesis"},
-    "concrete_transitions": {"phase": 3, "status": "spec_written", "lean_file": "FVSquad/ConcreteTransitions.lean", "theorems": 6, "sorry_count": 2, "note": "CT1 proved: HLogConsistency from CandLogMatching+CandLogCoversLastIndex. CT4+CT5 sorry. A4 gap partially closed."},
-    "commit_rule": {"phase": 1, "status": "not_started", "priority": "high", "note": "A5: concrete commit rule to discharge hnew_cert in RaftTrace"}
-  },
-  "key_proved_theorems": {
-    "CT1": "hlc_of_candLogMatching: HLogConsistency from CandLogMatching + CandLogCoversLastIndex (0 sorry)",
-    "CT2": "applyAE_preserves_prefix: AE preserves entries at indices <= prevLogIndex",
-    "CT3": "applyAE_extends_at_entries: AE writes entries at correct positions"
+    "leader_completeness": {"phase": 5, "status": "complete_conditional", "lean_file": "FVSquad/LeaderCompleteness.lean", "theorems": 10},
+    "concrete_transitions": {"phase": 4, "status": "in_progress", "lean_file": "FVSquad/ConcreteTransitions.lean", "theorems": 8, "sorry_count": 2, "note": "CT1-CT3 + CT4b + CT5b proved (5 proved). CT4+CT5 sorry. CT6 proved via CT1. hlc_from_hae (CT5b) is the key new result: hae directly gives HLogConsistency."}
   },
   "remaining_sorries": {
-    "CT4": "lmi_preserved_single_step: single AE step preserves LMI",
-    "CT5": "candLogMatching_of_broadcast: leader broadcast => CandLogMatching"
+    "CT4": "lmi_preserved_single_step: single AE step preserves LMI (hard, full global model needed)",
+    "CT5": "candLogMatching_of_broadcast: broadcast => CandLogMatching (needs global state model)"
   },
-  "critical_gap": "CT4+CT5 need global reachability model (~50-100 more theorems). Once proved, CT1 gives HLogConsistency for free.",
+  "a4_gap_status": "CT4b+CT5b provide clean inductive structure. Remaining gap: prove initial CandLogMatching from election + valid AE broadcasts satisfy hprev+hnew preconditions of CT4b.",
   "aeneas_status": "permanently_blocked_no_new_privileges",
-  "toolchain_notes": "no Mathlib, no push_neg, no lemma keyword, use 'theorem' only, stdlib only. List.get? not available - use custom listGet?",
-  "next_priority_targets": ["A4 complete: prove CT4 (lmi_preserved_single_step) and CT5 (candLogMatching_of_broadcast)", "A5 commit_rule (hnew_cert discharge)"],
-  "new_type_note": "AppendEntriesMsg E structure in ConcreteTransitions.lean. writeEntries uses listGet? helper (stdlib-safe). applyAppendEntries = writeEntries at prevLogIndex+1."
+  "ci_status": "Healthy. Lean 4.28.0. No changes needed.",
+  "toolchain_notes": "no Mathlib, use 'theorem' not 'lemma', stdlib only. simp [hw] (not subst hw) for w=v case split when v is a parameter.",
+  "lean_proof_notes": "CRITICAL: subst hw where hw:w=v eliminates v (param) not w (intro'd) in some cases. Use simp only [hw] to rewrite w->v without subst.",
+  "next_priority_targets": ["A4 complete: prove CT5 by adding initial CandLogMatching hypothesis from election model", "A5 commit_rule (hnew_cert discharge in RaftTrace)"],
+  "new_type_note": "simp only [hw] (hw:w=v) correctly beta-reduces lambda and simplifies if-then-else in Lean 4.28 stdlib."
 }
