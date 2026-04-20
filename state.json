@@ -1,11 +1,11 @@
 {
-    "last_run": "r149-critique",
-    "run_id": "24651845549",
+    "last_run": "r150-election-model",
+    "run_id": "24652347594",
     "fv_tool": "Lean4 (stdlib only, no Mathlib)",
     "lean_version": "4.28.0",
-    "lean_build_note": "lake build PASSED. 0 sorry. 443+ theorems across 23 files. ENTIRE SUITE MACHINE-CHECKED.",
+    "lean_build_note": "lake build PASSED. 0 sorry. 458+ theorems across 24 files.",
     "project_status": "IN_PROGRESS",
-    "critique_summary": "External critique (2026-04-20): RaftReachable.step bundles 5 hypotheses as abstract axioms. ~60-70% of components exist. Election model (NodeState, terms, votedFor, leader completeness composition) is the critical missing piece. ~3-5 new Lean files, ~100-200 new theorems needed.",
+    "critique_summary": "External critique (2026-04-20): RaftReachable.step bundles 5 hypotheses as abstract axioms. ~60-70% of components exist. Election model (NodeState, terms, votedFor, leader completeness composition) is the critical missing piece.",
     "targets": [
         {"id": "limit_size", "phase": 5, "notes": "17 proved. Merged."},
         {"id": "config_validate", "phase": 5, "notes": "10 proved. Merged."},
@@ -29,41 +29,40 @@
         {"id": "cross_module_composition", "phase": 5, "lean_file": "FVSquad/CrossModuleComposition.lean", "notes": "ALL 7 proved. Merged."},
         {"id": "raft_protocol", "phase": 5, "lean_file": "FVSquad/RaftProtocol.lean", "notes": "ALL 10 proved. RP6+RP8 proved. Merged."},
         {"id": "raft_trace", "phase": 5, "lean_file": "FVSquad/RaftTrace.lean", "notes": "RT0+RT1+RT2 proved (0 sorry). CONDITIONAL: step hypotheses are abstract axioms, not discharged from concrete election model."},
-        {"id": "election_model", "phase": 1, "lean_file": "FVSquad/RaftElection.lean", "notes": "NEW TARGET (r149): Model NodeState (currentTerm, votedFor, role), vote-granting rules, term monotonicity. Foundation for all other gap targets."},
-        {"id": "election_safety", "phase": 1, "lean_file": "FVSquad/RaftElection.lean", "notes": "NEW TARGET (r149): Prove at most one leader per term (ElectionSafety). Uses HQ20 + TallyVotes."},
-        {"id": "leader_completeness", "phase": 1, "lean_file": "FVSquad/LeaderCompleteness.lean", "notes": "NEW TARGET (r149): HARDEST GAP. Compose HQ20 + IU16 + RSS5 to prove elected leader has all committed entries. Discharges hqc_preserved."},
-        {"id": "concrete_transitions", "phase": 1, "lean_file": "FVSquad/ConcreteRaft.lean", "notes": "NEW TARGET (r149): AppendEntries + RequestVote with terms. Discharge hlogs', hno_overwrite, hcommitted_mono."},
-        {"id": "commit_rule", "phase": 1, "lean_file": "FVSquad/ConcreteRaft.lean", "notes": "NEW TARGET (r149): Discharge hnew_cert — commit only after quorum ACK. Builds on CMC3."}
+        {"id": "election_model", "phase": 5, "lean_file": "FVSquad/RaftElection.lean", "notes": "RE1-RE15 proved (0 sorry). NodeRole/NodeState/VoteRecord/wonInTerm/voteGranted. ElectionSafety (RE5) proved via HQ20. PR #open r150."},
+        {"id": "election_safety", "phase": 5, "lean_file": "FVSquad/RaftElection.lean", "notes": "RE5 electionSafety proved: at most one leader per term. Merged with election_model."},
+        {"id": "leader_completeness", "phase": 1, "lean_file": "FVSquad/LeaderCompleteness.lean", "notes": "NEXT TARGET (r150): Compose HQ20 + IU16 + RSS5 to prove elected leader has all committed entries. Discharges hqc_preserved."},
+        {"id": "concrete_transitions", "phase": 1, "lean_file": "FVSquad/ConcreteRaft.lean", "notes": "FUTURE: AppendEntries + RequestVote with terms. Discharge hlogs', hno_overwrite, hcommitted_mono."},
+        {"id": "commit_rule", "phase": 1, "lean_file": "FVSquad/ConcreteRaft.lean", "notes": "FUTURE: Discharge hnew_cert — commit only after quorum ACK."}
     ],
-    "total_theorems_proved": 443,
+    "total_theorems_proved": 458,
     "total_sorry": 0,
     "open_prs": [
-        "lean-squad/paper-task11-24562328877: Conference paper (Task 11) — paper.tex + paper.bib, ACM sigconf",
-        "lean-squad/critique-gap-analysis-r149-24651845549: Critique gap analysis — CRITIQUE.md + REPORT.md + TARGETS.md updated"
+        "lean-squad/paper-task11-24562328877: Conference paper (Task 11)",
+        "lean-squad/critique-gap-analysis-r149-24651845549: Critique gap analysis",
+        "lean-squad/election-model-task4-24652347594: RaftElection.lean — election model and ElectionSafety (RE1-RE15)"
     ],
     "aeneas_status": "BLOCKED - no-new-privileges container. Confirmed all runs.",
     "ci_workflow": ".github/workflows/lean-ci.yml",
-    "ci_status": "Healthy. Lean 4.28.0. No lake update needed (stdlib only).",
+    "ci_status": "Healthy. Lean 4.28.0.",
     "lean_stdlib_notes": {
         "no_lemma_keyword": "In Lean 4.28 stdlib-only, 'lemma' is not a top-level keyword. Use 'theorem' or 'private theorem' instead.",
-        "private_theorem": "Use 'private theorem' for module-internal helpers (not 'private lemma').",
         "no_split_ifs": "split_ifs is Mathlib only. Use by_cases h : P <;> simp [h].",
-        "no_push_neg": "push_neg is Mathlib only. Use omega or Nat.lt_of_not_le.",
-        "no_le_rfl": "le_rfl does not exist. Use Nat.le_refl _.",
-        "beq_iff_eq": "beq_iff_eq : a == b ↔ a = b — stdlib for LawfulBEq.",
-        "induction_implicit_vars": "In 'induction h with | step ... =>', implicit vars get ✝-named. Use 'rename_i cs_prev cs_new' to name them.",
-        "strong_induction": "induction n using Nat.strongRecOn with | ind n ih => ..."
+        "no_push_neg": "push_neg is Mathlib only. Use omega or rintro/cases.",
+        "voteGranted_prop_as_bool": "In voteGranted, '=' in Bool context auto-coerces via decide. Use Bool.and_eq_false_iff + Bool.or_eq_false_iff + decide_eq_false_iff_not. Use constructor for ∧ goals.",
+        "open_namespace": "HasQuorum.lean and IsUpToDate.lean have NO namespace. Do not use 'open FVSquad.HasQuorum'. Just import and use names directly.",
+        "eval_multiline": "Use single-line #eval with lambda rather than multi-line let blocks to avoid parse issues.",
+        "rintro_on_and": "rintro fails on ∧ goals. Use 'constructor' then solve each part separately."
     },
     "findings": [
-        "SOUNDNESS: Prior RSS3/RSS4 were false as stated (no hypotheses = arbitrary logs). Fixed r130 with LogMatchingInvariantFor/NoRollbackInvariantFor.",
+        "SOUNDNESS: Prior RSS3/RSS4 were false as stated. Fixed r130.",
         "No bugs found in implementation code.",
-        "GAP (r149): RaftReachable.step has 5 abstract hypotheses never discharged from concrete election model. Project is ~60-70% complete, not COMPLETE.",
-        "HARDEST GAP: hqc_preserved (leader completeness) requires election model + composition of HQ20 + IU16 + TallyVotes + RSS5."
+        "GAP (r149): RaftReachable.step has 5 abstract hypotheses never discharged from concrete election model.",
+        "HARDEST GAP: hqc_preserved (leader completeness) requires election model + composition of HQ20 + IU16 + TallyVotes + RSS5.",
+        "PROGRESS (r150): election_model + election_safety proved (RE1-RE15). Foundation for LeaderCompleteness."
     ],
     "next_targets": [
-        "A1: election_model — NodeState, terms, votedFor (FVSquad/RaftElection.lean)",
-        "A2: election_safety — at most one leader per term (HQ20 + TallyVotes)",
-        "A3: leader_completeness — HARDEST; compose HQ20+IU16+RSS5 (FVSquad/LeaderCompleteness.lean)",
+        "A3: leader_completeness — compose HQ20+IU16+RSS5 (FVSquad/LeaderCompleteness.lean) — NEXT",
         "A4: concrete_transitions — discharge hlogs'/hno_overwrite/hcommitted_mono",
         "A5: commit_rule — discharge hnew_cert"
     ]
