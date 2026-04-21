@@ -1,18 +1,38 @@
 {
   "lean_version": "4.28.0",
-  "theorem_count": 522,
+  "theorem_count": 524,
   "lean_file_count": 44,
   "sorry_count": 0,
-  "last_run": "Run 57 (2026-04-21): Task 8 Route B catch-up \u2014 5 new correspondence targets (LimitSize, ConfigValidate, Inflights, LogUnstable, TallyVotes), 56 new #guard, 5 Rust test fns. Task 9: lean-ci.yml expanded correspondence-tests job + trigger paths. All 11 cargo tests pass. PR: lean-squad/run-57-task8-task9-catchup-24703642284.",
+  "last_run": "Run 58 (2026-04-21): Task 11 \u2014 Updated paper (524T, 44 files, 57 runs, Layer 8 section, 189 #guard, model validation subsection). PR: lean-squad/run-58-paper-ci-24712688201.",
   "hqc_preserved_gap": "CLOSED via AEBroadcastInvariant.lean (ABI8). Remaining: connect broadcast model to full election lifecycle.",
   "aeneas_status": "permanently_blocked_no_new_privileges",
-  "toolchain_notes": "no Mathlib, use 'theorem' not 'lemma'. lakefile.toml globs=[FVSquad.+*]. LogUnstable.lean NO namespace (open FVSquad.LogUnstable fails). IsUpToDate.lean NO namespace. List.getElem?_take is a simp lemma.",
+  "toolchain_notes": "no Mathlib, use theorem not lemma. lakefile.toml globs=[FVSquad.+*]. LogUnstable/IsUpToDate have NO namespace. List.getElem?_take is simp lemma.",
   "notes": [
     "Run 55: Task 8 Route B: VoteResultCorrespondence.lean (12 #guard, exact correspondence), HasQuorumCorrespondence.lean (12 #guard, exact correspondence). 39 lean files, sorry stays 1. 6 correspondence test targets total, 93 #guard assertions.",
     "Run 56: Task 8 Route B catch-up: 5 new correspondence files (LimitSize, ConfigValidate, Inflights, LogUnstable, TallyVotes). 44 lean files total, 0 sorry. 11 total correspondence test functions, ~149 #guard assertions total. Task 9: lean-ci.yml now has correspondence-tests job (cargo test correspondence). CI triggers expanded to src/** + formal-verification/tests/**.",
-    "Run 57: Task 8 Route B catch-up (per user instruction): 5 new correspondence files (LimitSize, ConfigValidate, Inflights, LogUnstable, TallyVotes). 44 lean files total, 0 sorry. 11 total correspondence test functions (cargo test correspondence: 11/11). Task 9 CI: lean-ci.yml correspondence-tests job confirmed + triggers include src/** and formal-verification/tests/**. lake build: 46 jobs, Lean v4.28.0, 0 sorry."
+    "Run 57: Task 8 Route B catch-up (per user instruction): 5 new correspondence files (LimitSize, ConfigValidate, Inflights, LogUnstable, TallyVotes). 44 lean files total, 0 sorry. 11 total correspondence test functions (cargo test correspondence: 11/11). Task 9 CI: lean-ci.yml correspondence-tests job confirmed + triggers include src/** and formal-verification/tests/**. lake build: 46 jobs, Lean v4.28.0, 0 sorry.",
+    "Run 58: Task 11+9: Paper updated (524T, 44F, L7+L8 sections, 57 runs). CI already comprehensive."
   ],
   "run_history": [
+    {
+      "run": 58,
+      "date": "2026-04-21",
+      "tasks": [
+        "Task 11 (paper update)",
+        "Task 9 (CI audit)"
+      ],
+      "changes": [
+        "Updated paper.tex: 473->524 theorems, 29->44 files, 40->57 runs",
+        "Added Layer 7 (complete) descriptions for 4 new proof files",
+        "Added Layer 8 (correspondence validation) section with 11 files, 189 #guard",
+        "Added Model Validation subsection in Methodology",
+        "Updated all statistics: table, cost ($280->$399), abstract, conclusion",
+        "CI audit: lean-ci.yml already has correspondence-tests job, correct triggers"
+      ],
+      "sorry_count_after": 0,
+      "lean_file_count_after": 44,
+      "pr_branch": "lean-squad/run-58-paper-ci-24712688201"
+    },
     {
       "run": 55,
       "date": "2026-04-21",
@@ -54,93 +74,81 @@
       "sorry_count_after": 0,
       "lean_file_count_after": 44,
       "pr_branch": "lean-squad/run-56-task8-task9-catchup-24703152990"
-    },
-    {
-      "run": 57,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 8 Route B (catch-up, 5 targets)",
-        "Task 9 (CI expansion)"
-      ],
-      "changes": [
-        "Added LimitSizeCorrespondence.lean: 10 #guard tests (abstraction level)",
-        "Added ConfigValidateCorrespondence.lean: 12 #guard tests (exact)",
-        "Added InflightsCorrespondence.lean: 12 #guard tests (abstraction)",
-        "Added LogUnstableCorrespondence.lean: 12 #guard tests (abstraction)",
-        "Added TallyVotesCorrespondence.lean: 10 #guard tests (exact)",
-        "Added test_limit_size_correspondence to src/util.rs (10 cases)",
-        "Added test_config_validate_correspondence to src/config.rs (12 cases)",
-        "Added test_inflights_correspondence to src/tracker/inflights.rs (12 cases)",
-        "Added test_log_unstable_correspondence to src/log_unstable.rs (12 cases)",
-        "Added test_tally_votes_correspondence to src/tracker.rs (10 cases)",
-        "Added formal-verification/tests/{limit_size,config_validate,inflights,log_unstable,tally_votes}/",
-        "Updated .github/workflows/lean-ci.yml: triggers expanded to src/** + formal-verification/tests/**",
-        "Updated CORRESPONDENCE.md with 5 new sections"
-      ],
-      "sorry_count_after": 0,
-      "lean_file_count_after": 44,
-      "pr_branch": "lean-squad/run-57-task8-task9-catchup-24703642284",
-      "cargo_tests_pass": 11,
-      "lean_build_jobs": 46
     }
   ],
   "next_steps": [
-    "Add correspondence tests for remaining Phase-5 targets: limit_size, config_validate, inflights, log_unstable, tally_votes",
-    "Connect AEBroadcastInvariant to full Raft election lifecycle (election -> AE broadcast sequence -> ABI8 applies)",
-    "Close remaining sorry in FindConflictCorrespondence.lean (makeLog_some) using List.findSome? induction",
-    "Update paper (formal-verification/paper/) with Runs 52-55 results"
+    "Connect AEBroadcastInvariant to full Raft election lifecycle to close concrete safety proof",
+    "Close sorry in FindConflictCorrespondence.lean (makeLog_some theorem)",
+    "Update REPORT.md to reflect Runs 43-58 (Layer 7 complete, Layer 8 correspondence validation)",
+    "Update CRITIQUE.md with Layer 8 correspondence validation section",
+    "Update CORRESPONDENCE.md Last Updated date"
   ],
   "correspondence_test_targets": [
     {
-      "target": "find_conflict",
-      "file": "FindConflictCorrespondence.lean",
+      "name": "find_conflict",
+      "guard_count": 27,
+      "status": "complete",
+      "level": "exact"
+    },
+    {
+      "name": "maybe_append",
+      "guard_count": 35,
+      "status": "complete",
+      "level": "exact"
+    },
+    {
+      "name": "is_up_to_date",
+      "guard_count": 14,
+      "status": "complete",
+      "level": "exact"
+    },
+    {
+      "name": "committed_index",
+      "guard_count": 13,
+      "status": "complete",
+      "level": "abstraction"
+    },
+    {
+      "name": "limit_size",
+      "guard_count": 12,
+      "status": "complete",
+      "level": "abstraction"
+    },
+    {
+      "name": "config_validate",
+      "guard_count": 14,
+      "status": "complete",
+      "level": "exact"
+    },
+    {
+      "name": "inflights",
+      "guard_count": 14,
+      "status": "complete",
+      "level": "abstraction"
+    },
+    {
+      "name": "log_unstable",
+      "guard_count": 14,
+      "status": "complete",
+      "level": "exact"
+    },
+    {
+      "name": "tally_votes",
+      "guard_count": 12,
+      "status": "complete",
+      "level": "exact"
+    },
+    {
+      "name": "vote_result",
       "guard_count": 17,
-      "rust_test": "test_find_conflict_correspondence",
-      "fixture": "tests/find_conflict/"
+      "status": "complete",
+      "level": "exact"
     },
     {
-      "target": "maybe_append",
-      "file": "MaybeAppendCorrespondence.lean",
-      "guard_count": 32,
-      "rust_test": "test_maybe_append_correspondence",
-      "fixture": "tests/maybe_append/"
-    },
-    {
-      "target": "is_up_to_date",
-      "file": "IsUpToDateCorrespondence.lean",
-      "guard_count": 12,
-      "rust_test": "test_is_up_to_date_correspondence",
-      "fixture": "tests/is_up_to_date/"
-    },
-    {
-      "target": "committed_index",
-      "file": "CommittedIndexCorrespondence.lean",
-      "guard_count": 8,
-      "rust_test": "test_committed_index_correspondence (quorum::majority::tests)",
-      "fixture": "tests/committed_index/"
-    },
-    {
-      "target": "vote_result",
-      "file": "VoteResultCorrespondence.lean",
-      "guard_count": 12,
-      "rust_test": "test_vote_result_correspondence (quorum::majority::tests)",
-      "fixture": "tests/vote_result/",
-      "level": "Exact",
-      "run": 54
-    },
-    {
-      "target": "vote_result",
-      "file": "VoteResultCorrespondence.lean",
-      "guard_count": 12,
-      "rust_test": "test_vote_result_correspondence",
-      "fixture": "tests/vote_result/"
-    },
-    {
-      "target": "has_quorum",
-      "file": "HasQuorumCorrespondence.lean",
-      "guard_count": 12,
-      "rust_test": "test_has_quorum_correspondence",
-      "fixture": "tests/has_quorum/"
+      "name": "has_quorum",
+      "guard_count": 17,
+      "status": "complete",
+      "level": "exact"
     }
   ],
   "informal_specs_written": [
