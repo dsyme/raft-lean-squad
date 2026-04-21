@@ -1,21 +1,21 @@
 {
-  "run_id": "24699525834",
+  "run_id": "24700413995",
   "date": "2026-04-21",
   "lean_version": "4.28.0",
-  "total_theorems": 520,
+  "total_theorems": 522,
   "total_sorry": 2,
   "lean_files": 34,
   "completed_tasks_this_run": [
-    "Task 6 (Correspondence Review): Added ElectionReachability.lean section (12 theorems, ER1-ER12, 0 sorry) to CORRESPONDENCE.md. Fixed stale ABI6/ABI7/ABI8 sorry annotations. Updated Known Mismatches (removed resolved ABI6-7 gap). Updated file count 32->34.",
-    "Task 4->5 (Proof Assistance): Proved ra_batch_term (P6) and ra_beyond_batch_none (P7) in RaftLogAppend.lean. Added 3 private helpers: taa_offset_le_after, taa_total_extent, taa_maybeTerm_at_batch. RaftLogAppend: 14->19 theorems, 0 sorry. lake build passed."
+    "Task 10 (Project Report): REPORT.md updated — 505->522 theorems, 32->34 files, 2 sorry; added Runs 49-50 section (AEBroadcastInvariant 10T, FindConflictCorrespondence 2T+17guards, RaftLogAppend P6/P7); updated Layer 7 to 11 files; updated File Inventory.",
+    "Task 7 (Proof Utility Critique): CRITIQUE.md updated — AEBroadcastInvariant section (10T, ABI8 closes broadcast induction), FindConflictCorrespondence section (17 #guard tests, 2 sorry), RaftLogAppend updated (14->19T, P6/P7 added); Gaps updated (broadcast induction now closed, makeLog sorry remaining); Trajectory step 14 resolved."
   ],
-  "pr_branch": "lean-squad/run-50-p6-p7-correspondence-24699525834",
-  "hqc_preserved_gap": "CLOSED conditional on hae via ECM6. Remaining: AEBroadcastInvariant.lean (~10-20 theorems).",
+  "pr_branch": "lean-squad/run-51-report-critique-24700413995",
+  "hqc_preserved_gap": "CLOSED via ABI8 (hqc_preserved_of_broadcast). Remaining: connect broadcast to full Raft election lifecycle.",
   "aeneas_status": "permanently_blocked_no_new_privileges",
   "sorry_count": 2,
-  "theorem_count": 520,
+  "theorem_count": 522,
   "file_count": 34,
-  "last_run": 50,
-  "last_task": "Task 7+6: CRITIQUE.md + CORRESPONDENCE.md updates (RaftLogAppend + ECM sections)",
+  "last_run": 51,
+  "last_task": "Task 10 (REPORT) + Task 7 (CRITIQUE)",
   "toolchain_notes": "no Mathlib, stdlib only. lakefile.toml globs=[FVSquad.+*]. List.getElem?_append_left h closes (l1++l2)[i]?=l1[i]? when h:i<l1.length. simp [h] closes (l.take n)[j]?=l[j]? when h:j<n."
 }

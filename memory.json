@@ -1,12 +1,12 @@
 {
   "lean_version": "4.28.0",
-  "theorem_count": 520,
+  "theorem_count": 522,
   "lean_file_count": 34,
   "sorry_count": 2,
-  "last_run": "Run 50 (2026-04-21): Task 6 (Correspondence) + Task 4->5 (P6/P7 proofs). PR: lean-squad/run-50-p6-p7-correspondence-24699525834.",
-  "hqc_preserved_gap": "CLOSED conditional on hae via ECM6 (hqc_preserved_of_validAEStep). Remaining: derive hae inductively over AE broadcast history. Target: AEBroadcastInvariant.lean.",
+  "last_run": "Run 51 (2026-04-21): Task 10 (REPORT.md) + Task 7 (CRITIQUE.md). PR: lean-squad/run-51-report-critique-24700413995.",
+  "hqc_preserved_gap": "CLOSED via AEBroadcastInvariant.lean (ABI8=hqc_preserved_of_broadcast). Remaining: connect broadcast model to full Raft election lifecycle (election → AE broadcast → ABI8).",
   "aeneas_status": "permanently_blocked_no_new_privileges",
-  "toolchain_notes": "no Mathlib, use 'theorem' not 'lemma', stdlib only. lakefile.toml has globs=[FVSquad.+*]. LogUnstable.lean has NO namespace \u2014 open FVSquad.LogUnstable fails. Import it and use names directly. List.getElem?_append_left takes h:i<l1.length. List.getElem?_take is a simp lemma (simp [h] closes goal).",
+  "toolchain_notes": "no Mathlib, use 'theorem' not 'lemma', stdlib only. lakefile.toml has globs=[FVSquad.+*]. LogUnstable.lean has NO namespace — open FVSquad.LogUnstable fails. Import it and use names directly. List.getElem?_append_left takes h:i<l1.length. List.getElem?_take is a simp lemma (simp [h] closes goal).",
   "notes": [
     "Run 38: ConcreteProtocolStep.lean (CPS1-CPS13) discharges all 5 RaftReachable.step hypotheses given ValidAEStep.",
     "Run 39: CommitRule.lean (CR1-CR8) proves commit-only-after-quorum. CR8 discharges hnew_cert.",
@@ -18,73 +18,37 @@
     "Run 45: Task 3: RaftLogAppend.lean (RA1-RA9+2helpers, 11 theorems). 483->494 theorems, 30->31 files.",
     "Run 46: Task 4: RaftLogAppend.lean += taa_maybeTerm_before+ra_prefix_preserved+ra_committed_prefix_preserved (P4/P5). Task 5: ElectionConcreteModel.lean (ECM1-ECM7, 8 theorems) closes hqc_preserved gap. 494->505 theorems, 31->32 files.",
     "Run 47: Task 10: REPORT.md updated (505/32, Layer 7 section, Runs 43-46 history, ECM gap). Task 1: RESEARCH.md+TARGETS.md updated (A6 hae_inductive target, next steps post-ECM).",
-    "Run 48: Task 7: CRITIQUE.md updated (RaftLogAppend 14T + ECM 8T sections, Paper Review, counts 483->505). Task 6: CORRESPONDENCE.md updated (RaftLogAppend + ECM sections, Known Mismatches updated to 32 files)."
+    "Run 48: Task 7: CRITIQUE.md updated (RaftLogAppend 14T + ECM 8T sections, Paper Review, counts 483->505). Task 6: CORRESPONDENCE.md updated (RaftLogAppend + ECM sections, Known Mismatches updated to 32 files).",
+    "Run 49: Task 8 Route B: FindConflictCorrespondence.lean (17 #guard, 2 sorry). Task 5: AEBroadcastInvariant.lean (ABI1-ABI10, 10 theorems, 0 sorry). 505->517 theorems, 32->34 files.",
+    "Run 50: Task 6 Correspondence Review + Task 4->5 RaftLogAppend P6/P7 (ra_batch_term + ra_beyond_batch_none). 517->522 theorems.",
+    "Run 51: Task 10 (REPORT.md: 505->522, Layer 7 11 files, Runs 49-50 section) + Task 7 (CRITIQUE.md: ABI section 10T, FCC section 2T+17guards, RaftLogAppend P6/P7, Gaps updated, Trajectory step 14 resolved)."
   ],
   "run_history": [
-    {
-      "run": 38,
-      "result": "ConcreteProtocolStep.lean (CPS1-CPS13). 13 theorems."
-    },
-    {
-      "run": 39,
-      "result": "CommitRule.lean (CR1-CR8). 8 theorems."
-    },
-    {
-      "run": 40,
-      "result": "MaybeCommit.lean (MC1-MC4). 4 theorems."
-    },
-    {
-      "run": 41,
-      "result": "RaftElection.lean + LeaderCompleteness.lean. 30 theorems."
-    },
-    {
-      "run": 42,
-      "result": "CORRESPONDENCE.md (11 sections) + CRITIQUE.md updates. No new proofs."
-    },
-    {
-      "run": 43,
-      "result": "ElectionReachability.lean (ER1-ER12, 12 theorems). lakefile globs. TARGETS.md/RESEARCH.md updated."
-    },
-    {
-      "run": 44,
-      "result": "Task 2: raft_log_append_informal.md (Phase 2). Task 7: CRITIQUE.md + ElectionReachability section, counts 471->483."
-    },
-    {
-      "run": 45,
-      "result": "Task 3: RaftLogAppend.lean (RA1-RA9+2helpers, 11 theorems). 483->494 theorems, 30->31 files."
-    },
-    {
-      "run": 46,
-      "result": "Task 4: taa_maybeTerm_before+ra_prefix_preserved+ra_committed_prefix_preserved (3 theorems). Task 5: ElectionConcreteModel.lean (ECM1-ECM7, 8 theorems). 494->505 theorems, 31->32 files."
-    },
-    {
-      "run": 47,
-      "result": "Task 10: REPORT.md updated (505/32 files, Layer 7 section, new run history). Task 1: RESEARCH.md+TARGETS.md (A6 hae_inductive, post-ECM priorities)."
-    },
-    {
-      "run": 48,
-      "result": "Task 7: CRITIQUE.md (RaftLogAppend 14T + ECM 8T sections, Paper Review updates, 483->505). Task 6: CORRESPONDENCE.md (RaftLogAppend + ECM sections, Known Mismatches 29->32 files)."
-    }
+    {"run": 38, "result": "ConcreteProtocolStep.lean (CPS1-CPS13). 13 theorems."},
+    {"run": 39, "result": "CommitRule.lean (CR1-CR8). 8 theorems."},
+    {"run": 40, "result": "MaybeCommit.lean (MC1-MC4). 4 theorems."},
+    {"run": 41, "result": "RaftElection.lean + LeaderCompleteness.lean. 30 theorems."},
+    {"run": 42, "result": "CORRESPONDENCE.md (11 sections) + CRITIQUE.md updates. No new proofs."},
+    {"run": 43, "result": "ElectionReachability.lean (ER1-ER12, 12 theorems). lakefile globs. TARGETS.md/RESEARCH.md updated."},
+    {"run": 44, "result": "Task 2: raft_log_append_informal.md (Phase 2). Task 7: CRITIQUE.md + ElectionReachability section, counts 471->483."},
+    {"run": 45, "result": "Task 3: RaftLogAppend.lean (RA1-RA9+2helpers, 11 theorems). 483->494 theorems, 30->31 files."},
+    {"run": 46, "result": "Task 4: taa_maybeTerm_before+ra_prefix_preserved+ra_committed_prefix_preserved (3 theorems). Task 5: ElectionConcreteModel.lean (ECM1-ECM7, 8 theorems). 494->505 theorems, 31->32 files."},
+    {"run": 47, "result": "Task 10: REPORT.md updated (505/32 files, Layer 7 section, new run history). Task 1: RESEARCH.md+TARGETS.md (A6 hae_inductive, post-ECM priorities)."},
+    {"run": 48, "result": "Task 7: CRITIQUE.md (RaftLogAppend 14T + ECM 8T sections, Paper Review updates, 483->505). Task 6: CORRESPONDENCE.md (RaftLogAppend + ECM sections, Known Mismatches 29->32 files)."},
+    {"run": 49, "result": "Task 8 Route B: FindConflictCorrespondence.lean (17 #guard, 2 sorry). Task 5: AEBroadcastInvariant.lean (ABI1-ABI10, 10T, 0 sorry). 505->517T, 32->34 files."},
+    {"run": 50, "result": "Task 6 Correspondence Review + Task 4->5 RaftLogAppend P6/P7. 517->522T."},
+    {"run": 51, "result": "Task 10 REPORT.md + Task 7 CRITIQUE.md updated (522T, 34 files, 2 sorry, ABI/FCC/P6P7 sections)."}
   ],
   "next_steps": [
-    "Close remaining 2 sorry in FindConflictCorrespondence.lean (makeLog_some, makeLog_none at lines 167/174)",
-    "Connect ElectionReachability ER9 (shared-source) to a concrete Raft election history to close the main safety gap",
-    "Update paper (formal-verification/paper/) with Run 50 results: P6/P7 proved, ABI all proved",
-    "Task 9 (CI): Add lean-ci.yml workflow to run lake build on PRs with .lean files"
+    "Connect AEBroadcastInvariant to full Raft election lifecycle (election → AE broadcast sequence → ABI8 applies)",
+    "Close 2 sorry in FindConflictCorrespondence.lean (makeLog_some, makeLog_none at lines 167/174) using List.findSome? induction",
+    "Update paper (formal-verification/paper/) with Runs 49-51 results: ABI10, FCC, P6/P7",
+    "Task 9 (CI): Verify lean-ci.yml workflow is running correctly on PRs"
   ],
   "informal_specs_written": [
-    "config_validate",
-    "inflights",
-    "log_unstable",
-    "quorum_recently_active",
-    "find_conflict",
-    "is_up_to_date",
-    "maybe_append",
-    "tally_votes",
-    "has_quorum",
-    "limit_size",
-    "progress",
-    "raft_log_append"
+    "config_validate", "inflights", "log_unstable", "quorum_recently_active",
+    "find_conflict", "is_up_to_date", "maybe_append", "tally_votes",
+    "has_quorum", "limit_size", "progress", "raft_log_append"
   ],
   "lean_files": 34,
   "last_run_date": "2026-04-21",
@@ -92,37 +56,19 @@
     {
       "name": "hae_broadcast_invariant",
       "file": "formal-verification/lean/FVSquad/AEBroadcastInvariant.lean",
+      "phase": 5,
+      "notes": "Run 49: ABI1-ABI10 proved (0 sorry). ABI8=hqc_preserved_of_broadcast closes broadcast gap. Next: connect to full election lifecycle."
+    },
+    {
+      "name": "find_conflict_correspondence",
+      "file": "formal-verification/lean/FVSquad/FindConflictCorrespondence.lean",
       "phase": 4,
-      "notes": "Run 49: ABI1-ABI5 proved (0 sorry). ABI6-ABI8 use sorry pending concrete broadcast-sequence type. Closes ECM6 gap when ABI6-7 proved."
+      "notes": "Run 49: 17 #guard tests pass. 2 sorry (makeLog_some/none) pending List.findSome? induction."
     }
   ],
   "runs": [
-    {
-      "run": 49,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 8 Route B",
-        "Task 5"
-      ],
-      "new_theorems": 10,
-      "sorry_added": 4,
-      "files_created": [
-        "FindConflictCorrespondence.lean",
-        "AEBroadcastInvariant.lean",
-        "tests/find_conflict/"
-      ],
-      "notes": "Correspondence tests for find_conflict (17 #guard PASS). ABI1-ABI5 proved; ABI6-ABI8 sorry pending broadcast type."
-    },
-    {
-      "run": 50,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 6 Correspondence Review",
-        "Task 4->5 RaftLogAppend P6/P7"
-      ],
-      "theorems_added": 5,
-      "sorry_added": 0,
-      "pr": "lean-squad/run-50-p6-p7-correspondence-24699525834"
-    }
+    {"run": 49, "date": "2026-04-21", "tasks": ["Task 8 Route B", "Task 5"], "new_theorems": 12, "sorry_added": 2, "files_created": ["FindConflictCorrespondence.lean", "AEBroadcastInvariant.lean", "tests/find_conflict/"]},
+    {"run": 50, "date": "2026-04-21", "tasks": ["Task 6 Correspondence Review", "Task 4->5 RaftLogAppend P6/P7"], "theorems_added": 5, "sorry_added": 0, "pr": "lean-squad/run-50-p6-p7-correspondence-24699525834"},
+    {"run": 51, "date": "2026-04-21", "tasks": ["Task 10 Project Report", "Task 7 Proof Utility Critique"], "theorems_added": 0, "sorry_added": 0, "pr": "lean-squad/run-51-report-critique-24700413995"}
   ]
 }
