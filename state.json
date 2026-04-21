@@ -1,50 +1,23 @@
 {
   "lean_version": "4.28.0",
-  "theorem_count": 540,
+  "theorem_count": 542,
   "lean_file_count": 46,
   "sorry_count": 0,
-  "last_run": "Run 62 (2026-04-21): Task 8 Route B \u2014 ReadOnlyCorrespondence.lean (14 #guard) + Task 10: REPORT.md updated (538T/46F/1sorry). PR: lean-squad/run-62-task8-task10-24716554131.",
+  "last_run": "Run 65 (2026-04-22): Task 5 — RO14+RO15 (542T/46F/0sorry). PR: lean-squad/run-65-task5-task9-24720468785. Task 9: CI already healthy.",
   "hqc_preserved_gap": "CLOSED via AEBroadcastInvariant.lean (ABI8). Remaining: connect broadcast model to full election lifecycle.",
   "aeneas_status": "permanently_blocked_no_new_privileges",
-  "toolchain_notes": "no Mathlib, use theorem not lemma. lakefile.toml globs=[FVSquad.+*]. LogUnstable/IsUpToDate NO namespace. ReadOnly has namespace FVSquad.ReadOnly. RO8 sorry=NoDuplicates needed.",
+  "toolchain_notes": "no Mathlib, use theorem not lemma. lakefile.toml globs=[FVSquad.+*]. LogUnstable/IsUpToDate NO namespace. ReadOnly has namespace FVSquad.ReadOnly. Lean4 operator precedence: existential binder ∃ x ∈ l, P stops at = (prec 50), so write ∃ x ∈ l, (x.1 == c) = true with explicit parens. Bool if-then-else desugars to ite (b = true) so use if_pos/if_neg not simp only [h, ite_true/ite_false]. List.any_map exists in stdlib.",
   "notes": [
-    "Run 58: Task 11+9: Paper updated (524T, 44F, L7+L8 sections, 57 runs). CI already comprehensive.",
-    "Run 59: Task 6: CORRESPONDENCE.md updated with 5 new sections for Runs 56-57 correspondence files. Task 11: Paper run count updated 57\u219258.",
-    "Run 60: Task 4: ReadOnly.lean added \u2014 ReadOnly struct from src/read_only.rs. 12 theorems (RO1-RO12): 11 proved (including RO4/RO5/RO7/RO10/RO11/RO12), 1 sorry (RO8: needs NoDuplicates invariant). 16 #guard tests. Task 7: CRITIQUE.md updated with Layer 8 (correspondence validation table), Layer 9 (ReadOnly section), updated header/overall assessment.",
-    "Run 61: Task 2: read_only_informal.md written (ReadIndex \u00a76.4, all 5 ops, QueuePendingInv, NoDuplicates gap, 12T table). Task 9: CI timeout-minutes added (60/30 min). TARGETS.md updated (read_only Phase 4, raft_log_append Phase 5 corrected, Next Steps updated).",
-    "Run 62: Task 8 Route B: ReadOnlyCorrespondence.lean (14 #guard, exact correspondence). Task 10: REPORT.md updated (538T/46F/1sorry, Runs 51-62 section, Layer 8 table, 0-sorry milestone noted). 12 correspondence test targets total."
+    "Run 62: Task 8 Route B: ReadOnlyCorrespondence.lean (14 #guard tests). Task 10: REPORT.md updated (538T/46F/1sorry).",
+    "Run 64: Task 5: Proved RO8 (advance_removes_ctx) and added RO13 (addRequest_preserves_nodup). 540T/46F/0sorry.",
+    "Run 65: Task 5: Proved RO14 (recvAck preserves QueuePendingInv) and RO15 (advance preserves QueuePendingInv). 542T/46F/0sorry. Key insight: amember_aupdate_eq uses List.any_map + funext; aupdate_key_subset uses by_cases + if_pos/if_neg."
   ],
   "run_history": [
     {
-      "run": 61,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 2 (Informal Spec Extraction)",
-        "Task 9 (CI Audit)"
-      ],
-      "changes": [
-        "Added formal-verification/specs/read_only_informal.md (ReadOnly/ReadIndex spec)",
-        "Updated TARGETS.md: added read_only Phase 4, corrected raft_log_append Phase 5, updated Next Steps",
-        "lean-ci.yml: added timeout-minutes (60 min for build, 30 min for correspondence-tests)"
-      ],
-      "sorry_count_after": 1,
-      "lean_file_count_after": 45,
-      "pr_branch": "lean-squad/run-61-task2-task9-24715452114"
-    },
-    {
       "run": 62,
       "date": "2026-04-21",
-      "tasks": [
-        "Task 8 Route B (ReadOnly correspondence)",
-        "Task 10 (Project Report)"
-      ],
-      "changes": [
-        "Added ReadOnlyCorrespondence.lean: 14 #guard tests (exact correspondence)",
-        "Added test_read_only_correspondence to src/read_only.rs (15 cases, all pass)",
-        "Added formal-verification/tests/read_only/README.md",
-        "Updated REPORT.md: header 522T/34F/2sorry -> 538T/46F/1sorry, Executive Summary updated, Runs 51-62 section added"
-      ],
-      "sorry_count_after": 1,
+      "tasks": ["Task 8 Route B (ReadOnly correspondence)", "Task 10 (Project Report)"],
+      "sorry_after": 1,
       "lean_file_count_after": 46,
       "pr_branch": "lean-squad/run-62-task8-task10-24716554131"
     },
@@ -52,199 +25,47 @@
       "run": 64,
       "date": "2026-04-21",
       "workflow_run_id": "24719296210",
-      "tasks": [
-        "Task 5 (Proof Assistance)",
-        "Task 7 (Critique)"
-      ],
-      "summary": "Proved RO8 (advance_removes_ctx) \u2014 last sorry in project. Added RO13 (addRequest_preserves_nodup). 540 theorems, 46 file",
-      "sorry_before": 1,
+      "tasks": ["Task 5 (Proof Assistance)", "Task 7 (Critique)"],
+      "summary": "Proved RO8 (advance_removes_ctx) — last sorry. Added RO13 (addRequest_preserves_nodup). 540T/46F/0sorry.",
       "sorry_after": 0,
       "theorems_added": 2
+    },
+    {
+      "run": 65,
+      "date": "2026-04-22",
+      "workflow_run_id": "24720468785",
+      "tasks": ["Task 5 (Proof Assistance)", "Task 9 (CI Audit)"],
+      "summary": "Proved RO14 (recvAck_preserves_QueuePendingInv) + RO15 (advance_preserves_QueuePendingInv) + helpers amember_aupdate_eq + aupdate_key_subset. 542T/46F/0sorry.",
+      "sorry_after": 0,
+      "theorems_added": 4,
+      "pr_branch": "lean-squad/run-65-task5-task9-24720468785"
     }
   ],
   "next_steps": [
-    "Prove RO8 by formalising NoDuplicates queue invariant for ReadOnly",
-    "Add ReadOnly Phase 5: RO13 (advance preserves QueuePendingInv), RO14 (FIFO delivery order)",
+    "Prove RO16: NoDuplicates preserved by advance (queue shortens, so nodup preserved)",
+    "Prove RO17: recvAck preserves NoDuplicates (pending values changed, not keys)",
+    "Add correspondence test for QueuePendingInv invariant",
     "progress_set Target 11: informal spec + Lean spec for ProgressSet::quorum_active",
-    "Update paper.tex with Runs 51-62 results (ReadOnly, correspondence catch-up, 538T)",
     "Connect AEBroadcastInvariant to full Raft election lifecycle"
   ],
   "correspondence_test_targets": [
-    {
-      "name": "find_conflict",
-      "guard_count": 17,
-      "status": "complete",
-      "level": "exact"
-    },
-    {
-      "name": "maybe_append",
-      "guard_count": 35,
-      "status": "complete",
-      "level": "exact"
-    },
-    {
-      "name": "is_up_to_date",
-      "guard_count": 14,
-      "status": "complete",
-      "level": "exact"
-    },
-    {
-      "name": "committed_index",
-      "guard_count": 13,
-      "status": "complete",
-      "level": "abstraction"
-    },
-    {
-      "name": "limit_size",
-      "guard_count": 12,
-      "status": "complete",
-      "level": "abstraction"
-    },
-    {
-      "name": "config_validate",
-      "guard_count": 14,
-      "status": "complete",
-      "level": "exact"
-    },
-    {
-      "name": "inflights",
-      "guard_count": 14,
-      "status": "complete",
-      "level": "abstraction"
-    },
-    {
-      "name": "log_unstable",
-      "guard_count": 14,
-      "status": "complete",
-      "level": "exact"
-    },
-    {
-      "name": "tally_votes",
-      "guard_count": 12,
-      "status": "complete",
-      "level": "exact"
-    },
-    {
-      "name": "vote_result",
-      "guard_count": 17,
-      "status": "complete",
-      "level": "exact"
-    },
-    {
-      "name": "has_quorum",
-      "guard_count": 17,
-      "status": "complete",
-      "level": "exact"
-    },
-    {
-      "name": "read_only",
-      "lean_file": "FVSquad/ReadOnlyCorrespondence.lean",
-      "rust_test": "read_only::tests::test_read_only_correspondence",
-      "guard_count": 14,
-      "status": "complete",
-      "correspondence_level": "exact"
-    }
+    {"name": "find_conflict", "guard_count": 17, "status": "complete", "level": "exact"},
+    {"name": "maybe_append", "guard_count": 35, "status": "complete", "level": "exact"},
+    {"name": "is_up_to_date", "guard_count": 14, "status": "complete", "level": "exact"},
+    {"name": "committed_index", "guard_count": 13, "status": "complete", "level": "abstraction"},
+    {"name": "limit_size", "guard_count": 12, "status": "complete", "level": "abstraction"},
+    {"name": "config_validate", "guard_count": 14, "status": "complete", "level": "exact"},
+    {"name": "inflights", "guard_count": 14, "status": "complete", "level": "abstraction"},
+    {"name": "log_unstable", "guard_count": 14, "status": "complete", "level": "exact"},
+    {"name": "tally_votes", "guard_count": 12, "status": "complete", "level": "exact"},
+    {"name": "vote_result", "guard_count": 17, "status": "complete", "level": "exact"},
+    {"name": "has_quorum", "guard_count": 17, "status": "complete", "level": "exact"},
+    {"name": "read_only", "guard_count": 14, "status": "complete", "level": "exact"}
   ],
-  "informal_specs_written": [
-    "config_validate",
-    "inflights",
-    "log_unstable",
-    "quorum_recently_active",
-    "find_conflict",
-    "is_up_to_date",
-    "maybe_append",
-    "tally_votes",
-    "has_quorum",
-    "limit_size",
-    "progress",
-    "raft_log_append",
-    "read_only"
+  "targets": [
+    {"name": "hae_broadcast_invariant", "file": "formal-verification/lean/FVSquad/AEBroadcastInvariant.lean", "phase": 5, "notes": "ABI1-ABI10 proved (0 sorry)."},
+    {"name": "read_only", "file": "formal-verification/lean/FVSquad/ReadOnly.lean", "phase": 5, "notes": "Phase 5: RO1-RO15 proved, 0 sorry. QueuePendingInv fully preserved by all ops (RO14+RO15). NoDuplicates next.", "sorry_count": 0}
   ],
   "lean_files": 46,
-  "last_run_date": "2026-04-21",
-  "ci_status": {
-    "lean_ci_yml": "Has 'correspondence-tests' job (cargo test correspondence), trigger paths include src/** and formal-verification/tests/**",
-    "aeneas_generate_yml": "not applicable (Aeneas permanently blocked)"
-  },
-  "targets": [
-    {
-      "name": "hae_broadcast_invariant",
-      "file": "formal-verification/lean/FVSquad/AEBroadcastInvariant.lean",
-      "phase": 5,
-      "notes": "ABI1-ABI10 proved (0 sorry). ABI8 closes broadcast gap. Next: connect to full election lifecycle."
-    },
-    {
-      "name": "find_conflict_correspondence",
-      "file": "formal-verification/lean/FVSquad/FindConflictCorrespondence.lean",
-      "phase": 5,
-      "notes": "17 #guard tests, 4 theorems, 0 sorry (makeLog_some proved Run 55)."
-    },
-    {
-      "name": "maybe_append_correspondence",
-      "file": "formal-verification/lean/FVSquad/MaybeAppendCorrespondence.lean",
-      "phase": 5,
-      "notes": "35 #guard tests, 8 cases, 0 sorry."
-    },
-    {
-      "name": "is_up_to_date_correspondence",
-      "file": "formal-verification/lean/FVSquad/IsUpToDateCorrespondence.lean",
-      "phase": 5,
-      "notes": "14 #guard tests, exact correspondence, 0 sorry."
-    },
-    {
-      "name": "committed_index_correspondence",
-      "file": "formal-verification/lean/FVSquad/CommittedIndexCorrespondence.lean",
-      "phase": 5,
-      "notes": "13 #guard tests, abstraction level, 0 sorry."
-    },
-    {
-      "name": "vote_result_correspondence",
-      "file": "formal-verification/lean/FVSquad/VoteResultCorrespondence.lean",
-      "phase": 5,
-      "notes": "17 #guard tests, exact correspondence, 0 sorry."
-    },
-    {
-      "name": "has_quorum_correspondence",
-      "file": "formal-verification/lean/FVSquad/HasQuorumCorrespondence.lean",
-      "phase": 5,
-      "notes": "17 #guard tests, exact correspondence, 0 sorry."
-    },
-    {
-      "name": "limit_size_correspondence",
-      "file": "formal-verification/lean/FVSquad/LimitSizeCorrespondence.lean",
-      "phase": 5,
-      "notes": "12 #guard tests, abstraction, 0 sorry."
-    },
-    {
-      "name": "config_validate_correspondence",
-      "file": "formal-verification/lean/FVSquad/ConfigValidateCorrespondence.lean",
-      "phase": 5,
-      "notes": "14 #guard tests, exact, 0 sorry."
-    },
-    {
-      "name": "inflights_correspondence",
-      "file": "formal-verification/lean/FVSquad/InflightsCorrespondence.lean",
-      "phase": 5,
-      "notes": "14 #guard tests, abstraction, 0 sorry."
-    },
-    {
-      "name": "log_unstable_correspondence",
-      "file": "formal-verification/lean/FVSquad/LogUnstableCorrespondence.lean",
-      "phase": 5,
-      "notes": "14 #guard tests, exact, 0 sorry."
-    },
-    {
-      "name": "tally_votes_correspondence",
-      "file": "formal-verification/lean/FVSquad/TallyVotesCorrespondence.lean",
-      "phase": 5,
-      "notes": "12 #guard tests, exact, 0 sorry."
-    },
-    {
-      "name": "read_only",
-      "file": "formal-verification/lean/FVSquad/ReadOnly.lean",
-      "phase": 5,
-      "notes": "Phase 5 complete: 13 theorems (RO1-RO12+RO13), 0 sorry. RO8 proved with Nodup invariant; RO13 proves addRequest preserves Nodup.",
-      "sorry_count": 0
-    }
-  ]
+  "last_run_date": "2026-04-22"
 }
