@@ -2067,4 +2067,86 @@ mod test {
                 .is_err()
         );
     }
+
+    // -----------------------------------------------------------------------
+    // Task 8 Route B — is_up_to_date correspondence test
+    //
+    // These 12 cases mirror FVSquad/IsUpToDateCorrespondence.lean exactly.
+    // Each case specifies a voter log state (voter_term, voter_index) and a
+    // candidate (cand_term, cand_index), and the expected Boolean result.
+    //
+    // The Lean model `isUpToDate voter cand_term cand_index` computes:
+    //   cand_term > voter.term || (cand_term == voter.term && cand_index >= voter.index)
+    //
+    // The Rust `RaftLog::is_up_to_date(last_index, term)` computes:
+    //   term > self.last_term() || (term == self.last_term() && last_index >= self.last_index())
+    //
+    // Correspondence: voter.term = last_term(), voter.index = last_index().
+    // -----------------------------------------------------------------------
+    #[test]
+    fn test_is_up_to_date_correspondence() {
+        let l = default_logger();
+
+        // Build a RaftLog whose last entry has the given (last_index, last_term).
+        // For last_index=0 (empty log), no entries are appended.
+        let make_log = |last_index: u64, last_term: u64| {
+            let store = MemStorage::new();
+            let mut raft_log = RaftLog::new(store, l.clone(), &Config::default());
+            if last_index > 0 {
+                // Entries 1..(last_index-1) use term=1; the final entry uses last_term.
+                let mut entries: Vec<_> = (1..last_index).map(|i| new_entry(i, 1)).collect();
+                entries.push(new_entry(last_index, last_term));
+                raft_log.append(&entries);
+            }
+            raft_log
+        };
+
+        // (voter_term, voter_index, cand_term, cand_index, expected)
+        // Mirrors formal-verification/tests/is_up_to_date/cases.json exactly.
+        let cases: &[(u64, u64, u64, u64, bool)] = &[
+            // Cases 1-3: higher cand term → always true
+            (3, 3, 4, 2, true),   // case 1: higher term beats lower index
+            (3, 3, 4, 3, true),   // case 2: higher term wins (same index)
+            (3, 3, 4, 4, true),   // case 3: higher term wins (higher index)
+            // Cases 4-6: lower cand term → always false
+            (3, 3, 2, 2, false),  // case 4: lower term loses (lower index)
+            (3, 3, 2, 3, false),  // case 5: lower term loses (same index)
+            (3, 3, 2, 4, false),  // case 6: lower term loses even with higher index
+            // Cases 7-9: same term — index decides
+            (3, 3, 3, 2, false),  // case 7: same term, shorter cand log loses
+            (3, 3, 3, 3, true),   // case 8: same term, equal length (isUpToDate_refl)
+            (3, 3, 3, 4, true),   // case 9: same term, longer cand log wins
+            // Cases 10-12: additional edge cases
+            (0, 0, 0, 0, true),   // case 10: empty voter log → any cand is up-to-date
+            (5, 10, 5, 9, false), // case 11: same term, shorter cand index → false
+            (5, 10, 6, 0, true),  // case 12: higher cand term wins regardless of index
+        ];
+
+        for (i, &(voter_term, voter_index, cand_term, cand_index, expected)) in
+            cases.iter().enumerate()
+        {
+            let raft_log = make_log(voter_index, voter_term);
+            // Verify the log fixture matches the intended voter state.
+            assert_eq!(
+                raft_log.last_term(),
+                voter_term,
+                "case {}: last_term mismatch — log fixture incorrect",
+                i + 1
+            );
+            assert_eq!(
+                raft_log.last_index(),
+                voter_index,
+                "case {}: last_index mismatch — log fixture incorrect",
+                i + 1
+            );
+            let result = raft_log.is_up_to_date(cand_index, cand_term);
+            assert_eq!(
+                result,
+                expected,
+                "case {}: is_up_to_date({cand_index}, {cand_term}) on log \
+                 (term={voter_term}, idx={voter_index}) = {result}, want {expected}",
+                i + 1
+            );
+        }
+    }
 }

@@ -7,8 +7,8 @@ correspondence level, known divergences, and the impact on any proofs that rely 
 definition.
 
 ## Last Updated
-- **Date**: 2026-04-23 00:00 UTC
-- **Commit**: `d9e8f7a` — Run 52: Task 8 Route B (MaybeAppendCorrespondence: 32 #guard tests; FindConflictCorrespondence: makeLog_none proved, sorry count 2→1)
+- **Date**: 2026-04-21 03:03 UTC
+- **Commit**: `eb368a1` — Run 53: Task 8 Route B (IsUpToDateCorrespondence: 12 #guard tests; CommittedIndexCorrespondence: 8 #guard tests)
 
 ---
 
@@ -379,6 +379,80 @@ mirroring the JSON fixture (verified passing: `cargo test test_maybe_append_corr
 **No sorry in this file.** All `#guard` assertions are compile-time checked.
 
 **No mismatches found.**
+
+---
+
+## `formal-verification/lean/FVSquad/IsUpToDateCorrespondence.lean`
+
+### Target: `RaftLog::is_up_to_date` — executable correspondence tests
+
+**New in Run 53.** This file provides 12 `#guard` assertions that cross-check the Lean
+model `isUpToDate` (from `IsUpToDate.lean`) against concrete computed values matching
+the expected behaviour of `RaftLog::is_up_to_date`.
+
+| Lean name | Rust counterpart | Correspondence | Notes |
+|-----------|-----------------|----------------|-------|
+| `voter33`, `voter00`, `voter510` | — (test fixtures) | Exact | `LogId` values encoding `(last_term, last_index)` state |
+| `isUpToDate voter cand_term cand_index` | `RaftLog::is_up_to_date(last_index, term)` | Exact | Boolean comparison; Rust logic is identical one-liner |
+| 12 `#guard` assertions | 12-case Rust `#[test]` in `src/raft_log.rs` | Exact | Both sides cover the same 12 scenarios |
+
+**Correspondence test fixture**: `formal-verification/tests/is_up_to_date/cases.json`
+(12 cases: 9 from the existing `test_is_up_to_date` Rust test + 3 edge cases).
+
+**Rust side**: `src/raft_log.rs::test_is_up_to_date_correspondence` — 12 cases
+mirroring the JSON fixture (verified passing: `cargo test test_is_up_to_date_correspondence`).
+
+**Correspondence level**: **Exact** — the Lean model is a one-liner functionally identical
+to the Rust:
+```
+Lean:  cand_term > voter.term || (cand_term == voter.term && cand_index >= voter.index)
+Rust:  term > self.last_term() || (term == self.last_term() && last_index >= self.last_index())
+```
+
+**Validation evidence**: `formal-verification/tests/is_up_to_date/` — 12 cases, all
+passing on both Lean (`lake build`) and Rust (`cargo test`) sides.
+
+**No sorry in this file.** All `#guard` assertions are compile-time checked.
+
+**No mismatches found.**
+
+---
+
+## `formal-verification/lean/FVSquad/CommittedIndexCorrespondence.lean`
+
+### Target: `Configuration::committed_index` — executable correspondence tests
+
+**New in Run 53.** This file provides 8 `#guard` assertions that cross-check the Lean
+model `committedIndex` (from `CommittedIndex.lean`) against concrete computed values
+matching the expected behaviour of `Configuration::committed_index(false, l)`.
+
+| Lean name | Rust counterpart | Correspondence | Notes |
+|-----------|-----------------|----------------|-------|
+| `makeAcked pairs` | — (test helper) | Exact | Builds `AckedFn` (`Nat → Nat`) from association list; missing → 0 |
+| `committedIndex voters acked` | `Configuration::committed_index(false, l)` | Abstraction | `use_group_commit=false` path only; see divergences |
+| 8 `#guard` assertions | 8-case Rust `#[test]` in `src/quorum/majority.rs` | Exact | Both sides cover the same 8 scenarios |
+
+**Correspondence test fixture**: `formal-verification/tests/committed_index/cases.json`
+(8 cases: single voter, two voters, three voters with distinct/same acked values,
+five voters, missing voter, all-same-acked).
+
+**Rust side**: `src/quorum/majority.rs::tests::test_committed_index_correspondence` — 8 cases
+mirroring the JSON fixture (verified passing: `cargo test test_committed_index_correspondence`).
+
+**Correspondence level**: **Abstraction** — the tested `use_group_commit=false` path is
+exactly modelled; known divergences:
+
+- **Empty voters**: Rust returns `(u64::MAX, true)`, Lean model returns `0`
+  (divergence documented in CI1/`committedIndex_empty_contract`; not tested here)
+- **Group-commit path** (`use_group_commit=true`): not modelled in `CommittedIndex.lean`
+- **`u64` vs `Nat`**: Rust uses `u64`; overflow not tested (log indices are practical `Nat` values)
+
+**Validation evidence**: `formal-verification/tests/committed_index/` — 8 cases, all
+passing on both Lean (`lake build`) and Rust (`cargo test`) sides.
+
+**No sorry in this file.** All `#guard` assertions are compile-time checked.
+
+**No mismatches found** for the `use_group_commit=false` path.
 
 ---
 
@@ -1623,4 +1697,4 @@ level.  The honest residual gaps are:
 These are all documented modelling choices, not semantic errors. No proved theorem is
 invalidated by these gaps.
 
-> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24700764734) automated formal verification. Run 52: Task 8 Route B (MaybeAppendCorrespondence.lean: 32 #guard tests for maybeAppend; FindConflictCorrespondence.lean: makeLog_none proved). 35 Lean files, 481+ theorems, 1 sorry (FindConflictCorrespondence.lean makeLog_some).
+> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24701759513) automated formal verification. Run 53: Task 8 Route B (IsUpToDateCorrespondence.lean: 12 #guard tests; CommittedIndexCorrespondence.lean: 8 #guard tests). 37 Lean files, 522+ theorems, 1 sorry (FindConflictCorrespondence.lean makeLog_some).

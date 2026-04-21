@@ -1,0 +1,14 @@
+[
+  {"id": 1, "voter_term": 3, "voter_index": 3, "cand_term": 4, "cand_index": 2, "expected": true,  "note": "higher cand term beats lower index"},
+  {"id": 2, "voter_term": 3, "voter_index": 3, "cand_term": 4, "cand_index": 3, "expected": true,  "note": "higher cand term wins (same index)"},
+  {"id": 3, "voter_term": 3, "voter_index": 3, "cand_term": 4, "cand_index": 4, "expected": true,  "note": "higher cand term wins (higher index)"},
+  {"id": 4, "voter_term": 3, "voter_index": 3, "cand_term": 2, "cand_index": 2, "expected": false, "note": "lower cand term loses (lower index)"},
+  {"id": 5, "voter_term": 3, "voter_index": 3, "cand_term": 2, "cand_index": 3, "expected": false, "note": "lower cand term loses (same index)"},
+  {"id": 6, "voter_term": 3, "voter_index": 3, "cand_term": 2, "cand_index": 4, "expected": false, "note": "lower cand term loses even with higher index"},
+  {"id": 7, "voter_term": 3, "voter_index": 3, "cand_term": 3, "cand_index": 2, "expected": false, "note": "same term, shorter cand log loses"},
+  {"id": 8, "voter_term": 3, "voter_index": 3, "cand_term": 3, "cand_index": 3, "expected": true,  "note": "same term, equal length (isUpToDate_refl)"},
+  {"id": 9, "voter_term": 3, "voter_index": 3, "cand_term": 3, "cand_index": 4, "expected": true,  "note": "same term, longer cand log wins"},
+  {"id": 10, "voter_term": 0, "voter_index": 0, "cand_term": 0, "cand_index": 0, "expected": true, "note": "empty voter log — any candidate is up-to-date"},
+  {"id": 11, "voter_term": 5, "voter_index": 10, "cand_term": 5, "cand_index": 9, "expected": false, "note": "same term, shorter cand index"},
+  {"id": 12, "voter_term": 5, "voter_index": 10, "cand_term": 6, "cand_index": 0, "expected": true,  "note": "higher cand term wins regardless of index"}
+]

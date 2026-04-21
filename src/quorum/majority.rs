@@ -312,3 +312,82 @@ impl DerefMut for Configuration {
         &mut self.voters
     }
 }
+
+// ---------------------------------------------------------------------------
+// Task 8 Route B — committed_index correspondence test
+//
+// These 8 cases mirror FVSquad/CommittedIndexCorrespondence.lean exactly.
+// Each case specifies a voter set and an acked-index map, and the expected
+// committed index returned by `committed_index(false, &acker)`.
+//
+// The Lean model `committedIndex voters acked` sorts acked values descending and
+// returns the element at position `majority(|voters|) - 1`.  The Rust function
+// `Configuration::committed_index(false, l)` does exactly the same for
+// `use_group_commit = false`.
+// ---------------------------------------------------------------------------
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::quorum::{AckIndexer, Index};
+    use crate::{HashMap, HashSet};
+
+    // Build an AckIndexer from a list of (voter_id, acked_index) pairs.
+    // Missing entries are absent from the map; `unwrap_or_default()` in Rust
+    // gives Index { index: 0, group_id: 0 }, mirroring the Lean default of 0.
+    fn make_acker(pairs: &[(u64, u64)]) -> AckIndexer {
+        let mut m = AckIndexer::default();
+        for &(id, idx) in pairs {
+            m.insert(
+                id,
+                Index {
+                    index: idx,
+                    group_id: 0,
+                },
+            );
+        }
+        m
+    }
+
+    #[test]
+    fn test_committed_index_correspondence() {
+        // (voters, acked_pairs, expected)
+        // Mirrors formal-verification/tests/committed_index/cases.json exactly.
+        let cases: &[(&[u64], &[(u64, u64)], u64)] = &[
+            // Case 1: single voter, acked=5 → 5
+            // sorted=[5], majority(1)=1, result=sorted[0]=5
+            (&[1], &[(1, 5)], 5),
+            // Case 2: two voters, acked={1→5, 2→3} → 3
+            // sorted=[5,3], majority(2)=2, result=sorted[1]=3
+            (&[1, 2], &[(1, 5), (2, 3)], 3),
+            // Case 3: three voters, acked={1→2, 2→4, 3→6} → 4
+            // sorted=[6,4,2], majority(3)=2, result=sorted[1]=4
+            (&[1, 2, 3], &[(1, 2), (2, 4), (3, 6)], 4),
+            // Case 4: three voters, all acked=2 → 2
+            (&[1, 2, 3], &[(1, 2), (2, 2), (3, 2)], 2),
+            // Case 5: three voters, all acked=0 → 0
+            (&[1, 2, 3], &[(1, 0), (2, 0), (3, 0)], 0),
+            // Case 6: five voters, acked={1→1,…,5→5} → 3
+            // sorted=[5,4,3,2,1], majority(5)=3, result=sorted[2]=3
+            (&[1, 2, 3, 4, 5], &[(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)], 3),
+            // Case 7: two voters, voter 2 missing → defaults to 0 → result=0
+            // sorted=[10,0], majority(2)=2, result=sorted[1]=0
+            (&[1, 2], &[(1, 10)], 0),
+            // Case 8: three voters, all acked=10 → 10
+            (&[1, 2, 3], &[(1, 10), (2, 10), (3, 10)], 10),
+        ];
+
+        for (i, &(voter_ids, acked_pairs, expected)) in cases.iter().enumerate() {
+            let voters: HashSet<u64> = voter_ids.iter().copied().collect();
+            let cfg = Configuration::new(voters);
+            let acker = make_acker(acked_pairs);
+            let (result, _) = cfg.committed_index(false, &acker);
+            assert_eq!(
+                result,
+                expected,
+                "case {}: committed_index voters={voter_ids:?} acked={acked_pairs:?} \
+                 = {result}, want {expected}",
+                i + 1
+            );
+        }
+    }
+}
