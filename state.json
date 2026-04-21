@@ -1,8 +1,8 @@
 {
   "lean_version": "4.28.0",
-  "theorem_count": 538,
-  "lean_file_count": 45,
-  "sorry_count": 1,
+  "theorem_count": 540,
+  "lean_file_count": 46,
+  "sorry_count": 0,
   "last_run": "Run 62 (2026-04-21): Task 8 Route B \u2014 ReadOnlyCorrespondence.lean (14 #guard) + Task 10: REPORT.md updated (538T/46F/1sorry). PR: lean-squad/run-62-task8-task10-24716554131.",
   "hqc_preserved_gap": "CLOSED via AEBroadcastInvariant.lean (ABI8). Remaining: connect broadcast model to full election lifecycle.",
   "aeneas_status": "permanently_blocked_no_new_privileges",
@@ -15,38 +15,6 @@
     "Run 62: Task 8 Route B: ReadOnlyCorrespondence.lean (14 #guard, exact correspondence). Task 10: REPORT.md updated (538T/46F/1sorry, Runs 51-62 section, Layer 8 table, 0-sorry milestone noted). 12 correspondence test targets total."
   ],
   "run_history": [
-    {
-      "run": 60,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 4 (Implementation Extraction)",
-        "Task 7 (Proof Utility Critique)"
-      ],
-      "changes": [
-        "Added ReadOnly.lean: 12 theorems (RO1-RO12), 1 sorry (RO8), 16 #guard tests",
-        "CRITIQUE.md: updated Overall Assessment (45 files, 493 theorems, 1 sorry)",
-        "CRITIQUE.md: added Layer 8 correspondence validation table (11 files)",
-        "CRITIQUE.md: added Layer 9 ReadOnly.lean section (12T, 1 sorry analysis)"
-      ],
-      "sorry_count_after": 1,
-      "lean_file_count_after": 45,
-      "pr_branch": "lean-squad/run-60-task4-task7-24714321754"
-    },
-    {
-      "run": 59,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 6 (Correspondence Review)",
-        "Task 11 (paper update)"
-      ],
-      "changes": [
-        "CORRESPONDENCE.md: added 5 new sections (LimitSize/ConfigValidate/Inflights/LogUnstable/TallyVotes)",
-        "paper.tex: updated run count 57\u219258, cost $399\u2192$406"
-      ],
-      "sorry_count_after": 0,
-      "lean_file_count_after": 44,
-      "pr_branch": "lean-squad/run-59-correspondence-paper-24713683812"
-    },
     {
       "run": 61,
       "date": "2026-04-21",
@@ -79,6 +47,19 @@
       "sorry_count_after": 1,
       "lean_file_count_after": 46,
       "pr_branch": "lean-squad/run-62-task8-task10-24716554131"
+    },
+    {
+      "run": 64,
+      "date": "2026-04-21",
+      "workflow_run_id": "24719296210",
+      "tasks": [
+        "Task 5 (Proof Assistance)",
+        "Task 7 (Critique)"
+      ],
+      "summary": "Proved RO8 (advance_removes_ctx) \u2014 last sorry in project. Added RO13 (addRequest_preserves_nodup). 540 theorems, 46 file",
+      "sorry_before": 1,
+      "sorry_after": 0,
+      "theorems_added": 2
     }
   ],
   "next_steps": [
@@ -261,8 +242,9 @@
     {
       "name": "read_only",
       "file": "formal-verification/lean/FVSquad/ReadOnly.lean",
-      "phase": 4,
-      "notes": "Run 60: 12 theorems (RO1-RO12), 11 proved, 1 sorry (RO8: NoDuplicates). 16 #guard. Run 62: ReadOnlyCorrespondence.lean added (14 #guard, exact correspondence)."
+      "phase": 5,
+      "notes": "Phase 5 complete: 13 theorems (RO1-RO12+RO13), 0 sorry. RO8 proved with Nodup invariant; RO13 proves addRequest preserves Nodup.",
+      "sorry_count": 0
     }
   ]
 }
