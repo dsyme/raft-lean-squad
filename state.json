@@ -1,79 +1,54 @@
 {
   "lean_version": "4.28.0",
-  "theorem_count": 524,
-  "lean_file_count": 44,
-  "sorry_count": 0,
-  "last_run": "Run 59 (2026-04-21): Task 6 — CORRESPONDENCE.md 5 new sections (LimitSize/ConfigValidate/Inflights/LogUnstable/TallyVotesCorrespondence). Task 11 — paper run count updated 57→58. PR: lean-squad/run-59-correspondence-paper-24713683812.",
+  "theorem_count": 493,
+  "lean_file_count": 45,
+  "sorry_count": 1,
+  "last_run": "Run 60 (2026-04-21): Task 4 — ReadOnly.lean (12T, 1 sorry: RO8). Task 7 — CRITIQUE.md Layer 8+9 sections. PR: lean-squad/run-60-task4-task7-24714321754.",
   "hqc_preserved_gap": "CLOSED via AEBroadcastInvariant.lean (ABI8). Remaining: connect broadcast model to full election lifecycle.",
   "aeneas_status": "permanently_blocked_no_new_privileges",
-  "toolchain_notes": "no Mathlib, use theorem not lemma. lakefile.toml globs=[FVSquad.+*]. LogUnstable/IsUpToDate have NO namespace. List.getElem?_take is simp lemma.",
+  "toolchain_notes": "no Mathlib, use theorem not lemma. lakefile.toml globs=[FVSquad.+*]. LogUnstable/IsUpToDate have NO namespace. List.getElem?_take is simp lemma. ReadOnly has namespace FVSquad.ReadOnly. alookup/aupdate/amember are NOT private in ReadOnly.lean.",
   "notes": [
-    "Run 55: Task 8 Route B: VoteResultCorrespondence.lean (12 #guard, exact correspondence), HasQuorumCorrespondence.lean (12 #guard, exact correspondence). 39 lean files, sorry stays 1. 6 correspondence test targets total, 93 #guard assertions.",
     "Run 56: Task 8 Route B catch-up: 5 new correspondence files (LimitSize, ConfigValidate, Inflights, LogUnstable, TallyVotes). 44 lean files total, 0 sorry. 11 total correspondence test functions, ~149 #guard assertions total. Task 9: lean-ci.yml now has correspondence-tests job (cargo test correspondence). CI triggers expanded to src/** + formal-verification/tests/**.",
-    "Run 57: Task 8 Route B catch-up (per user instruction): 5 new correspondence files (LimitSize, ConfigValidate, Inflights, LogUnstable, TallyVotes). 44 lean files total, 0 sorry. 11 total correspondence test functions (cargo test correspondence: 11/11). Task 9 CI: lean-ci.yml correspondence-tests job confirmed + triggers include src/** and formal-verification/tests/**. lake build: 46 jobs, Lean v4.28.0, 0 sorry.",
     "Run 58: Task 11+9: Paper updated (524T, 44F, L7+L8 sections, 57 runs). CI already comprehensive.",
-    "Run 59: Task 6: CORRESPONDENCE.md updated with 5 new sections for Runs 56-57 correspondence files (LimitSize, ConfigValidate, Inflights, LogUnstable, TallyVotes). Task 11: Paper run count updated 56/57→58, cost $399→$406."
+    "Run 59: Task 6: CORRESPONDENCE.md updated with 5 new sections for Runs 56-57 correspondence files. Task 11: Paper run count updated 57→58.",
+    "Run 60: Task 4: ReadOnly.lean added — ReadOnly struct from src/read_only.rs. 12 theorems (RO1-RO12): 11 proved (including RO4/RO5/RO7/RO10/RO11/RO12), 1 sorry (RO8: needs NoDuplicates invariant). 16 #guard tests. Task 7: CRITIQUE.md updated with Layer 8 (correspondence validation table), Layer 9 (ReadOnly section), updated header/overall assessment."
   ],
   "run_history": [
+    {
+      "run": 60,
+      "date": "2026-04-21",
+      "tasks": ["Task 4 (Implementation Extraction)", "Task 7 (Proof Utility Critique)"],
+      "changes": [
+        "Added ReadOnly.lean: 12 theorems (RO1-RO12), 1 sorry (RO8), 16 #guard tests",
+        "CRITIQUE.md: updated Overall Assessment (45 files, 493 theorems, 1 sorry)",
+        "CRITIQUE.md: added Layer 8 correspondence validation table (11 files)",
+        "CRITIQUE.md: added Layer 9 ReadOnly.lean section (12T, 1 sorry analysis)"
+      ],
+      "sorry_count_after": 1,
+      "lean_file_count_after": 45,
+      "pr_branch": "lean-squad/run-60-task4-task7-24714321754"
+    },
     {
       "run": 59,
       "date": "2026-04-21",
       "tasks": ["Task 6 (Correspondence Review)", "Task 11 (paper update)"],
       "changes": [
-        "CORRESPONDENCE.md: added 5 new sections for LimitSizeCorrespondence (12#guard, Abstraction)",
-        "CORRESPONDENCE.md: added ConfigValidateCorrespondence (14#guard, Exact)",
-        "CORRESPONDENCE.md: added InflightsCorrespondence (14#guard, Abstraction)",
-        "CORRESPONDENCE.md: added LogUnstableCorrespondence (14#guard, Exact)",
-        "CORRESPONDENCE.md: added TallyVotesCorrespondence (12#guard, Exact)",
-        "CORRESPONDENCE.md: updated Last Updated header to Run 59",
-        "paper.tex: updated run count 56/57→58 throughout abstract, results, comparison, conclusion",
-        "paper.tex: updated cost $399 (57 runs)→$406 (58 runs)"
+        "CORRESPONDENCE.md: added 5 new sections (LimitSize/ConfigValidate/Inflights/LogUnstable/TallyVotes)",
+        "paper.tex: updated run count 57→58, cost $399→$406"
       ],
       "sorry_count_after": 0,
       "lean_file_count_after": 44,
       "pr_branch": "lean-squad/run-59-correspondence-paper-24713683812"
-    },
-    {
-      "run": 58,
-      "date": "2026-04-21",
-      "tasks": ["Task 11 (paper update)", "Task 9 (CI audit)"],
-      "changes": [
-        "Updated paper.tex: 473->524 theorems, 29->44 files, 40->57 runs",
-        "Added Layer 7 (complete) descriptions for 4 new proof files",
-        "Added Layer 8 (correspondence validation) section with 11 files, 189 #guard",
-        "Added Model Validation subsection in Methodology",
-        "Updated all statistics: table, cost ($280->$399), abstract, conclusion",
-        "CI audit: lean-ci.yml already has correspondence-tests job, correct triggers"
-      ],
-      "sorry_count_after": 0,
-      "lean_file_count_after": 44,
-      "pr_branch": "lean-squad/run-58-paper-ci-24712688201"
-    },
-    {
-      "run": 56,
-      "date": "2026-04-21",
-      "tasks": ["Task 8 Route B (catch-up)", "Task 9 (CI update)"],
-      "changes": [
-        "Added LimitSizeCorrespondence.lean: 10 #guard tests for limitSize",
-        "Added ConfigValidateCorrespondence.lean: 12 #guard tests for configValidate",
-        "Added InflightsCorrespondence.lean: 12 #guard tests for Inflights ops",
-        "Added LogUnstableCorrespondence.lean: 12 #guard tests for log_unstable",
-        "Added TallyVotesCorrespondence.lean: 10 #guard tests for tallyVotes",
-        "Updated lean-ci.yml: added correspondence-tests job, expanded path triggers to src/** and formal-verification/tests/**"
-      ],
-      "sorry_count_after": 0,
-      "lean_file_count_after": 44,
-      "pr_branch": "lean-squad/run-56-task8-task9-catchup-24703152990"
     }
   ],
   "next_steps": [
-    "Connect AEBroadcastInvariant to full Raft election lifecycle to close concrete safety proof",
-    "Close sorry in FindConflictCorrespondence.lean (makeLog_some theorem)",
-    "Update REPORT.md to reflect Runs 43-59 (Layer 7 complete, Layer 8 correspondence validation, CORRESPONDENCE.md coverage)",
-    "Update CRITIQUE.md with Layer 8 correspondence validation section"
+    "Prove RO8 in ReadOnly.lean (NoDuplicates invariant for queue)",
+    "Connect AEBroadcastInvariant to full Raft election lifecycle",
+    "Update REPORT.md to reflect Runs 43-60 (Layer 8 + ReadOnly)",
+    "Update paper.tex with ReadOnly.lean and updated theorem counts"
   ],
   "correspondence_test_targets": [
-    {"name": "find_conflict", "guard_count": 27, "status": "complete", "level": "exact"},
+    {"name": "find_conflict", "guard_count": 17, "status": "complete", "level": "exact"},
     {"name": "maybe_append", "guard_count": 35, "status": "complete", "level": "exact"},
     {"name": "is_up_to_date", "guard_count": 14, "status": "complete", "level": "exact"},
     {"name": "committed_index", "guard_count": 13, "status": "complete", "level": "abstraction"},
@@ -88,9 +63,9 @@
   "informal_specs_written": [
     "config_validate", "inflights", "log_unstable", "quorum_recently_active",
     "find_conflict", "is_up_to_date", "maybe_append", "tally_votes", "has_quorum",
-    "limit_size", "progress", "raft_log_append"
+    "limit_size", "progress", "raft_log_append", "read_only"
   ],
-  "lean_files": 44,
+  "lean_files": 45,
   "last_run_date": "2026-04-21",
   "ci_status": {
     "lean_ci_yml": "Has 'correspondence-tests' job (cargo test correspondence), trigger paths include src/** and formal-verification/tests/**",
@@ -98,16 +73,17 @@
   },
   "targets": [
     {"name": "hae_broadcast_invariant", "file": "formal-verification/lean/FVSquad/AEBroadcastInvariant.lean", "phase": 5, "notes": "ABI1-ABI10 proved (0 sorry). ABI8 closes broadcast gap. Next: connect to full election lifecycle."},
-    {"name": "find_conflict_correspondence", "file": "formal-verification/lean/FVSquad/FindConflictCorrespondence.lean", "phase": 4, "notes": "27 #guard tests. 1 sorry (makeLog_some) remaining. makeLog_none proved Run 52."},
+    {"name": "find_conflict_correspondence", "file": "formal-verification/lean/FVSquad/FindConflictCorrespondence.lean", "phase": 5, "notes": "17 #guard tests, 4 theorems, 0 sorry (makeLog_some proved Run 55)."},
     {"name": "maybe_append_correspondence", "file": "formal-verification/lean/FVSquad/MaybeAppendCorrespondence.lean", "phase": 5, "notes": "35 #guard tests, 8 cases, 0 sorry."},
     {"name": "is_up_to_date_correspondence", "file": "formal-verification/lean/FVSquad/IsUpToDateCorrespondence.lean", "phase": 5, "notes": "14 #guard tests, exact correspondence, 0 sorry."},
     {"name": "committed_index_correspondence", "file": "formal-verification/lean/FVSquad/CommittedIndexCorrespondence.lean", "phase": 5, "notes": "13 #guard tests, abstraction level, 0 sorry."},
     {"name": "vote_result_correspondence", "file": "formal-verification/lean/FVSquad/VoteResultCorrespondence.lean", "phase": 5, "notes": "17 #guard tests, exact correspondence, 0 sorry."},
     {"name": "has_quorum_correspondence", "file": "formal-verification/lean/FVSquad/HasQuorumCorrespondence.lean", "phase": 5, "notes": "17 #guard tests, exact correspondence, 0 sorry."},
-    {"name": "limit_size_correspondence", "file": "formal-verification/lean/FVSquad/LimitSizeCorrespondence.lean", "phase": 5, "notes": "12 #guard tests, abstraction, 0 sorry. CORRESPONDENCE.md section added Run 59."},
-    {"name": "config_validate_correspondence", "file": "formal-verification/lean/FVSquad/ConfigValidateCorrespondence.lean", "phase": 5, "notes": "14 #guard tests, exact, 0 sorry. CORRESPONDENCE.md section added Run 59."},
-    {"name": "inflights_correspondence", "file": "formal-verification/lean/FVSquad/InflightsCorrespondence.lean", "phase": 5, "notes": "14 #guard tests, abstraction, 0 sorry. CORRESPONDENCE.md section added Run 59."},
-    {"name": "log_unstable_correspondence", "file": "formal-verification/lean/FVSquad/LogUnstableCorrespondence.lean", "phase": 5, "notes": "14 #guard tests, exact, 0 sorry. CORRESPONDENCE.md section added Run 59."},
-    {"name": "tally_votes_correspondence", "file": "formal-verification/lean/FVSquad/TallyVotesCorrespondence.lean", "phase": 5, "notes": "12 #guard tests, exact, 0 sorry. CORRESPONDENCE.md section added Run 59."}
+    {"name": "limit_size_correspondence", "file": "formal-verification/lean/FVSquad/LimitSizeCorrespondence.lean", "phase": 5, "notes": "12 #guard tests, abstraction, 0 sorry."},
+    {"name": "config_validate_correspondence", "file": "formal-verification/lean/FVSquad/ConfigValidateCorrespondence.lean", "phase": 5, "notes": "14 #guard tests, exact, 0 sorry."},
+    {"name": "inflights_correspondence", "file": "formal-verification/lean/FVSquad/InflightsCorrespondence.lean", "phase": 5, "notes": "14 #guard tests, abstraction, 0 sorry."},
+    {"name": "log_unstable_correspondence", "file": "formal-verification/lean/FVSquad/LogUnstableCorrespondence.lean", "phase": 5, "notes": "14 #guard tests, exact, 0 sorry."},
+    {"name": "tally_votes_correspondence", "file": "formal-verification/lean/FVSquad/TallyVotesCorrespondence.lean", "phase": 5, "notes": "12 #guard tests, exact, 0 sorry."},
+    {"name": "read_only", "file": "formal-verification/lean/FVSquad/ReadOnly.lean", "phase": 4, "notes": "Run 60: 12 theorems (RO1-RO12), 11 proved, 1 sorry (RO8: NoDuplicates). 16 #guard tests. Models ReadOnly struct from src/read_only.rs."}
   ]
 }
