@@ -1897,8 +1897,124 @@ joint-quorum composition is proved separately in `JointVote.lean`.
 
 ---
 
-## Last Updated
-- **Date**: 2026-04-21 09:03 UTC
-- **Commit**: `8149852b5069ec8749c83e031c1db2301bf14554`
+## `FVSquad/ReadOnly.lean` — ReadOnly Protocol (13 theorems, 0 sorry)
 
-> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24713683812) automated formal verification. Run 59: Task 6 Correspondence Review — added sections for LimitSizeCorrespondence, ConfigValidateCorrespondence, InflightsCorrespondence, LogUnstableCorrespondence, TallyVotesCorrespondence (Runs 56-57). 44 Lean files, 524 theorems, 0 sorry, 189 #guard assertions across 11 correspondence files.
+**New in Run 60 + Run 64.** Formal specification and implementation model for the
+ReadIndex read-only linearisability protocol (`src/read_only.rs`, §6.4 of the Raft paper).
+
+### Target: `ReadOnly` — `src/read_only.rs`
+
+Rust source: [`src/read_only.rs`](../src/read_only.rs)
+
+#### Lean definitions
+
+| Lean name | Rust name | Rust location | Correspondence | Notes |
+|-----------|-----------|---------------|----------------|-------|
+| `Ctx` (`= Nat`) | `Vec<u8>` context key | `read_only.rs` | Abstraction | Opaque keys modelled as `Nat`; payload content elided |
+| `ReadIndexStatus` | `ReadIndexStatus` | `read_only.rs` | Abstraction | `index` + `acks: List Nat`; `req: Message` elided |
+| `ReadOnly` | `ReadOnly` | `read_only.rs` | Abstraction | `pending: List (Ctx × ReadIndexStatus)` + `queue: List Ctx`; `option` field elided |
+| `addRequest` | `ReadOnly::add_request` | `read_only.rs#L85` | Exact | Same idempotent semantics: first caller wins |
+| `recvAck` | `ReadOnly::recv_ack` | `read_only.rs#L103` | Exact | Returns updated status or `none` if ctx absent |
+| `advance` | `ReadOnly::advance` | `read_only.rs#L113` | Abstraction | Returns `(deliverable, remaining_ro)`; logger/panic path omitted |
+| `lastPendingRequestCtx` | `ReadOnly::last_pending_request_ctx` | `read_only.rs#L131` | Exact | Last element of queue |
+| `pendingReadCount` | `ReadOnly::pending_read_count` | `read_only.rs#L136` | Exact | Length of queue |
+| `QueuePendingInv` | *(invariant)* | — | Exact | `∀ c ∈ queue, c ∈ keys(pending)` and `∀ c ∈ keys(pending), c ∈ queue` |
+
+#### Known divergences (Abstraction-level)
+
+1. **Context type**: `Ctx = Nat` models `Vec<u8>` byte contexts. Only key equality matters
+   for the invariant; byte content is irrelevant to the data-structure properties.
+2. **`ReadIndexStatus.req`**: The `Message` request field is elided. The Lean model focuses
+   on index and acks, which are the safety-relevant fields.
+3. **`advance` logger**: The `logger` parameter used for a fatal-error check is omitted.
+   The model assumes the precondition `ctx ∈ queue` is always satisfied (the panic path is
+   not modelled as a divergence — it should never be reached in correct usage).
+4. **`ReadOnly.option`**: The `ReadOnlyOption` (Safe/LeaseBased) field is omitted; it only
+   affects call sites, not the data structure invariants.
+5. **HashSet vs List**: Rust uses `HashSet<u64>` for acks; Lean uses `List Nat` (ordered).
+   Correctness properties are order-independent.
+
+#### Proved theorems (RO1–RO13)
+
+| Theorem | Statement | Tactic |
+|---------|-----------|--------|
+| RO1 | `addRequest` is idempotent (second call is a no-op) | `simp` |
+| RO2 | `addRequest` extends queue (appends ctx if absent) | `simp` |
+| RO3 | `addRequest` extends pending (adds entry if absent) | `simp` |
+| RO4 | After `addRequest`, `alookup ctx pending ≠ none` | `simp` |
+| RO5 | `recvAck` returns `none` iff ctx absent | `simp` / split |
+| RO6 | `recvAck` adds the ack ID to the status acks | case split |
+| RO7 | `advance` is a no-op if ctx absent from queue | `simp` |
+| RO8 | `advance` removes ctx from pending and queue | induction + `by_cases` Bool |
+| RO9 | `QueuePendingInv` holds for the empty state | `trivial` |
+| RO10 | `QueuePendingInv` is preserved by `addRequest` | split / `simp` |
+| RO11 | `pendingReadCount` = `queue.length` after `addRequest` | `simp` |
+| RO12 | `pendingReadCount == 0 ↔ pending = [] ∧ queue = []` | `simp` |
+| RO13 | `addRequest` preserves `Nodup` on the queue | `by_cases` + `simp` |
+
+#### Impact on proofs
+
+All 13 theorems are proved with 0 sorry. RO8 is the most complex: it required a private
+helper `ro8_aux_mem_take` (proved by induction with Bool case splits) to show that
+`findIdx? (·==ctx) = some i → ctx ∈ take(i+1)`, then combined with `List.nodup_append`
+to derive a contradiction for the negation case.
+
+RO10 + RO13 together establish the inductive invariant for the `pending`/`queue` pair:
+both `QueuePendingInv` and `Nodup queue` are preserved by the three mutating operations.
+
+**Assessment**: The Lean model is a sound abstraction of the Rust. The core data structure
+invariants and operation semantics are faithfully captured. No mismatches found.
+
+### Validation evidence
+
+- **Lean side**: 13 proved theorems in `FVSquad/ReadOnly.lean` (lake build ✅, 0 sorry).
+- **Rust side**: Tested via `ReadOnlyCorrespondence.lean` (see next section).
+
+---
+
+## `FVSquad/ReadOnlyCorrespondence.lean` — ReadOnly Correspondence Tests (14 `#guard`, 0 sorry)
+
+**New in Run 62.** Task 8 Route B correspondence test for the `ReadOnly` data structure
+(`src/read_only.rs`).
+
+### Target: `ReadOnly` operations — `src/read_only.rs`
+
+| Lean name | Rust counterpart | Rust location | Correspondence | Notes |
+|-----------|-----------------|---------------|----------------|-------|
+| `addRequest ro ctx index selfId` | `ReadOnly::add_request` | `read_only.rs#L85` | Exact | Same idempotent semantics |
+| `recvAck ro id ctx` | `ReadOnly::recv_ack` | `read_only.rs#L103` | Exact | Returns updated acks |
+| `advance ro ctx` | `ReadOnly::advance` | `read_only.rs#L113` | Exact | Returns deliverable + remaining |
+| `lastPendingRequestCtx ro` | `ReadOnly::last_pending_request_ctx` | `read_only.rs#L131` | Exact | Last queue element |
+| `pendingReadCount ro` | `ReadOnly::pending_read_count` | `read_only.rs#L136` | Exact | Queue length |
+
+### Validation evidence
+
+- **Lean side**: 14 `#guard` tests in `FVSquad/ReadOnlyCorrespondence.lean` (lake build ✅)
+- **Rust side**: `test_read_only_correspondence` in `src/read_only.rs` (15 cases, `cargo test ✅`)
+- **Fixture**: Inline in `ReadOnlyCorrespondence.lean` and `src/read_only.rs`
+
+### Correspondence level: **Exact** (with documented abstractions)
+
+The 14 `#guard` tests cover:
+- Empty state: `pendingReadCount = 0`, `lastPendingRequestCtx = none`
+- `addRequest` idempotency (second call is a no-op)
+- Two distinct requests: queue ordering, count
+- `recvAck` on present and absent contexts
+- `advance` of a non-existent ctx (no-op)
+- `advance` of the first ctx: returns deliverable list, removes from queue
+- Full lifecycle: `addRequest → recvAck → advance → check count`
+
+**Modelling notes**:
+- Rust `acks: HashSet<u64>` is compared after sorting; Lean `acks: List Nat` is naturally ordered.
+- Contexts modelled as `Nat` (1=`vec![1u8]`, 2=`vec![2u8]`).
+- Logger parameter of `advance` not modelled.
+
+**No mismatches found.**
+
+---
+
+## Last Updated
+- **Date**: 2026-04-21 17:19 UTC
+- **Commit**: `865b8cbf96a6a2b696ea95c782c3ca3b58c11a0f`
+
+> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24736307285) automated formal verification. Run 66: Task 6 Correspondence Review — added ReadOnly.lean (13T, 0 sorry) and ReadOnlyCorrespondence.lean (14 #guard) sections. Task 2: new informal spec for find_conflict_by_term. 46 Lean files, 542 theorems, 0 sorry.
