@@ -442,4 +442,97 @@ theorem PR30b_pause_preserves_wf (p : Progress) (hw : p.wf) :
   simp [Progress.pause, Progress.wf]
   exact hw
 
+-- ---------------------------------------------------------------------------
+-- PR31–PR33: Non-Replicate state `maybeDecrTo` behaviour
+-- ---------------------------------------------------------------------------
+
+/-- Helper: `p.state ≠ Replicate → (p.state == Replicate) = false`. -/
+private theorem beq_replicate_false_of_ne (p : Progress)
+    (h : p.state ≠ ProgressState.Replicate) :
+    (p.state == ProgressState.Replicate) = false :=
+  beq_eq_false_iff_ne.mpr h
+
+/-- PR31: In non-Replicate state, a stale rejection (next_idx ≠ rejected + 1) with no
+    snapshot request leaves the progress unchanged and returns false. -/
+theorem PR31_maybeDecrTo_non_replicate_stale (p : Progress)
+    (rejected match_hint : Nat)
+    (hs : p.state ≠ ProgressState.Replicate)
+    (hstale : p.next_idx ≠ rejected + 1) :
+    p.maybeDecrTo rejected match_hint INVALID_INDEX = (p, false) := by
+  have hbeq : (p.state == ProgressState.Replicate) = false :=
+    beq_replicate_false_of_ne p hs
+  simp only [Progress.maybeDecrTo, hbeq, ite_false, INVALID_INDEX]
+  have hbne : (p.next_idx != rejected + 1) = true := by simp [bne_iff_ne, hstale]
+  simp [hbne]
+
+/-- PR32: In non-Replicate state, when the rejection is fresh (next_idx = rejected + 1)
+    and no snapshot is requested, `maybeDecrTo` decrements `next_idx` to
+    `max(min(rejected, match_hint + 1), matched + 1)` and returns true. -/
+theorem PR32_maybeDecrTo_non_replicate_decr (p : Progress)
+    (rejected match_hint : Nat)
+    (hs : p.state ≠ ProgressState.Replicate)
+    (hfresh : p.next_idx = rejected + 1) :
+    let ni' := Nat.max (Nat.min rejected (match_hint + 1)) (p.matched + 1)
+    (p.maybeDecrTo rejected match_hint INVALID_INDEX).2 = true ∧
+    (p.maybeDecrTo rejected match_hint INVALID_INDEX).1.next_idx = ni' := by
+  have hbeq : (p.state == ProgressState.Replicate) = false :=
+    beq_replicate_false_of_ne p hs
+  simp only [Progress.maybeDecrTo, hbeq, ite_false, INVALID_INDEX]
+  have hbne : (p.next_idx != rejected + 1) = false := by
+    simp [bne_iff_ne, hfresh]
+  simp only [hbne, false_and, ite_false, beq_self_eq_true, ite_true]
+  simp
+
+/-- PR33: `maybeDecrTo` preserves the well-formedness invariant (`matched + 1 ≤ next_idx`)
+    in all states and for all argument values. -/
+theorem PR33_maybeDecrTo_preserves_wf (p : Progress)
+    (rejected match_hint request_snapshot : Nat) (hw : p.wf) :
+    (p.maybeDecrTo rejected match_hint request_snapshot).1.wf := by
+  by_cases hrep : p.state = ProgressState.Replicate
+  · -- Replicate branch
+    simp only [Progress.maybeDecrTo, hrep, beq_self_eq_true, ite_true]
+    by_cases hstale : rejected < p.matched ||
+        (rejected == p.matched && request_snapshot == INVALID_INDEX)
+    · simp only [hstale, ite_true]; exact hw
+    · simp only [hstale, ite_false]
+      by_cases hnosnap : request_snapshot == INVALID_INDEX
+      · simp only [hnosnap, ite_true]; simp [Progress.wf]
+      · simp only [hnosnap, ite_false]; exact hw
+  · -- Probe / Snapshot branch
+    have hbeq : (p.state == ProgressState.Replicate) = false :=
+      beq_replicate_false_of_ne p hrep
+    simp only [Progress.maybeDecrTo, hbeq, ite_false]
+    by_cases hguard : p.next_idx != rejected + 1 && request_snapshot == INVALID_INDEX
+    · simp only [hguard, ite_true]; exact hw
+    · simp only [hguard, ite_false]
+      by_cases hnosnap : request_snapshot == INVALID_INDEX
+      · -- decrement path: next_idx := max(min(rejected, match_hint+1), matched+1)
+        simp only [hnosnap, ite_true]; simp only [Progress.wf]
+        exact Nat.le_max_right _ _
+      · simp only [hnosnap, ite_false]
+        by_cases hpend : p.pending_request_snapshot == INVALID_INDEX
+        · simp only [hpend, ite_true]; exact hw
+        · simp only [hpend, ite_false]; exact hw
+
+-- ---------------------------------------------------------------------------
+-- PR34–PR35: `optimisticUpdate` semantics and wf preservation
+-- ---------------------------------------------------------------------------
+
+/-- PR34: `optimisticUpdate` sets `next_idx` to `n + 1` and leaves all other
+    fields unchanged. -/
+theorem PR34_optimisticUpdate_semantics (p : Progress) (n : Nat) :
+    (p.optimisticUpdate n).next_idx = n + 1 ∧
+    (p.optimisticUpdate n).matched = p.matched ∧
+    (p.optimisticUpdate n).state = p.state := by
+  simp [Progress.optimisticUpdate]
+
+/-- PR35: `optimisticUpdate n` preserves wf when `p.matched ≤ n`.
+    In practice, `n` is the index of the last replicated entry, so `matched ≤ n`
+    holds by the replication protocol. -/
+theorem PR35_optimisticUpdate_preserves_wf (p : Progress) (n : Nat)
+    (hn : p.matched ≤ n) :
+    (p.optimisticUpdate n).wf := by
+  simp [Progress.optimisticUpdate, Progress.wf]
+  omega
+
 end FVSquad.Progress
