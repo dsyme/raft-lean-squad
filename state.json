@@ -1,54 +1,21 @@
 {
-  "lean_version": "4.30.0-rc2",
-  "theorem_count": 598,
-  "lean_file_count": 53,
-  "sorry_count": 1,
-  "last_run": 80,
+  "lean_version": "4.28.0",
+  "theorem_count": 569,
+  "lean_file_count": 52,
+  "sorry_count": 0,
+  "last_run": 81,
   "hqc_preserved_gap": "CLOSED",
   "aeneas_status": "permanently_blocked_no_new_privileges",
   "toolchain_notes": "no Mathlib, use theorem not lemma. lakefile.toml globs=[FVSquad.+*]. No push_neg (no Mathlib): use Nat.lt_of_not_le instead. LogUnstable/IsUpToDate NO namespace. ReadOnly has namespace FVSquad.ReadOnly.",
   "notes": [
-    "Run 64: Task 5: Proved RO8 (advance_removes_ctx) and added RO13 (addRequest_preserves_nodup). 540T/46F/0sorry.",
-    "Run 65: Task 5: Proved RO14 (recvAck preserves QueuePendingInv) and RO15 (advance preserves QueuePendingInv). 542T/46F/0sorry.",
     "Run 67: Task 3/5 FindConflictByTerm.lean (10T, 0 sorry). FCB3 maximality proved by structural induction alone. FCB2 needs LogDummyZero.",
     "Run 75: Task 6: CORRESPONDENCE.md += ProgressCorrespondence section (46 #guard). Task 4: MaybePersist.lean (13T, 0 sorry).",
     "Run 76: Task 7: CRITIQUE.md += Run 76 section (MaybePersist assessment, ProgressCorrespondence 55 #guard). Task 11: paper.tex 548\u2192569T, 204\u2192279 #guard, 70\u219275 runs, 13\u219214 corr files, MaybePersist+ProgressCorrespondence rows added.",
     "Run 77: Task 5: ElectionHistoryModel.lean (7T, 0 sorry) \u2014 BroadcastSeq inductive type + haeCovered_of_broadcastSeq (real ABI5). TermTracking.lean (8T + 5 defs, 0 sorry) \u2014 term-aware election model closing Gap 2. 569\u2192583T, 50\u219252 files.",
-    "Run 80: Closed both REPORT.md critical gaps. ABI9-12: BroadcastSequence + haeCovered_of_broadcastSeq (real inductive proof). TT1-10: TermSafeAEStep + TermConsistentLog invariant. 583->598T, 52->53F, 0->1sorry."
+    "Run 80: Closed both REPORT.md critical gaps. ABI9-12: BroadcastSequence + haeCovered_of_broadcastSeq (real inductive proof). TT1-10: TermSafeAEStep + TermConsistentLog invariant. 583->598T, 52->53F, 0->1sorry.",
+    "Run 81: Task 8 Route B: MaybeCommitCorrespondence.lean (19 #guard, 10 maybeCommit + 4 commitTo + 5 cross-checks). Task 11: paper.tex 50\u219252F, 279\u2192321 #guard, 13\u219215 Rust tests, 75\u219281 runs. lake build: 54 jobs, 0 sorry."
   ],
   "run_history": [
-    {
-      "run": 75,
-      "date": "2026-04-22",
-      "tasks": [
-        "Task 6 (Correspondence Review)",
-        "Task 4 (Implementation Extraction)"
-      ],
-      "changes": [
-        "Added ProgressCorrespondence section to CORRESPONDENCE.md (46 #guard tests documented)",
-        "New MaybePersist.lean: 13 theorems (MP1-MP8, SP1-SP4, compose_monotone), 0 sorry"
-      ],
-      "sorry_count_after": 0,
-      "lean_file_count_after": 50,
-      "pr_branch": "lean-squad/run-75-task6-task4-24759028473"
-    },
-    {
-      "run": 76,
-      "date": "2026-04-22",
-      "tasks": [
-        "Task 7 (Proof Utility Critique)",
-        "Task 11 (Conference Paper)"
-      ],
-      "changes": [
-        "CRITIQUE.md: Run 76 section \u2014 MaybePersist.lean (13T) full assessment table, ProgressCorrespondence 55 #guard section, project stats updated to 569T/50F",
-        "paper.tex: theorem counts 548\u2192569, files 48\u219250, #guard 204\u2192279, runs 70\u219275",
-        "paper.tex: Layer 3 (4\u21925 files, 58\u219275T), Layer 8 (13\u219214 files, 279 #guard)",
-        "paper.tex: added MaybePersist + ProgressCorrespondence rows to inventory table"
-      ],
-      "sorry_count_after": 0,
-      "lean_file_count_after": 50,
-      "pr_branch": "lean-squad/run-76-task7-task11-24760390415"
-    },
     {
       "run": 77,
       "date": "2026-04-22",
@@ -102,94 +69,114 @@
       "sorry_count_after": 1,
       "lean_file_count_after": 53,
       "pr_branch": "lean-squad/run-80-election-model-gaps-24776997847"
+    },
+    {
+      "run": 81,
+      "date": "2026-04-22",
+      "tasks": [
+        "Task 8 Route B (MaybeCommitCorrespondence)",
+        "Task 11 (Conference Paper)"
+      ],
+      "changes": [
+        "New MaybeCommitCorrespondence.lean: 19 #guard (10 maybeCommit + 4 commitTo + 5 cross-checks), 0 sorry",
+        "Rust test test_maybe_commit_correspondence: 14 cases, all pass",
+        "New formal-verification/tests/maybe_commit/: cases.json + README.md",
+        "paper.tex: 50\u219252 files, 14\u219216 corr files, 279\u2192321 #guard, 13\u219215 Rust tests, 75\u219281 runs",
+        "Added MaybePersistCorrespondence + MaybeCommitCorrespondence rows to inventory table",
+        "PDF not recompiled (LaTeX unavailable)"
+      ],
+      "sorry_count_after": 0,
+      "lean_file_count_after": 52,
+      "pr_branch": "lean-squad/run-81-task8-task11-24792236956"
     }
   ],
   "next_steps": [
-    "Update paper.tex with Runs 71-78 results (MaybePersist 13T, 15 corr files, 288 guard, 14 Rust tests)",
-    "Recompile paper.pdf (needs LaTeX/latexmk)",
-    "Add FindConflictCorrespondence makeLog_some sorry (1 remaining sorry in non-main branch)",
-    "Connect ElectionHistoryModel/TermTracking (from unmerged Run 77 branch) to paper",
-    "Progress \u2194 ProgressTracker integration: prove wf invariant preserved at multi-peer level",
-    "Update CRITIQUE.md with MaybePersistCorrespondence and Layer 8 new status"
+    "Recompile paper.pdf (needs LaTeX/latexmk \u2014 unavailable in sandbox)",
+    "Connect ElectionHistoryModel (Run 77 unmerged) to paper when that branch is created",
+    "Add TermTracking.lean theorems to paper when Run 80 branch is created and merged",
+    "Task 7: Update CRITIQUE.md with MaybeCommitCorrespondence and Layer 8 new status (16 files, 321 #guard)",
+    "Task 6: Update CORRESPONDENCE.md with MaybeCommitCorrespondence section"
   ],
   "correspondence_test_targets": [
     {
       "name": "find_conflict",
-      "status": "complete",
-      "guard_count": 27
+      "guard_count": 27,
+      "status": "complete"
     },
     {
       "name": "maybe_append",
-      "status": "complete",
-      "guard_count": 35
+      "guard_count": 35,
+      "status": "complete"
     },
     {
       "name": "is_up_to_date",
-      "status": "complete",
-      "guard_count": 14
+      "guard_count": 14,
+      "status": "complete"
     },
     {
       "name": "committed_index",
-      "status": "complete",
-      "guard_count": 13
+      "guard_count": 13,
+      "status": "complete"
     },
     {
       "name": "limit_size",
-      "status": "complete",
-      "guard_count": 12
+      "guard_count": 12,
+      "status": "complete"
     },
     {
       "name": "config_validate",
-      "status": "complete",
-      "guard_count": 14
+      "guard_count": 14,
+      "status": "complete"
     },
     {
       "name": "inflights",
-      "status": "complete",
-      "guard_count": 14
+      "guard_count": 14,
+      "status": "complete"
     },
     {
       "name": "log_unstable",
-      "status": "complete",
-      "guard_count": 14
+      "guard_count": 14,
+      "status": "complete"
     },
     {
       "name": "tally_votes",
-      "status": "complete",
-      "guard_count": 12
+      "guard_count": 12,
+      "status": "complete"
     },
     {
       "name": "vote_result",
-      "status": "complete",
-      "guard_count": 17
+      "guard_count": 17,
+      "status": "complete"
     },
     {
       "name": "has_quorum",
-      "status": "complete",
-      "guard_count": 17
+      "guard_count": 17,
+      "status": "complete"
     },
     {
       "name": "read_only",
-      "status": "complete",
-      "guard_count": 16
+      "guard_count": 16,
+      "status": "complete"
     },
     {
       "name": "find_conflict_by_term",
-      "status": "complete",
-      "guard_count": 19
+      "guard_count": 19,
+      "status": "complete"
     },
     {
       "name": "progress",
-      "status": "complete",
-      "guard_count": 55
+      "guard_count": 55,
+      "status": "complete"
     },
     {
       "name": "maybe_persist",
-      "lean_file": "FVSquad/MaybePersistCorrespondence.lean",
-      "rust_test": "raft_log::test::test_maybe_persist_correspondence",
       "guard_count": 15,
-      "status": "complete",
-      "correspondence_level": "abstraction"
+      "status": "complete"
+    },
+    {
+      "name": "maybe_commit",
+      "guard_count": 19,
+      "status": "complete"
     }
   ],
   "targets": [
