@@ -1,0 +1,17 @@
+[
+  {"id":  1, "variant": "persist", "persisted": 3, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 5, "term": 2,  "expected": true,  "note": "all guards pass — persisted advances to 5"},
+  {"id":  2, "variant": "persist", "persisted": 3, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 3, "term": 1,  "expected": false, "note": "guard 1 fails: 3 not > persisted 3"},
+  {"id":  3, "variant": "persist", "persisted": 3, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 7, "term": 3,  "expected": false, "note": "guard 2 fails: 7 not < fui 7"},
+  {"id":  4, "variant": "persist", "persisted": 3, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 5, "term": 99, "expected": false, "note": "guard 3 fails: term mismatch (logTerm(5)=2, arg=99)"},
+  {"id":  5, "variant": "persist", "persisted": 3, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 4, "term": 1,  "expected": true,  "note": "all guards pass at index 4"},
+  {"id":  6, "variant": "persist", "persisted": 3, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 2, "term": 1,  "expected": false, "note": "guard 1 fails: 2 < persisted 3"},
+  {"id":  7, "variant": "persist", "persisted": 3, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 8, "term": 3,  "expected": false, "note": "guard 2 fails: 8 > fui 7"},
+  {"id":  8, "variant": "persist", "persisted": 3, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 6, "term": 3,  "expected": true,  "note": "all guards pass at index 6"},
+  {"id":  9, "variant": "persist", "persisted": 3, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 6, "term": 1,  "expected": false, "note": "guard 3 fails: wrong term for index 6"},
+  {"id": 10, "variant": "persist", "persisted": 5, "fui": 7, "log_term_at_idx": {"4":1,"5":2,"6":3}, "index": 5, "term": 2,  "expected": false, "note": "guard 1 fails: idempotent (persisted=5, index=5)"},
+  {"id": 11, "variant": "snap",    "persisted": 3, "fui": 7, "log_term_at_idx": {}, "index": 5, "term": 0,  "expected": true,  "note": "snap: 5 > persisted 3"},
+  {"id": 12, "variant": "snap",    "persisted": 5, "fui": 7, "log_term_at_idx": {}, "index": 5, "term": 0,  "expected": false, "note": "snap: 5 not > persisted 5"},
+  {"id": 13, "variant": "snap",    "persisted": 6, "fui": 7, "log_term_at_idx": {}, "index": 5, "term": 0,  "expected": false, "note": "snap: 5 < persisted 6"},
+  {"id": 14, "variant": "snap",    "persisted": 3, "fui": 7, "log_term_at_idx": {}, "index": 4, "term": 0,  "expected": true,  "note": "snap: 4 > persisted 3"},
+  {"id": 15, "variant": "snap",    "persisted": 0, "fui": 7, "log_term_at_idx": {}, "index": 1, "term": 0,  "expected": true,  "note": "snap: 1 > persisted 0"}
+]
