@@ -2214,4 +2214,144 @@ mod test {
             );
         }
     }
+
+    /// Correspondence test for `RaftLog::maybe_persist` and `RaftLog::maybe_persist_snap`
+    /// vs the Lean 4 models `FVSquad.MaybePersist.maybePersist` /
+    /// `FVSquad.MaybePersist.maybePersistSnap` on the 15 fixture cases in
+    /// `formal-verification/tests/maybe_persist/cases.json`.
+    ///
+    /// 🔬 Lean Squad automated formal verification — Task 8 Route B.
+    /// Each assertion here corresponds to one `#guard` block in
+    /// `formal-verification/lean/FVSquad/MaybePersistCorrespondence.lean`.
+    ///
+    /// Fixture for cases 1–10:
+    ///   snap=(3,1) → persisted=3; entries [(4,1),(5,2),(6,3)] stabilised → fui=7.
+    /// Fixture for cases 11–15 (snap variant): various persisted values; committed and
+    ///   offset set high enough to avoid fatal branches.
+    #[test]
+    fn test_maybe_persist_correspondence() {
+        let l = default_logger();
+
+        // -----------------------------------------------------------------------
+        // Helper: build a RaftLog with snapshot at (snap_idx, snap_term) and
+        // entries [(e_idx,e_term), ...] all stabilised into storage.
+        // After this: persisted = snap_idx, first_update_index = last_entry.index + 1.
+        // -----------------------------------------------------------------------
+        let make_persist_log = |snap_idx: u64, snap_term: u64, ents: &[(u64, u64)]| {
+            let store = MemStorage::new();
+            if snap_idx > 0 {
+                store
+                    .wl()
+                    .apply_snapshot(new_snapshot(snap_idx, snap_term))
+                    .expect("apply_snapshot");
+            }
+            let mut rl = RaftLog::new(store, l.clone(), &Config::default());
+            if !ents.is_empty() {
+                let entries: Vec<_> = ents.iter().map(|&(i, t)| new_entry(i, t)).collect();
+                rl.append(&entries);
+                let unstable = rl.unstable_entries().to_vec();
+                if let Some(e) = unstable.last() {
+                    rl.stable_entries(e.get_index(), e.get_term());
+                    rl.mut_store().wl().append(&unstable).expect("append");
+                }
+            }
+            rl
+        };
+
+        // Shared log fixture for cases 1–10:
+        //   snap=(3,1), entries [(4,1),(5,2),(6,3)] stabilised → fui=7.
+        let base_entries = [(4u64, 1u64), (5, 2), (6, 3)];
+
+        // -----------------------------------------------------------------------
+        // Cases 1–10: maybePersist
+        // (init_persisted, call_index, call_term, expected_result, expected_new_persisted)
+        // -----------------------------------------------------------------------
+        let persist_cases: &[(u64, u64, u64, bool, u64)] = &[
+            (3, 5, 2,  true,  5), // case 1: all guards pass → persisted advances to 5
+            (3, 3, 1,  false, 3), // case 2: guard 1 fails: 3 not > persisted 3
+            (3, 7, 3,  false, 3), // case 3: guard 2 fails: 7 not < fui 7
+            (3, 5, 99, false, 3), // case 4: guard 3 fails: term mismatch
+            (3, 4, 1,  true,  4), // case 5: all guards pass at index 4
+            (3, 2, 1,  false, 3), // case 6: guard 1 fails: 2 < persisted 3
+            (3, 8, 3,  false, 3), // case 7: guard 2 fails: 8 > fui 7
+            (3, 6, 3,  true,  6), // case 8: all guards pass at index 6
+            (3, 6, 1,  false, 3), // case 9: guard 3 fails: wrong term for index 6
+            (5, 5, 2,  false, 5), // case 10: guard 1 fails: idempotent (persisted=5)
+        ];
+
+        for (i, &(init_persisted, index, term, expected_result, expected_new_persisted)) in
+            persist_cases.iter().enumerate()
+        {
+            let mut rl = make_persist_log(3, 1, &base_entries);
+            // Case 10 starts with persisted=5 — advance by calling maybe_persist(5,2).
+            if init_persisted == 5 {
+                assert!(
+                    rl.maybe_persist(5, 2),
+                    "case {}: setup advance to persisted=5 failed",
+                    i + 1
+                );
+            }
+            assert_eq!(
+                rl.persisted, init_persisted,
+                "case {}: fixture persisted mismatch",
+                i + 1
+            );
+            let got = rl.maybe_persist(index, term);
+            assert_eq!(
+                got, expected_result,
+                "case {}: maybe_persist({index}, {term}) with persisted={init_persisted} \
+                 = {got}, want {expected_result}",
+                i + 1
+            );
+            assert_eq!(
+                rl.persisted, expected_new_persisted,
+                "case {}: new persisted = {}, want {}",
+                i + 1, rl.persisted, expected_new_persisted
+            );
+        }
+
+        // -----------------------------------------------------------------------
+        // Cases 11–15: maybePersistSnap
+        // Base: snap=(3,1), entries [(4,1),(5,2),(6,3)] stabilised → offset=7,
+        //   commit_to(6) → committed=6, persisted=3.
+        // This ensures maybe_persist_snap does not trigger fatal branches.
+        // -----------------------------------------------------------------------
+        let make_snap_base = || {
+            let mut rl = make_persist_log(3, 1, &base_entries);
+            rl.commit_to(6);
+            rl
+        };
+
+        // case 11: persisted=3, snap(5) → true, persisted→5
+        let mut rl = make_snap_base();
+        assert_eq!(rl.maybe_persist_snap(5), true, "case 11: snap(5) with persisted=3");
+        assert_eq!(rl.persisted, 5, "case 11: new persisted");
+
+        // case 12: persisted=5, snap(5) → false (5 not > 5)
+        let mut rl = make_snap_base();
+        assert!(rl.maybe_persist(5, 2), "case 12: setup advance to persisted=5");
+        assert_eq!(rl.persisted, 5, "case 12: fixture persisted");
+        assert_eq!(rl.maybe_persist_snap(5), false, "case 12: snap(5) with persisted=5");
+        assert_eq!(rl.persisted, 5, "case 12: persisted unchanged");
+
+        // case 13: persisted=6, snap(5) → false (5 not > 6)
+        let mut rl = make_snap_base();
+        assert!(rl.maybe_persist(6, 3), "case 13: setup advance to persisted=6");
+        assert_eq!(rl.persisted, 6, "case 13: fixture persisted");
+        assert_eq!(rl.maybe_persist_snap(5), false, "case 13: snap(5) with persisted=6");
+        assert_eq!(rl.persisted, 6, "case 13: persisted unchanged");
+
+        // case 14: persisted=3, snap(4) → true, persisted→4
+        let mut rl = make_snap_base();
+        assert_eq!(rl.maybe_persist_snap(4), true, "case 14: snap(4) with persisted=3");
+        assert_eq!(rl.persisted, 4, "case 14: new persisted");
+
+        // case 15: persisted=0, snap(1) → true, persisted→1
+        // Use empty base (no snapshot) + entry(1,1) stabilised + commit_to(1).
+        let mut rl = make_persist_log(0, 0, &[(1u64, 1u64)]);
+        rl.commit_to(1);
+        assert_eq!(rl.persisted, 0, "case 15: fixture persisted");
+        assert_eq!(rl.maybe_persist_snap(1), true, "case 15: snap(1) with persisted=0");
+        assert_eq!(rl.persisted, 1, "case 15: new persisted");
+    }
 }

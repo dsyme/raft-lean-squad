@@ -7,7 +7,8 @@ correspondence level, known divergences, and the impact on any proofs that rely 
 definition.
 
 ## Last Updated
-- **Date**: 2026-04-21 03:03 UTC
+- **Date**: 2026-04-22 10:00 UTC
+- **Commit**: `a9222b1`
 - **Commit**: `eb368a1` — Run 53: Task 8 Route B (IsUpToDateCorrespondence: 12 #guard tests; CommittedIndexCorrespondence: 8 #guard tests)
 
 ---
@@ -2147,6 +2148,85 @@ under normal operation (storage failure is a fatal condition). No mismatches fou
 - **Coverage**: 12 cases covering immediate match, multi-step backward scan, base case (index 0),
   scan to dummy entry, and out-of-range early return.
 - **Correspondence test status**: ✅ Complete — 12 `#guard` + 12 Rust assertions all pass.
+
+---
+
+## `MaybePersist` — `RaftLog::maybe_persist` / `RaftLog::maybe_persist_snap`
+
+**Source**: `src/raft_log.rs` lines 545–610  
+**Lean spec**: `formal-verification/lean/FVSquad/MaybePersist.lean`  
+**Correspondence tests**: `formal-verification/lean/FVSquad/MaybePersistCorrespondence.lean`
+
+### Defined functions
+
+| Lean name | Rust name | Rust location | Correspondence level |
+|-----------|-----------|---------------|----------------------|
+| `maybePersist persisted fui logTerm index term` | `RaftLog::maybe_persist(index, term)` | `src/raft_log.rs:545` | Abstraction |
+| `maybePersistSnap persisted index` | `RaftLog::maybe_persist_snap(index)` | `src/raft_log.rs:577` | Abstraction |
+
+### Correspondence analysis
+
+**`maybePersist`**: The Lean model faithfully captures the three-guard condition:
+1. `index > persisted`
+2. `index < first_update_index`
+3. `logTerm index = term`
+
+The Rust `first_update_index` is derived from `unstable.snapshot?.metadata.index` or
+`unstable.offset` depending on whether an unstable snapshot exists. The Lean model
+receives this as an explicit parameter (`fui`), abstracting away the derivation.
+
+The `logTerm` function models `store.term(index).is_ok_and(|t| t == term)`.  The Lean
+model uses an infallible `logTerm : Nat → Nat` function — storage errors (which produce
+`Err`) are abstracted away: in the Lean model `logTerm` returns 0 for any index that
+would fail in Rust.  This is safe because guard 1 and 2 must pass first; a failed term
+lookup maps to a term mismatch in the Lean model (logTerm returns 0 ≠ actual term).
+
+**`maybePersistSnap`**: The Lean model captures only the `index > persisted` branch.
+Two `fatal!` branches in Rust (index > committed, index >= offset) are not modelled —
+they represent contract violations that cannot arise under correct usage.
+
+### Known divergences
+
+| Divergence | Impact |
+|-----------|--------|
+| `logTerm` is infallible (no Err path) | MP1–MP8 remain valid: storage errors are unreachable when the Raft node is healthy. Theorems about the false/unchanged case (MP4) still hold because logTerm returning 0 will fail guard 3. |
+| `first_update_index` derivation abstracted | The derivation is a pure function of `unstable` state; taking it as a parameter is a sound abstraction — no impact on MP1–MP8. |
+| `fatal!` branches in `maybe_persist_snap` | SP1–SP4 remain valid: the fatal branches represent precondition violations. The model only makes claims about well-formed invocations. |
+
+### Validated theorems
+
+The following 13 theorems in `MaybePersist.lean` are proved (0 sorry) and remain valid
+under the above abstractions:
+
+| ID | Theorem | Property |
+|----|---------|---------|
+| MP1 | `maybePersist_true_iff` | Returns true ↔ all three guards hold |
+| MP2 | `maybePersist_monotone` | `persisted` never decreases |
+| MP3 | `maybePersist_true_advances` | true → new persisted = index |
+| MP4 | `maybePersist_false_unchanged` | false → persisted unchanged |
+| MP5 | `maybePersist_true_gt` | true → new persisted > old persisted |
+| MP6 | `maybePersist_true_lt_fui` | true → new persisted < fui |
+| MP7 | `maybePersist_true_term` | true → logTerm(new persisted) = term |
+| MP8 | `maybePersist_idempotent` | Second call with same args → false |
+| SP1 | `maybePersistSnap_true_iff` | Returns true ↔ index > persisted |
+| SP2 | `maybePersistSnap_monotone` | `persisted` never decreases |
+| SP3 | `maybePersistSnap_true_advances` | true → new persisted = index |
+| SP4 | `maybePersistSnap_false_unchanged` | false → persisted unchanged |
+| — | `compose_monotone` | Composing both: final persisted ≥ initial |
+
+### Validation evidence
+
+- **Lean side**: 15 `#guard` assertions in `FVSquad/MaybePersistCorrespondence.lean`
+  (lake build ✅, 0 sorry, Lean 4.28.0).
+- **Rust side**: `test_maybe_persist_correspondence` in `src/raft_log.rs` (15 cases, all pass).
+- **Fixtures**: `formal-verification/tests/maybe_persist/cases.json` (15 cases).
+- **Commands**:
+  - Lean: `cd formal-verification/lean && lake build FVSquad.MaybePersistCorrespondence`
+  - Rust: `cargo test test_maybe_persist_correspondence`
+- **Coverage**: 10 `maybePersist` cases exercising each guard individually,
+  all-guards-pass paths at multiple indices, and idempotency.
+  5 `maybePersistSnap` cases covering advance, equal, below, and from-zero.
+- **Correspondence test status**: ✅ Complete — 15 `#guard` + 15 Rust assertions all pass.
 
 ---
 

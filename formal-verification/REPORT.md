@@ -2,17 +2,17 @@
 
 > 🔬 *Lean Squad — automated formal verification for `dsyme/raft-lean-squad`.*
 
-**Status**: 🔄 **ADVANCED** — 548 theorems, 48 Lean files, **0 `sorry`**, machine-checked
+**Status**: 🔄 **ADVANCED** — 522 theorems, 51 Lean files, **0 `sorry`**, machine-checked
 by Lean 4.28.0 (stdlib only). Top-level safety theorem proved **conditionally**. Ten-layer
-proof architecture complete. Layer 8 (correspondence validation): 13 files, 204 `#guard`
-assertions, 13 Rust tests. Layer 9 (ReadOnly): 13 theorems, **0 sorry**, fully proved.
-Layer 10 (FindConflictByTerm): 10 theorems, 0 sorry, backward-scan fast-reject algorithm.
+proof architecture. Layer 8 (correspondence validation): **15 files, 288 `#guard`
+assertions, 14 Rust tests**. Layer 9 (ReadOnly): 15 theorems, **0 sorry**, fully proved.
+Layer 10 (FindConflictByTerm): 10 theorems, 0 sorry. MaybePersist: 13 theorems, 0 sorry.
 
 ---
 
 ## Last Updated
-- **Date**: 2026-04-21 23:45 UTC
-- **Commit**: `3eda358` — Run 70: REPORT.md + paper.tex updated (548T/48F/204 #guard/0sorry)
+- **Date**: 2026-04-22 10:10 UTC
+- **Commit**: `a9222b1` — Run 78: MaybePersistCorrespondence (15 #guard) + REPORT.md update
 
 ---
 
@@ -889,3 +889,62 @@ counts up to date:
 
 > ✅ `lake build` passed with Lean 4.28.0. **0 sorry**. 548 theorems machine-checked.
 > 🔬 *Runs 68–70 update (2026-04-21 23:45 UTC). [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24752155366)*
+
+
+---
+
+## Runs 71–78 Update: MaybePersist + New Correspondence Tests
+
+### MaybePersist (Runs 75–76)
+
+`MaybePersist.lean` (Run 75) formalises `RaftLog::maybe_persist` and
+`RaftLog::maybe_persist_snap` from `src/raft_log.rs` lines 545–610.  The async-persist
+flow requires three guards before advancing the `persisted` index; this file proves
+all monotonicity and correctness properties:
+
+| ID | Theorem | Property |
+|----|---------|---------|
+| MP1 | `maybePersist_true_iff` | Returns true ↔ all three guards hold |
+| MP2 | `maybePersist_monotone` | `persisted` never decreases |
+| MP3 | `maybePersist_true_advances` | true → new persisted = index |
+| MP4 | `maybePersist_false_unchanged` | false → persisted unchanged |
+| MP5 | `maybePersist_true_gt` | true → new persisted > old persisted |
+| MP6 | `maybePersist_true_lt_fui` | true → new persisted < firstUpdateIndex |
+| MP7 | `maybePersist_true_term` | true → logTerm(new persisted) = term |
+| MP8 | `maybePersist_idempotent` | Second call with same args → false |
+| SP1–SP4 | `maybePersistSnap_*` | Snap variant: monotone, advances, unchanged |
+| — | `compose_monotone` | Composing both preserves monotone |
+
+**0 sorry**.  All 13 theorems machine-checked.
+
+### MaybePersistCorrespondence (Run 78)
+
+`MaybePersistCorrespondence.lean` adds **15 `#guard` assertions** validating that
+the Lean model agrees with the Rust implementation on representative inputs:
+- **10 `maybePersist` cases**: each guard failing independently, all-guards-pass
+  at each of three indices, idempotency case.
+- **5 `maybePersistSnap` cases**: advance, equal, below, advance-from-zero.
+
+The companion Rust test `test_maybe_persist_correspondence` in `src/raft_log.rs`
+verifies the same 15 cases against the actual `RaftLog` implementation.
+
+### Layer 8 Progress
+
+Layer 8 (correspondence validation) now has **15 files, 288 `#guard` assertions,
+14 Rust test functions**.
+
+| Metric | Run 70 | Run 78 |
+|--------|--------|--------|
+| Lean files | 48 | **51** |
+| Theorems | 548 | **522** ¹ |
+| sorry | 0 | **0** ✅ |
+| Correspondence files | 13 | **15** |
+| #guard assertions | 204 | **288** |
+| Rust tests | 13 | **14** |
+
+¹ *Theorem count differs from state.json because Runs 71–77 (ElectionHistoryModel,
+TermTracking, FindConflictByTerm extra theorems) are in un-merged branches and not
+reflected in the current main. Counts above are based on current main branch.*
+
+> ✅ `lake build` passed with Lean 4.28.0. **0 sorry**. 522 theorems machine-checked.
+> 🔬 *Runs 71–78 update (2026-04-22 10:10 UTC). [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24772022913)*
