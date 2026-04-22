@@ -3,16 +3,15 @@
 > 🔬 *Lean Squad — automated formal verification for `dsyme/fv-squad`.*
 
 ## Last Updated
-- **Date**: 2026-04-21 09:18 UTC
-- **Commit**: `b9c56b4` — Run 60: Task 4 (ReadOnly.lean, 12 theorems, 1 sorry) + Task 7 Critique update; 45 files, 1 sorry
+- **Date**: 2026-04-22 04:36 UTC
+- **Commit**: `2aa568d` — Run 76: Task 7 (Critique update — MaybePersist 13T, ProgressCorrespondence 55 #guard); 50 files, 569 theorems, 0 sorry
 
 ---
 
 ## Overall Assessment
 
-The FV project has produced **493 theorem declarations across 45 Lean files, machine-checked by
-Lean 4 (version 4.28.0, stdlib only — no Mathlib), with 1 `sorry`** (RO8 in `ReadOnly.lean`,
-which requires a NoDuplicates invariant for the queue — see §Layer 9 below).
+The FV project has produced **569 theorem declarations across 50 Lean files, machine-checked by
+Lean 4 (version 4.28.0, stdlib only — no Mathlib), with 0 `sorry`**.
 
 Since Run 55, the project has expanded significantly with **Layer 8: Correspondence Validation**
 (11 correspondence-test files covering 152+ `#guard` tests for 11 Rust functions) and
@@ -1811,3 +1810,110 @@ Run 74 adds 5 proved theorems and 1 new correspondence file while maintaining
 3. **Lean 4 `@[reducible]`**: Adding `@[reducible]` to `Progress.wf` would allow
    `decide` to synthesise `Decidable (p.wf)` without expanding manually, simplifying
    future correspondence tests.
+
+---
+
+> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24760390415)
+> automated formal verification. Current state: **50 files, 569 theorem declarations, 0 sorry**.
+> Run 76: Task 7 (Proof Utility Critique — MaybePersist.lean 13T section added,
+> ProgressCorrespondence 55 #guard section, counts updated 511→569).
+
+## Run 76 Critique Update
+
+### Task 4/Task 7: MaybePersist.lean — Async-Persist Safety Guards
+
+Run 75 added `MaybePersist.lean` with **13 theorems** (MP1–MP8 + SP1–SP4 + `compose_monotone`),
+all proved, 0 sorry, covering two Rust functions from `src/raft_log.rs`:
+
+- **`maybe_persist(index, term)`** (MP1–MP8): Advances the `persisted` index only when three
+  guards hold: `index > persisted`, `index < firstUpdateIndex`, and `logTerm(index) = term`.
+  The three guards prevent: regression (MP5), overtaking uncommitted unstable entries (MP6),
+  and stale-term entries from a previous leadership epoch (MP7).
+
+- **`maybe_persist_snap(index)`** (SP1–SP4): Simpler snapshot-persist variant — advances
+  `persisted` iff `index > persisted`.
+
+**Proof strategy**: All 13 theorems proved by `by_cases` + `simp` + `omega` with no helper
+lemmas. The guards are encoded as a conjunction, so `by_cases` on the conjunction splits
+exactly into the `true` and `false` paths.
+
+#### Assessment of MaybePersist proofs
+
+| Theorem | Level | Bug-catching potential | Notes |
+|---------|-------|----------------------|-------|
+| `maybePersist_true_iff` (MP1) | Mid | **High** | Precisely states all three guards; would catch any guard removal or reordering |
+| `maybePersist_monotone` (MP2) | Low | **High** | Persisted never regresses; catches monotonicity violations in the async path |
+| `maybePersist_true_advances` (MP3) | Low | Medium | New persisted = index; confirms exact semantics |
+| `maybePersist_false_unchanged` (MP4) | Low | Medium | Guards-fail path: persisted unchanged |
+| `maybePersist_true_gt` (MP5) | Mid | **High** | Strict monotonicity; would catch `≥` vs `>` guard bugs |
+| `maybePersist_true_lt_fui` (MP6) | Mid | **High** | Persisted stays below firstUpdateIndex; critical async correctness property |
+| `maybePersist_true_term` (MP7) | Mid | **High** | Term guard integrity; would catch term-mismatch bugs after leadership change |
+| `maybePersist_idempotent` (MP8) | Mid | **High** | Re-applying same args returns false; guards against double-advance race |
+| `maybePersistSnap_true_iff` (SP1) | Low | Medium | Simpler snap path; exact iff characterisation |
+| `maybePersistSnap_monotone` (SP2) | Low | **High** | Snap persisted never regresses |
+| `maybePersistSnap_true_advances` (SP3) | Low | Low | Exact new value |
+| `maybePersistSnap_false_unchanged` (SP4) | Low | Low | No-change path |
+| `compose_monotone` | Low | Medium | Chained persist+snap-persist: global monotonicity preserved |
+
+**Overall assessment**: The MaybePersist proofs are **high-utility**. The three-guard structure
+of `maybe_persist` is subtle — it encodes Raft's async-persist safety contract, which is critical
+for systems that asynchronously flush log entries to stable storage. Theorems MP5 (strict
+monotonicity), MP6 (below firstUpdateIndex), and MP7 (term guard) directly formalise the
+three correctness obligations that prevent data loss or illegal advancement of the persisted
+pointer under concurrent leadership changes.
+
+**Known gap**: The Lean model abstracts `firstUpdateIndex` as a bare `Nat` parameter.  In the
+Rust implementation, `firstUpdateIndex` is derived from `unstable.snapshot?.index` or
+`unstable.offset` — a more complex derivation. If the derivation has bugs (returning a value
+that is too large), MP6 would not catch them.  Future work could add a model of `Unstable`
+to close this gap.
+
+### Task 7 (continued): ProgressCorrespondence — 55 Runtime Tests
+
+`FVSquad/ProgressCorrespondence.lean` (Run 71/74) contains **55 `#guard` tests** covering:
+
+- `maybeUpdate`: forward-progress path (sets `matched` + optimistic `next_idx`) and no-op
+  path (stale index ignored)
+- `maybeDecrTo` in **Replicate** state: stale path (not `next_idx-1`) and fresh path
+  (step-back to `max(rejected, matched+1)`)
+- `maybeDecrTo` in **Probe** state: stale and fresh paths (probe step-back semantics)
+- `maybeDecrTo` in **Snapshot** state: similar
+- `optimisticUpdate`: pessimistic advance (`next_idx := n + 1`)
+- State transitions: `becomeProbe`, `becomeReplicate`, `becomeSnapshot`
+- Invariant checks via `checkWf` (monotonicity guard: `matched + 1 ≤ next_idx`)
+
+All 55 `#guard` tests pass at compile time via `lake build`.
+
+**Correspondence level**: *abstraction* — `Inflights` ring buffer replaced by `ins_full : Bool`.
+
+### Project-Wide Statistics (Run 76)
+
+| Metric | Value |
+|--------|-------|
+| Total theorem declarations | **569** |
+| Lean 4 files | **50** (36 proof + 14 correspondence) |
+| `sorry` remaining | **0** |
+| `#guard` tests | **304** (279 in correspondence files + 25 in proof files) |
+| Rust correspondence tests | **13** |
+| Lean 4 version | 4.28.0 |
+
+**Recommendations for future runs**:
+
+1. **MaybePersist correspondence tests (Task 8 Route B)**: Write `MaybePersistCorrespondence.lean`
+   with `#guard` tests and a Rust `test_maybe_persist_correspondence` function. The three-guard
+   logic is straightforward to test with fixtures covering all 8 guard combinations.
+
+2. **firstUpdateIndex modelling**: Formalise the derivation of `firstUpdateIndex` from `Unstable`
+   to close the known gap in `MaybePersist.lean` — this would raise MP6 from "parameter is
+   correct" to "derivation is correct".
+
+3. **Progress ↔ ProgressTracker integration**: Prove that the per-peer `Progress` invariant
+   is preserved by the enclosing `ProgressTracker` update loop. This would leverage PR1–PR35
+   and lift correctness to the multi-peer level.
+
+4. **Update REPORT.md**: The project report has not been updated since Run 70. REPORT.md needs
+   to reflect Runs 71–76 (MaybePersist, ProgressCorrespondence, ReadOnly Phase 5 completion,
+   FindConflictByTerm, etc.).
+
+5. **Recompile paper.pdf**: The conference paper needs a fresh `latexmk` run after the
+   numerical updates in Run 76 (569T/50F/279 #guard/75 runs).
