@@ -3,6 +3,7 @@
 
 \usepackage{listings}
 \usepackage{booktabs}
+\let\Bbbk\relax
 \usepackage{amsmath,amssymb}
 \usepackage{xcolor}
 \usepackage{microtype}
@@ -37,6 +38,16 @@
   xrightmargin=4pt,
   aboveskip=4pt,
   belowskip=4pt,
+  literate=
+    {≠}{{$\neq$}}1
+    {→}{{$\to$}}1
+    {∃}{{$\exists$}}1
+    {∈}{{$\in$}}1
+    {∧}{{$\land$}}1
+    {∀}{{$\forall$}}1
+    {≥}{{$\geq$}}1
+    {₁}{{$_1$}}1
+    {₂}{{$_2$}}1,
 }
 
 \lstdefinelanguage{Rust2}{
@@ -234,9 +245,9 @@ Finding a bug through formal verification is exactly the point.
 
 \paragraph{Transparent.} Every PR, issue, and comment includes an AI
 disclosure.  Specs document their approximations.
-Proofs document what is still open. THe history of every run is public, and the
+Proofs document what is still open. The history of every run is public, and the
 full history of the specifications and proofs is available in the repository for the
-humand and the agent to examing as needed.
+human and the agent to examine as needed.
 
 \subsection{Phase-Weighted Task Selection}
 \label{sec:tasksel}
@@ -837,9 +848,9 @@ Table~\ref{tab:inventory} summarises the full file inventory.
 Total: 569 theorems, 50~files (36 proof files + 14 correspondence-test files),
 0 \texttt{sorry}, $\approx$15{,}000 lines of Lean.
 
-\begin{table}[h]
-\centering\small
-\begin{tabular}{lrp{3.4cm}}
+\begin{table*}[p]
+\centering\footnotesize
+\begin{tabular}{lrp{5cm}}
 \toprule
 File & Thms & Key result \\
 \midrule
@@ -871,7 +882,7 @@ ConcreteTransitions & 11 & CT4: LMI preserved; CT5: broadcast $\to$ match \\
 CommitRule        &  9 & CR8: \texttt{hnew\_cert} closed \\
 MaybeCommit       & 12 & MC4: A6 term safety \\
 MaybePersist      & 13 & MP6: async-persist below firstUpdateIndex; MP8: idempotent \\
-ConcreteProtocolStep & 14 & CPS2: A5 bridge (concrete→abstract) \\
+ConcreteProtocolStep & 14 & CPS2: A5 bridge (concrete$\to$abstract) \\
 ElectionReachability & 12 & ER1--ER10: high-water-mark + shared-source \\
 ElectionConcreteModel &  8 & ECM1--ECM7: hae $\to$ hqc\_preserved \\
 AEBroadcastInvariant & 10 & ABI8: hqc\_preserved\_of\_broadcast \\
@@ -899,7 +910,7 @@ Basic             & -- & Shared definitions \\
 \end{tabular}
 \caption{Full file inventory (all at Phase~5, 0 sorry). Correspondence files contribute \texttt{\#guard} assertions but no named theorems.}
 \label{tab:inventory}
-\end{table}
+\end{table*}
 
 \subsection{Bugs and Findings}
 \label{sec:findings}
@@ -1477,7 +1488,7 @@ range of formal verification tools and methodology; and applying Lean
 Squad to other production codebases to test generality.
 
 \begin{acks}
-🔬 \emph{This paper was co-authored by Don Syme, LeanSquad (an autonomous
+\emph{This paper was co-authored by Don Syme, LeanSquad (an autonomous
 AI automation workflow using GitHub Agentic Workflows), Copilot CLI
 (GitHub's AI coding agent), and Claude Sonnet~4.6 (Anthropic's LLM).  Don Syme designed the Lean Squad workflow
 and made two brief interventions; all 26 target selections, all
