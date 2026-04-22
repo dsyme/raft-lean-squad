@@ -1,272 +1,89 @@
 {
   "lean_version": "4.28.0",
-  "theorem_count": 511,
-  "lean_file_count": 48,
+  "theorem_count": 569,
+  "lean_file_count": 50,
   "sorry_count": 0,
-  "last_run": 75,
+  "last_run": 76,
   "hqc_preserved_gap": "CLOSED via AEBroadcastInvariant.lean (ABI8). Remaining: connect broadcast model to full election lifecycle.",
   "aeneas_status": "permanently_blocked_no_new_privileges",
-  "toolchain_notes": "no Mathlib, use theorem not lemma. lakefile.toml globs=[FVSquad.+*]. LogUnstable/IsUpToDate NO namespace. ReadOnly has namespace FVSquad.ReadOnly. Lean4 operator precedence: existential binder \u2203 x \u2208 l, P stops at = (prec 50), so write \u2203 x \u2208 l, (x.1 == c) = true with explicit parens. Bool if-then-else desugars to ite (b = true) so use if_pos/if_neg not simp only [h, ite_true/ite_false]. List.any_map exists in stdlib.",
+  "toolchain_notes": "no Mathlib, use theorem not lemma. lakefile.toml globs=[FVSquad.+*]. LogUnstable/IsUpToDate NO namespace. ReadOnly has namespace FVSquad.ReadOnly. Lean4 operator precedence: existential binder ∃ x ∈ l, P stops at = (prec 50), so write ∃ x ∈ l, (x.1 == c) = true with explicit parens. Bool if-then-else desugars to ite (b = true) so use if_pos/if_neg not simp only [h, ite_true/ite_false]. List.any_map exists in stdlib.",
   "notes": [
     "Run 64: Task 5: Proved RO8 (advance_removes_ctx) and added RO13 (addRequest_preserves_nodup). 540T/46F/0sorry.",
-    "Run 65: Task 5: Proved RO14 (recvAck preserves QueuePendingInv) and RO15 (advance preserves QueuePendingInv). 542T/46F/0sorry. Key insight: amember_aupdate_eq uses List.any_map + funext; aupdate_key_subset uses by_cases + if_pos/if_neg.",
-    "Run 66: Task 2 \u2014 find_conflict_by_term_informal.md (6 proposed Lean properties). Task 6 \u2014 CORRESPONDENCE.md + ReadOnly.lean (13T) + ReadOnlyCorrespondence.lean (14 #guard) sections.",
-    "Run 67: Task 3/5 FindConflictByTerm.lean (10T, 0 sorry). FCB3 maximality proved by structural induction alone. FCB2 needs LogDummyZero. Task 1 TARGETS+RESEARCH updated.",
-    "Run 75: Task 6: CORRESPONDENCE.md += ProgressCorrespondence section (46 #guard). Task 4: MaybePersist.lean (13T, 0 sorry)."
+    "Run 65: Task 5: Proved RO14 (recvAck preserves QueuePendingInv) and RO15 (advance preserves QueuePendingInv). 542T/46F/0sorry.",
+    "Run 67: Task 3/5 FindConflictByTerm.lean (10T, 0 sorry). FCB3 maximality proved by structural induction alone. FCB2 needs LogDummyZero.",
+    "Run 75: Task 6: CORRESPONDENCE.md += ProgressCorrespondence section (46 #guard). Task 4: MaybePersist.lean (13T, 0 sorry).",
+    "Run 76: Task 7: CRITIQUE.md += Run 76 section (MaybePersist assessment, ProgressCorrespondence 55 #guard). Task 11: paper.tex 548→569T, 204→279 #guard, 70→75 runs, 13→14 corr files, MaybePersist+ProgressCorrespondence rows added."
   ],
   "run_history": [
     {
-      "run": 62,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 8 Route B (ReadOnly correspondence)",
-        "Task 10 (Project Report)"
-      ],
-      "sorry_after": 1,
-      "lean_file_count_after": 46,
-      "pr_branch": "lean-squad/run-62-task8-task10-24716554131"
-    },
-    {
-      "run": 64,
-      "date": "2026-04-21",
-      "workflow_run_id": "24719296210",
-      "tasks": [
-        "Task 5 (Proof Assistance)",
-        "Task 7 (Critique)"
-      ],
-      "summary": "Proved RO8 (advance_removes_ctx) \u2014 last sorry. Added RO13 (addRequest_preserves_nodup). 540T/46F/0sorry.",
-      "sorry_after": 0,
-      "theorems_added": 2
-    },
-    {
-      "run": 65,
-      "date": "2026-04-22",
-      "workflow_run_id": "24720468785",
-      "tasks": [
-        "Task 5 (Proof Assistance)",
-        "Task 9 (CI Audit)"
-      ],
-      "summary": "Proved RO14 (recvAck_preserves_QueuePendingInv) + RO15 (advance_preserves_QueuePendingInv) + helpers amember_aupdate_eq + aupdate_key_subset. 542T/46F/0sorry.",
-      "sorry_after": 0,
-      "theorems_added": 4,
-      "pr_branch": "lean-squad/run-65-task5-task9-24720468785"
-    },
-    {
       "run": 67,
       "date": "2026-04-21",
-      "tasks": [
-        "Task 3 (Formal Spec Writing)",
-        "Task 1 (Research Update)"
-      ],
-      "changes": [
-        "Added FindConflictByTerm.lean: 10 theorems FCB1-FCB9 + helper, 0 sorry",
-        "FCB3 maximality proved without monotonicity assumption",
-        "FCB2 term bound needs LogDummyZero (logTerm 0 = 0)",
-        "..."
-      ],
+      "tasks": ["Task 3 (Formal Spec Writing)", "Task 1 (Research Update)"],
       "sorry_count_after": 0,
       "lean_file_count_after": 47,
       "pr_branch": "lean-squad/run-67-task3-task1-24745775854"
     },
     {
-      "run": 68,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 10 (Project Report)",
-        "Task 6 (Correspondence Review)"
-      ],
-      "changes": [
-        "REPORT.md: status updated to 548T/47F/0sorry",
-        "REPORT.md: Layer 9 ReadOnly updated to all 13T proved (0 sorry)",
-        "REPORT.md: Added Runs 63-67 section (ReadOnly complete + FindConflictByTerm)",
-        "..."
-      ],
-      "sorry_count_after": 0,
-      "lean_file_count_after": 47,
-      "pr_branch": "lean-squad/run-68-task10-task6-24749616887"
-    },
-    {
-      "run": 69,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 8 Route B (FindConflictByTerm correspondence)",
-        "Task 11 (Conference Paper)"
-      ],
-      "changes": [
-        "Added FindConflictByTermCorrespondence.lean: 16 #guard tests (12 cases + 4 fixture sanity), 0 sorry",
-        "Added test_find_conflict_by_term_correspondence in src/raft_log.rs (12 cases, all pass)",
-        "Added formal-verification/tests/find_conflict_by_term/ (cases.json + README.md)",
-        "..."
-      ],
-      "sorry_count_after": 0,
-      "lean_file_count_after": 48,
-      "pr_branch": "lean-squad/run-69-task8-task11-24750830891"
-    },
-    {
-      "run": 70,
-      "date": "2026-04-21",
-      "tasks": [
-        "Task 10 (Project Report)",
-        "Task 11 (Conference Paper)"
-      ],
-      "changes": [
-        "REPORT.md: status updated to 48 files, 13 correspondence files, 204 #guard, 13 Rust tests",
-        "REPORT.md: added FindConflictByTermCorrespondence row (19 #guard) to Layer 8 table",
-        "REPORT.md: added Runs 68-70 update section",
-        "..."
-      ],
-      "sorry_count_after": 0,
-      "lean_file_count_after": 48,
-      "pr_branch": "lean-squad/run-70-task11-task10-24752155366"
-    },
-    {
-      "run": 71,
-      "date": "2026-04-22",
-      "tasks": [
-        "Task 8 (Route B, progress)",
-        "Task 5 (PR31-PR35)"
-      ],
-      "added_theorems": 5,
-      "added_files": [
-        "ProgressCorrespondence.lean"
-      ],
-      "sorry_delta": 0,
-      "notes": "PR31-PR35: maybeDecrTo wf-preservation. 12 #guard correspondence tests for maybeUpdate/maybeDecrTo. lake build: 51 jobs, 0 sorry."
-    },
-    {
       "run": 75,
       "date": "2026-04-22",
-      "tasks": [
-        "Task 6 (Correspondence Review)",
-        "Task 4 (Implementation Extraction)"
-      ],
+      "tasks": ["Task 6 (Correspondence Review)", "Task 4 (Implementation Extraction)"],
       "changes": [
         "Added ProgressCorrespondence section to CORRESPONDENCE.md (46 #guard tests documented)",
-        "Added row to CORRESPONDENCE.md Summary table for ProgressCorrespondence.lean",
-        "New MaybePersist.lean: 13 theorems (MP1-MP8, SP1-SP4, compose_monotone), 0 sorry",
-        "..."
+        "New MaybePersist.lean: 13 theorems (MP1-MP8, SP1-SP4, compose_monotone), 0 sorry"
       ],
       "sorry_count_after": 0,
       "lean_file_count_after": 50,
       "pr_branch": "lean-squad/run-75-task6-task4-24759028473"
+    },
+    {
+      "run": 76,
+      "date": "2026-04-22",
+      "tasks": ["Task 7 (Proof Utility Critique)", "Task 11 (Conference Paper)"],
+      "changes": [
+        "CRITIQUE.md: Run 76 section — MaybePersist.lean (13T) full assessment table, ProgressCorrespondence 55 #guard section, project stats updated to 569T/50F",
+        "paper.tex: theorem counts 548→569, files 48→50, #guard 204→279, runs 70→75",
+        "paper.tex: Layer 3 (4→5 files, 58→75T), Layer 8 (13→14 files, 279 #guard)",
+        "paper.tex: added MaybePersist + ProgressCorrespondence rows to inventory table",
+        "NOTE: PDF not recompiled — sudo/LaTeX unavailable in this runner"
+      ],
+      "sorry_count_after": 0,
+      "lean_file_count_after": 50,
+      "pr_branch": "lean-squad/run-76-task7-task11-24760390415"
     }
   ],
   "next_steps": [
-    "Recompile paper.pdf",
-    "Fix unused variable warnings in AEBroadcastInvariant",
-    "Connect AEBroadcastInvariant to election lifecycle",
-    "Add MaybePersist to TARGETS.md and CORRESPONDENCE.md",
-    "Add correspondence tests for MaybePersist (Task 8 Route B)",
-    "Update REPORT.md with Run 75 (MaybePersist 13T, ProgressCorrespondence docs)"
+    "Recompile paper.pdf (needs LaTeX/latexmk — skipped in Run 76 due to no sudo)",
+    "Add MaybePersist correspondence tests (Task 8 Route B): MaybePersistCorrespondence.lean + Rust test",
+    "Update REPORT.md with Runs 71-76 (MaybePersist, ProgressCorrespondence, ReadOnly completion, FindConflictByTerm)",
+    "Model firstUpdateIndex derivation from Unstable to close MP6 gap",
+    "Progress ↔ ProgressTracker integration: prove wf invariant preserved at multi-peer level"
   ],
   "correspondence_test_targets": [
-    {
-      "name": "find_conflict",
-      "status": "complete",
-      "guard_count": 17
-    },
-    {
-      "name": "maybe_append",
-      "status": "complete",
-      "guard_count": 35
-    },
-    {
-      "name": "is_up_to_date",
-      "status": "complete",
-      "guard_count": 14
-    },
-    {
-      "name": "committed_index",
-      "status": "complete",
-      "guard_count": 13
-    },
-    {
-      "name": "limit_size",
-      "status": "complete",
-      "guard_count": 12
-    },
-    {
-      "name": "config_validate",
-      "status": "complete",
-      "guard_count": 14
-    },
-    {
-      "name": "inflights",
-      "status": "complete",
-      "guard_count": 14
-    },
-    {
-      "name": "log_unstable",
-      "status": "complete",
-      "guard_count": 14
-    },
-    {
-      "name": "tally_votes",
-      "status": "complete",
-      "guard_count": 12
-    },
-    {
-      "name": "vote_result",
-      "status": "complete",
-      "guard_count": 17
-    },
-    {
-      "name": "has_quorum",
-      "status": "complete",
-      "guard_count": 17
-    },
-    {
-      "name": "read_only",
-      "status": "complete",
-      "guard_count": 14
-    },
-    {
-      "name": "find_conflict_by_term",
-      "status": "complete",
-      "guard_count": 16
-    },
-    {
-      "name": "progress",
-      "status": "complete",
-      "guard_count": "?"
-    }
+    {"name": "find_conflict", "status": "complete", "guard_count": 27},
+    {"name": "maybe_append", "status": "complete", "guard_count": 35},
+    {"name": "is_up_to_date", "status": "complete", "guard_count": 14},
+    {"name": "committed_index", "status": "complete", "guard_count": 13},
+    {"name": "limit_size", "status": "complete", "guard_count": 12},
+    {"name": "config_validate", "status": "complete", "guard_count": 14},
+    {"name": "inflights", "status": "complete", "guard_count": 14},
+    {"name": "log_unstable", "status": "complete", "guard_count": 14},
+    {"name": "tally_votes", "status": "complete", "guard_count": 12},
+    {"name": "vote_result", "status": "complete", "guard_count": 17},
+    {"name": "has_quorum", "status": "complete", "guard_count": 17},
+    {"name": "read_only", "status": "complete", "guard_count": 16},
+    {"name": "find_conflict_by_term", "status": "complete", "guard_count": 19},
+    {"name": "progress", "status": "complete", "guard_count": 55}
   ],
   "targets": [
-    {
-      "name": "hae_broadcast_invariant",
-      "file": "formal-verification/lean/FVSquad/AEBroadcastInvariant.lean",
-      "phase": 5,
-      "notes": "ABI1-ABI10 proved (0 sorry)."
-    },
-    {
-      "name": "read_only",
-      "file": "formal-verification/lean/FVSquad/ReadOnly.lean",
-      "phase": 5,
-      "notes": "Phase 5: RO1-RO15 proved, 0 sorry. QueuePendingInv fully preserved by all ops (RO14+RO15). NoDuplicates next.",
-      "sorry_count": 0
-    },
-    {
-      "name": "find_conflict_by_term",
-      "file": "formal-verification/lean/FVSquad/FindConflictByTerm.lean",
-      "phase": 5,
-      "notes": "Run 67: FCB1-FCB9 + logNonDecreasing_le (10 theorems, 0 sorry). Maximality (FCB3) proved without monotonicity assumption. Base case uses LogDummyZero."
-    },
-    {
-      "name": "maybe_persist",
-      "file": "formal-verification/lean/FVSquad/MaybePersist.lean",
-      "phase": 4,
-      "notes": "Run 75: MP1-MP8 + SP1-SP4 + compose_monotone (13T, 0 sorry). maybe_persist and maybe_persist_snap async-persist guards."
-    }
+    {"name": "hae_broadcast_invariant", "file": "formal-verification/lean/FVSquad/AEBroadcastInvariant.lean", "phase": 5, "notes": "ABI1-ABI10 proved (0 sorry)."},
+    {"name": "read_only", "file": "formal-verification/lean/FVSquad/ReadOnly.lean", "phase": 5, "notes": "RO1-RO15 proved, 0 sorry. QueuePendingInv fully preserved."},
+    {"name": "find_conflict_by_term", "file": "formal-verification/lean/FVSquad/FindConflictByTerm.lean", "phase": 5, "notes": "FCB1-FCB9+helper (10T, 0 sorry). Maximality (FCB3) proved."},
+    {"name": "maybe_persist", "file": "formal-verification/lean/FVSquad/MaybePersist.lean", "phase": 5, "notes": "Run 75: MP1-MP8 + SP1-SP4 + compose_monotone (13T, 0 sorry). Async-persist safety guards."}
   ],
   "lean_files": 50,
   "last_run_date": "2026-04-22",
-  "informal_specs_written": [
-    "find_conflict_by_term"
-  ],
-  "last_commit": "4c4d59a",
-  "last_run_tasks": [
-    "Task 6 (Correspondence Review)",
-    "Task 4 (Implementation Extraction)"
-  ],
-  "last_run_summary": "Task 6: Added ProgressCorrespondence section to CORRESPONDENCE.md (46 #guard documented). Task 4: MaybePersist.lean (13T, 0 sorry) for maybe_persist/maybe_persist_snap."
+  "last_commit": "85540db",
+  "last_run_tasks": ["Task 7 (Proof Utility Critique)", "Task 11 (Conference Paper)"],
+  "last_run_summary": "Task 7: CRITIQUE.md MaybePersist full assessment + ProgressCorrespondence section. Task 11: paper.tex updated to 569T/50F/279 #guard/75 runs; added MaybePersist and ProgressCorrespondence rows.",
+  "ci_status": "lean-ci.yml has build job (lake build) + correspondence-tests job. Triggers: formal-verification/lean/**, formal-verification/tests/**, src/**"
 }
