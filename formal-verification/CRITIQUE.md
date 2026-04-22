@@ -1727,3 +1727,87 @@ may diverge.  This is acknowledged in CORRESPONDENCE.md.
 - The `RO13` theorem could be strengthened to cover the full `advance` operation
   (i.e., prove that `advance` also preserves Nodup on the output queue) — this would
   allow RO8 to be applied inductively after a sequence of `advance` calls.
+
+---
+
+> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24756643900)
+> automated formal verification. Current state: **49 files, 511 theorems, 0 sorry**.
+> Run 74: Task 5 (Proof Assistance — Progress.lean PR31–PR35, 5 new theorems proved) +
+> Task 7 (Critique update — Progress correspondence tests, 0 sorry maintained).
+
+## Run 74 Critique Update
+
+### Task 5: Progress.lean — PR31–PR35 Proved
+
+Run 74 added **5 new theorems** to `Progress.lean` covering the non-Replicate
+paths through `maybeDecrTo` and the `optimisticUpdate` function:
+
+- **PR31** (`maybeDecrTo_non_replicate_stale`): In Probe or Snapshot state, `maybeDecrTo`
+  with a stale rejected index (i.e., `next_idx ≠ rejected + 1`) returns `(p, false)`.
+  Proof: `simp [Progress.maybeDecrTo]` after case-splitting on state and decidability
+  of `next_idx == rejected + 1`.
+
+- **PR32** (`maybeDecrTo_non_replicate_decr`): In Probe or Snapshot state, a fresh
+  rejected index triggers the decrement path: `next_idx` is set to
+  `max (min rejected (match_hint + 1)) (matched + 1)`.  This captures the
+  "probe step-back" semantics precisely.
+
+- **PR33** (`maybeDecrTo_preserves_wf`): `maybeDecrTo` preserves the `Progress.wf`
+  invariant (`matched + 1 ≤ next_idx`) in all states.  The key insight for the
+  non-Replicate case is `Nat.le_max_right : n ≤ max m n`, ensuring the floor
+  `matched + 1` is always respected.
+
+- **PR34** (`optimisticUpdate_semantics`): `optimisticUpdate n p` sets `next_idx := n + 1`
+  (the optimistic advance for a pipeline-sent entry).
+
+- **PR35** (`optimisticUpdate_preserves_wf`): `optimisticUpdate n p` preserves
+  `Progress.wf` when `n ≥ p.matched` — i.e., the optimistic advance does not
+  retract the `next_idx` below `matched + 1`.
+
+A private helper `beq_replicate_false_of_ne` was added to prove `(p.state == Replicate) = false`
+given `h : p.state ≠ Replicate`.  The key lemma was `beq_eq_false_iff_ne.mpr h`
+(Lean 4 core lemma for `LawfulBEq` types, avoiding brittle `cases`-on-field-access patterns).
+
+### Task 7: ProgressCorrespondence.lean — 46 Runtime Tests
+
+`FVSquad/ProgressCorrespondence.lean` was created with **46 `#guard` tests** covering:
+- `maybeUpdate` forward-progress and no-op paths
+- `maybeDecrTo` in Replicate, Probe, and Snapshot states (stale and fresh paths)
+- `optimisticUpdate` pessimistic advance
+- `becomeProbe`, `becomeReplicate`, `becomeSnapshot` state transitions
+
+All `#guard` tests pass at compile time via `lake build`, confirming the Lean model
+produces the expected output on representative inputs.
+
+**Invariant checks**: `wf` preservation is tested using
+`checkWf p := Nat.ble (p.matched + 1) p.next_idx` rather than `decide (p.wf ...)`,
+because `Progress.wf` is not marked `@[reducible]` and instance synthesis cannot
+unfold it during `decide` elaboration in `#guard` without `@[reducible]`.
+
+**Correspondence level**: *abstraction* — the Lean `Progress` model replaces the
+Rust `Inflights` ring buffer with a single `ins_full : Bool` flag.  All `maybeDecrTo`
+and `maybeUpdate` paths are faithfully covered; `Inflights` logic is out of scope.
+
+### Project Assessment: 0 Sorry Maintained
+
+Run 74 adds 5 proved theorems and 1 new correspondence file while maintaining
+0 sorry across all 49 Lean files and 511 theorems.
+
+**High-value additions**:
+- PR33 (wf preservation via `maybeDecrTo`) is the most significant: it closes the
+  invariant-preservation gap for all non-Replicate states that prior runs left unproved.
+- PR35 (wf preservation via `optimisticUpdate`) is similarly important for the
+  pipeline-optimistic path.
+
+**Recommendations for future runs**:
+1. **Progress ↔ Raft integration**: The `Progress` invariants (PR1–PR35) form a
+   strong foundation.  The next high-value target is proving that the broader
+   `raft-rs` state-machine loop maintains `Progress.wf` for all tracked peers —
+   this would require formalising the enclosing `ProgressTracker` update loop.
+2. **Inflights correspondence**: The `ins_full` abstraction for `Inflights` has not
+   been validated against the ring-buffer implementation.  A correspondence test
+   harness (Route B) comparing `Inflights` behaviour against the Boolean abstraction
+   would increase confidence in results that depend on `maybeReset` and `freeTo`.
+3. **Lean 4 `@[reducible]`**: Adding `@[reducible]` to `Progress.wf` would allow
+   `decide` to synthesise `Decidable (p.wf)` without expanding manually, simplifying
+   future correspondence tests.
