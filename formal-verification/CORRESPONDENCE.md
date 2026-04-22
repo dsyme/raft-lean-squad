@@ -544,6 +544,7 @@ Rust source: [`src/raft_log.rs#L267`](../src/raft_log.rs#L267)
 | `MaybeAppend.lean` | `src/raft_log.rs` `maybe_append` | Abstraction | 18 | Stable/unstable split abstracted; panic not modelled; Nat vs u64 |
 | `Inflights.lean` | `src/tracker/inflights.rs` `Inflights` | Abstraction | 49 | Abstract (List) + concrete (InflightsConc) models; ALL correspondence theorems proved (0 sorry); phase 5 complete |
 | `Progress.lean` | `src/tracker/progress.rs` `Progress` | Abstraction | 31 | `PendingSnapshot` variant abstracted to single index; async effects omitted |
+| `ProgressCorrespondence.lean` | `src/tracker/progress.rs` `Progress` operations | Abstraction | 46 `#guard` | 46 `#guard` correspondence tests (maybeUpdate, maybeDecrTo, optimisticUpdate, transitions) |
 | `IsUpToDate.lean` | `src/raft_log.rs` `RaftLog::is_up_to_date` | Abstraction | 17 | Log viewed as (term, index) pairs; persistent/unstable split not modelled |
 | `LogUnstable.lean` | `src/log_unstable.rs` `Unstable` | Abstraction | 37 | I/O (persist/stable) not modelled; wf Case-2 caller guarantee documented |
 | `TallyVotes.lean` | `src/tracker.rs` `ProgressTracker::tally_votes` | Abstraction | 28 | HashMap→function; JointConfig→List; mutation→pure return |
@@ -671,6 +672,53 @@ All 38 proved theorems (INF1–INF32 minus the 2 sorry'd) are sound. The abstrac
 All 31 theorems proved (0 sorry). Key: `wf` invariant (`matched+1≤next_idx`) established by `mk_new` and preserved by all transitions. `becomeProbe`/`becomeReplicate` are self-healing.
 
 > 🔬 Updated by Lean Squad run [23790628468](https://github.com/dsyme/fv-squad/actions/runs/23790628468).
+
+---
+
+## `FVSquad/ProgressCorrespondence.lean` — Progress Correspondence Tests (46 `#guard`, 0 sorry)
+
+**New in Run 74.** Task 8 Route B correspondence test for the `Progress` state-machine
+(`src/tracker/progress.rs`).
+
+### Target: `Progress` operations — `src/tracker/progress.rs`
+
+| Lean name | Rust counterpart | Rust location | Correspondence | Notes |
+|-----------|-----------------|---------------|----------------|-------|
+| `Progress.maybeUpdate` | `Progress::maybe_update` | `progress.rs` | Exact | Returns `(Progress, Bool)` vs `&mut self + bool` |
+| `Progress.maybeDecrTo` | `Progress::maybe_decr_to` | `progress.rs` | Exact | Probe staleness check; `Nat` saturation vs `u64` guard; PR26 proves equivalence |
+| `Progress.optimisticUpdate` | `Progress::optimistic_update` | `progress.rs` | Exact | Advances `next_idx` by batch size |
+| `Progress.becomeProbe` | `Progress::become_probe` | `progress.rs` | Exact | State transition from Replicate/Snapshot |
+| `Progress.becomeReplicate` | `Progress::become_replicate` | `progress.rs` | Exact | State transition to fast-path |
+| `Progress.wf` | *(invariant)* `matched + 1 ≤ next_idx` | `progress.rs` | Exact | Core `Progress` well-formedness invariant |
+
+### Test cases (46 `#guard`)
+
+Tests cover:
+- **`maybeUpdate`** (PR14–PR17, PR20): forward-progress on `matched` index in Replicate/Probe; stale update no-op; wf preservation
+- **`maybeDecrTo` in Replicate state** (PR27–PR28): stale (rejected < matched or = matched), non-stale with/without snapshot request
+- **`maybeDecrTo` in Probe/Snapshot state** (PR31–PR33): staleness by `next_idx` comparison; fresh decrement path
+- **`optimisticUpdate`** (PR34–PR35): `next_idx` advance, wf preservation
+- **`becomeProbe` / `becomeReplicate`** (PR1–PR9): state transitions, `matched + 1` invariant
+
+### Validation evidence
+
+- **Lean side**: 46 `#guard` tests in `FVSquad/ProgressCorrespondence.lean` (lake build ✅, 0 sorry)
+- **Rust side**: Rust implementation manually cross-checked against each `#guard` case;
+  the Lean model definitions (especially `maybeDecrTo`) were verified to match the Rust logic via `PR26`
+- **Fixture**: Inline in `ProgressCorrespondence.lean`
+
+### Correspondence level: **Abstraction**
+
+The Lean model abstracts away:
+1. **`Inflights` ring buffer**: replaced by `ins_full : Bool` (only `full()` is observable)
+2. **`recent_active`**: pure metadata field; no invariants involving it
+3. **`commit_group_id` / `committed_index`**: separate bookkeeping; not part of state machine
+
+All 46 `#guard` tests pass at compile time. The `wf` invariant (`matched+1≤next_idx`) is
+verified to be preserved by `maybeUpdate`, `maybeDecrTo`, and `optimisticUpdate` in all tested
+cases.
+
+**No mismatches found.**
 
 ---
 
@@ -2103,7 +2151,7 @@ under normal operation (storage failure is a fatal condition). No mismatches fou
 ---
 
 ## Last Updated
-- **Date**: 2026-04-21 23:00 UTC
-- **Commit**: `7f83c46`
+- **Date**: 2026-04-22 03:45 UTC
+- **Commit**: `dc716f7`
 
-> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24750830891) automated formal verification. Run 69: Task 8 Route B — FindConflictByTermCorrespondence (12 #guard, Rust test). Task 11: paper updated (548→548+T, 47→48F). 48 Lean files, 548 theorems (+ 12 guard), 0 sorry.
+> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24759028473) automated formal verification. Run 75: Task 6 — added ProgressCorrespondence section (46 #guard). Task 4 — MaybePersist.lean new target. 49 Lean files, 0 sorry.
