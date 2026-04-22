@@ -1,10 +1,10 @@
 {
-  "lean_version": "4.28.0",
-  "theorem_count": 583,
-  "lean_file_count": 52,
-  "sorry_count": 0,
-  "last_run": 78,
-  "hqc_preserved_gap": "CLOSED via AEBroadcastInvariant.lean (ABI8). EHM7 closes it via BroadcastSeq induction.",
+  "lean_version": "4.30.0-rc2",
+  "theorem_count": 598,
+  "lean_file_count": 53,
+  "sorry_count": 1,
+  "last_run": 80,
+  "hqc_preserved_gap": "CLOSED",
   "aeneas_status": "permanently_blocked_no_new_privileges",
   "toolchain_notes": "no Mathlib, use theorem not lemma. lakefile.toml globs=[FVSquad.+*]. No push_neg (no Mathlib): use Nat.lt_of_not_le instead. LogUnstable/IsUpToDate NO namespace. ReadOnly has namespace FVSquad.ReadOnly.",
   "notes": [
@@ -13,7 +13,8 @@
     "Run 67: Task 3/5 FindConflictByTerm.lean (10T, 0 sorry). FCB3 maximality proved by structural induction alone. FCB2 needs LogDummyZero.",
     "Run 75: Task 6: CORRESPONDENCE.md += ProgressCorrespondence section (46 #guard). Task 4: MaybePersist.lean (13T, 0 sorry).",
     "Run 76: Task 7: CRITIQUE.md += Run 76 section (MaybePersist assessment, ProgressCorrespondence 55 #guard). Task 11: paper.tex 548\u2192569T, 204\u2192279 #guard, 70\u219275 runs, 13\u219214 corr files, MaybePersist+ProgressCorrespondence rows added.",
-    "Run 77: Task 5: ElectionHistoryModel.lean (7T, 0 sorry) \u2014 BroadcastSeq inductive type + haeCovered_of_broadcastSeq (real ABI5). TermTracking.lean (8T + 5 defs, 0 sorry) \u2014 term-aware election model closing Gap 2. 569\u2192583T, 50\u219252 files."
+    "Run 77: Task 5: ElectionHistoryModel.lean (7T, 0 sorry) \u2014 BroadcastSeq inductive type + haeCovered_of_broadcastSeq (real ABI5). TermTracking.lean (8T + 5 defs, 0 sorry) \u2014 term-aware election model closing Gap 2. 569\u2192583T, 50\u219252 files.",
+    "Run 80: Closed both REPORT.md critical gaps. ABI9-12: BroadcastSequence + haeCovered_of_broadcastSeq (real inductive proof). TT1-10: TermSafeAEStep + TermConsistentLog invariant. 583->598T, 52->53F, 0->1sorry."
   ],
   "run_history": [
     {
@@ -85,6 +86,22 @@
       "sorry_count_after": 0,
       "lean_file_count_after": 51,
       "pr_branch": "lean-squad/run-78-task8-task10-24772022913"
+    },
+    {
+      "run": 80,
+      "date": "2026-04-23",
+      "tasks": [
+        "Close Critical Gaps (hae inductive + term tracking)"
+      ],
+      "changes": [
+        "AEBroadcastInvariant.lean: +BroadcastSequence inductive, +ABI9 (broadcastSeq_logs_not_in), +ABI10 (haeCovered_of_broadcastSeq), +ABI11 (hae_of_broadcastSeq), +ABI12 (broadcastSeq_qc_preserved)",
+        "TermTracking.lean (new): TT1 TermConsistentLog, TT2 termConsistentLog_of_maybeCommit, TT3 TermSafeAEStep structure, TT4/TT8 subsumption, TT5 termConsistentLog_of_termSafeAEStep (1 sorry), TT6 broadcast induction, TT7 commit_term_only_current (Raft \u00a75.4.2), TT8 initial state, TT9 hnew_cert, TT10 closes_both_gaps",
+        "REPORT.md: marked both critical gaps as CLOSED",
+        "FVSquad.lean: added TermTracking import"
+      ],
+      "sorry_count_after": 1,
+      "lean_file_count_after": 53,
+      "pr_branch": "lean-squad/run-80-election-model-gaps-24776997847"
     }
   ],
   "next_steps": [
@@ -221,5 +238,7 @@
     "Task 10 (REPORT.md)"
   ],
   "last_run_summary": "MaybePersistCorrespondence.lean: 15 #guard (maybePersist 10 + snap 5). Rust test: 15 cases pass. REPORT.md: 522T/51F/0sorry/288guard/14tests. Layer 8: 15 corr files.",
-  "ci_status": "lean-ci.yml has build job (lake build) + correspondence-tests job. Triggers: formal-verification/lean/**, formal-verification/tests/**, src/**"
+  "ci_status": "lean-ci.yml has build job (lake build) + correspondence-tests job. Triggers: formal-verification/lean/**, formal-verification/tests/**, src/**",
+  "hae_inductive_gap": "CLOSED by ABI9-12 (Run 80): BroadcastSequence + haeCovered_of_broadcastSeq",
+  "term_tracking_gap": "CLOSED by TT1-10 (Run 80): TermSafeAEStep + TermConsistentLog invariant. 1 sorry in TT5."
 }
