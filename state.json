@@ -1,22 +1,42 @@
 {
-  "last_run": 89,
+  "last_run": 90,
   "lean_files": 56,
-  "theorem_count": 580,
-  "sorry_count": 1,
+  "theorem_count": 581,
+  "sorry_count": 0,
   "correspondence_targets": 18,
-  "guard_tests": 398,
-  "notes": "Run 89: ElectionBroadcastChain.lean (EBC1-EBC5) closes B3 gap. EBC1-EBC4 proved (0 sorry). EBC5 has 1 sorry (chain-condition generalisation). lake build passed. CORRESPONDENCE.md updated with EBC section.",
+  "guard_tests": 373,
+  "notes": "Run 90: ElectionBroadcastChain.lean (EBC1-EBC6) — ALL 6 theorems proved, 0 sorry. Closes B3 gap fully. BroadcastSeq inductive type introduced. EBC4 is the key structural-induction theorem. EBC6 delivers hqc_preserved from broadcast sequence. Paper updated to 581 theorems, 56 files, Run 90.",
   "targets": {
     "B3_election_broadcast": {
       "phase": 5,
       "file": "formal-verification/lean/FVSquad/ElectionBroadcastChain.lean",
-      "sorry_count": 1,
-      "notes": "EBC1-EBC4 proved. EBC5 needs chain-condition IH generalisation."
+      "sorry_count": 0,
+      "notes": "EBC1-EBC6 all proved. BroadcastSeq inductive type. Gap closed."
     },
-    "raft_safety": {"phase": 5, "file": "formal-verification/lean/FVSquad/RaftSafety.lean", "sorry_count": 0},
-    "leader_completeness": {"phase": 5, "file": "formal-verification/lean/FVSquad/LeaderCompleteness.lean", "sorry_count": 0},
-    "raft_election": {"phase": 5, "file": "formal-verification/lean/FVSquad/RaftElection.lean", "sorry_count": 0},
-    "ae_broadcast_invariant": {"phase": 5, "file": "formal-verification/lean/FVSquad/AEBroadcastInvariant.lean", "sorry_count": 0},
-    "concrete_protocol_step": {"phase": 5, "file": "formal-verification/lean/FVSquad/ConcreteProtocolStep.lean", "sorry_count": 0}
+    "raft_safety": {
+      "phase": 5,
+      "file": "formal-verification/lean/FVSquad/RaftSafety.lean",
+      "sorry_count": 0
+    },
+    "leader_completeness": {
+      "phase": 5,
+      "file": "formal-verification/lean/FVSquad/LeaderCompleteness.lean",
+      "sorry_count": 0
+    },
+    "raft_election": {
+      "phase": 5,
+      "file": "formal-verification/lean/FVSquad/RaftElection.lean",
+      "sorry_count": 0
+    },
+    "ae_broadcast_invariant": {
+      "phase": 5,
+      "file": "formal-verification/lean/FVSquad/AEBroadcastInvariant.lean",
+      "sorry_count": 0
+    },
+    "concrete_protocol_step": {
+      "phase": 5,
+      "file": "formal-verification/lean/FVSquad/ConcreteProtocolStep.lean",
+      "sorry_count": 0
+    }
   }
 }
