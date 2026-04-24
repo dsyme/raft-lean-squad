@@ -446,3 +446,36 @@ theorem truncateAndAppend_case3_wf (u : Unstable) (newTerms : List Nat) (after :
   unfold wf truncateAndAppend
   rw [if_neg h1, if_neg h2]
   exact hwf
+
+/-- WF7: truncateAndAppend preserves wf in all three cases.
+
+    This is the combined form of WF4, WF5, and WF6: `wf` is preserved by
+    `truncateAndAppend` as long as, in the case where `after ≤ offset` (case 2),
+    the snapshot index lies strictly below the new offset.
+
+    The `hwf_after` parameter encodes this conditional requirement: it is a function
+    from the case-2 hypothesis `after ≤ u.offset` to the snapshot-safety condition.
+    In cases 1 and 3 the function is never applied, so only `hwf` is needed. -/
+theorem truncateAndAppend_wf (u : Unstable) (newTerms : List Nat) (after : Nat)
+    (hwf : wf u)
+    (hwf_after : after ≤ u.offset →
+                 match u.snapshot with
+                 | none             => True
+                 | some ⟨sidx, _⟩  => sidx < after) :
+    wf (truncateAndAppend u newTerms after) := by
+  by_cases h1 : after = u.offset + u.entries.length
+  · exact truncateAndAppend_case1_wf u newTerms after h1 hwf
+  · by_cases h2 : after ≤ u.offset
+    · exact truncateAndAppend_case2_wf u newTerms after h1 h2 (hwf_after h2)
+    · exact truncateAndAppend_case3_wf u newTerms after h1 h2 hwf
+
+/-- WF8: When `after > u.offset`, `truncateAndAppend` preserves wf unconditionally.
+
+    This is a simple corollary of WF7 covering cases 1 (after = offset + len, which
+    implies after > offset) and 3 (offset < after < offset + len).  No snapshot-safety
+    precondition is required because the case-2 branch (`after ≤ offset`) cannot fire. -/
+theorem truncateAndAppend_gt_wf (u : Unstable) (newTerms : List Nat) (after : Nat)
+    (hwf : wf u)
+    (h : u.offset < after) :
+    wf (truncateAndAppend u newTerms after) :=
+  truncateAndAppend_wf u newTerms after hwf (fun h2 => absurd h2 (Nat.not_le.mpr h))
