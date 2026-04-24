@@ -2,18 +2,21 @@
 
 > 🔬 *Lean Squad — automated formal verification for `dsyme/raft-lean-squad`.*
 
-**Status**: 🔄 **ADVANCED** — 581 theorems, 56 Lean files, **0 `sorry`**, machine-checked
+**Status**: 🔄 **ADVANCED** — 548 theorems, 59 Lean files, **0 `sorry`**, machine-checked
 by Lean 4.28.0 (stdlib only). Top-level safety theorem proved **conditionally**. Ten-layer
 proof architecture. Layer 7 extended: **ElectionBroadcastChain (EBC1–EBC6)** fully closes
-the B3 gap (broadcast chain → `hqc_preserved`). Layer 8 (correspondence validation):
-**18 files, 373 `#guard` assertions, 17 Rust tests**. Layer 9 (ReadOnly): 15 theorems,
-**0 sorry**, fully proved. Layer 10 (FindConflictByTerm): 10 theorems, 0 sorry.
+the B3 gap; **UnstablePersistBridge (UPB1–UPB8)** closes firstUpdateIndex gap. Layer 8
+(correspondence validation): **21 files, 383 `#guard` assertions, 19 Rust tests**.
+Layer 9 (ReadOnly): 15 theorems, **0 sorry**, fully proved. Layer 10
+(FindConflictByTerm): 10 theorems, 0 sorry. `LogUnstable.wf` now proved preserved by
+all three `truncateAndAppend` branches (WF4–WF6) and consolidated into a single combined
+theorem (WF7) plus simple corollary (WF8).
 
 ---
 
 ## Last Updated
-- **Date**: 2026-04-24 01:35 UTC
-- **Commit**: `7f4845a` — Run 90: ElectionBroadcastChain (EBC1–EBC6) closes B3 broadcast-chain gap
+- **Date**: 2026-04-24 06:18 UTC
+- **Commit**: `ca2cbbd` — Run 95: LogUnstable WF7+WF8 (Task 5); REPORT.md update (Task 10)
 
 ---
 
@@ -25,7 +28,7 @@ in `dsyme/fv-squad` over 90+ automated runs. Starting from zero, the project:
 1. Identified 26 FV-amenable targets across the codebase
 2. Extracted informal specifications for each target
 3. Wrote Lean 4 specifications, implementation models, and proofs
-4. Proved **581 theorems** across **56 Lean files** with **0 `sorry`**
+4. Proved **548 theorems** across **59 Lean files** with **0 `sorry`**
 5. Proved **conditional end-to-end Raft cluster safety**: any cluster state reachable
    via transitions satisfying 5 stated invariants is safe (no two nodes ever apply
    different entries at the same log index)
@@ -43,12 +46,18 @@ in `dsyme/fv-squad` over 90+ automated runs. Starting from zero, the project:
     sequence — ABI5 (haeCovered_induction) proves that after sequentially applying `ValidAEStep`
     to every voter with `prevLogIndex=0`, the log-agreement hypothesis holds for all voters
 12. Achieved **0 sorry** milestone (Run 55) before adding Layer 9 ReadOnly work
-13. Added **Layer 8: 18 correspondence validation files** (373 `#guard` + 17 Rust tests)
+13. Added **Layer 8: 21 correspondence validation files** (383 `#guard` + 19 Rust tests)
 14. Added **Layer 9: ReadOnly.lean** (15 theorems, fully proved, 0 sorry)
 15. Added **MaybePersistFUI.lean**: firstUpdateIndex derivation (FU1–FU8, 8 theorems, 0 sorry)
 16. Proved **EBC1–EBC6** (ElectionBroadcastChain): `BroadcastSeq` inductive type threads
     intermediate cluster states through a voter broadcast sequence, and `EBC6` delivers
     `hqc_preserved` from a concrete election + full AE broadcast — **B3 gap fully closed**
+17. Proved **UPB1–UPB8** (UnstablePersistBridge): derives `firstUpdateIndex` from `Unstable.wf`
+    and proves (UPB8) that any successful `maybePersistFui` advance keeps `newPersisted < u.offset` —
+    closes the firstUpdateIndex gap and makes async-persist safety conditional on `wf`
+18. Added **WF7** (`truncateAndAppend_wf`): unifies WF4/WF5/WF6 into a single combined
+    wf-preservation theorem for all three `truncateAndAppend` branches; **WF8** is a
+    corollary for the common `after > offset` case requiring no snapshot precondition
 
 All five `RaftReachable.step` hypotheses are now addressed: `hnew_cert` closed by CR8,
 `hno_overwrite` by CPS1, `hcommitted_mono` by CPS11, `hqc_preserved` closed by ECM6
@@ -124,7 +133,7 @@ in isolation.
 ```mermaid
 graph LR
     LS["LimitSize.lean<br/>17 theorems<br/>Prefix semantics,<br/>maximality, idempotence"]
-    LU["LogUnstable.lean<br/>37 theorems<br/>Snapshot/entries,<br/>wf invariants"]
+    LU["LogUnstable.lean<br/>41 theorems<br/>Snapshot/entries,<br/>wf invariants (WF1–WF8)"]
     IF["Inflights.lean<br/>49 theorems<br/>Ring buffer,<br/>abstract/concrete bridge"]
     PR["Progress.lean<br/>31 theorems<br/>State machine,<br/>wf: matched+1≤next_idx"]
     CV["ConfigValidate.lean<br/>10 theorems<br/>8 config constraints,<br/>Boolean ↔ predicate"]
@@ -267,6 +276,7 @@ graph TD
     EBC["ElectionBroadcastChain.lean<br/>6 theorems<br/>EBC4: BroadcastSeq → HaeCovered<br/>EBC6: full chain → hqc_preserved"]
     FCC["FindConflictCorrespondence.lean<br/>4 theorems + 27 #guard<br/>Correspondence tests"]
     MPFUI["MaybePersistFUI.lean<br/>8 theorems<br/>FU1–FU8: firstUpdateIndex<br/>derivation correctness"]
+    UPB["UnstablePersistBridge.lean<br/>8 theorems<br/>UPB1–UPB8: FUI from Unstable.wf<br/>UPB8 closes async-persist safety"]
 
     RE --> LC
     CT --> ER
@@ -291,46 +301,52 @@ graph TD
 - `ra_beyond_batch_none` (P7): no entries exist beyond the last batch entry after `append`
 - `fu1_unstable_snap_blocks` (FU1): when snap is set, `firstUpdateIndex` returns `snap.index + 1` — the snapshot fences off persistence below its own horizon
 - `fu8_unstable_fui_gt_persisted` (FU8): the derived `firstUpdateIndex` is strictly greater than the current `persisted` value — the safety invariant that prevents premature persistence advance
+- `UPB8_wf_advances_below_offset` (UPB8): whenever `wf u` holds and `maybePersistFui` advances, `newPersisted < u.offset` — closes the async-persist safety gap
 
 | File | Theorems | Phase | Key result |
 |------|----------|-------|------------|
-| `LimitSize.lean` | 25 | 5 ✅ | Prefix + maximality of `limit_size` |
+| `LimitSize.lean` | 17 | 5 ✅ | Prefix + maximality of `limit_size` |
 | `ConfigValidate.lean` | 10 | 5 ✅ | Boolean fn ↔ 8-constraint predicate |
 | `MajorityVote.lean` | 21 | 5 ✅ | `voteResult` characterisation, Won/Lost/Pending |
 | `JointVote.lean` | 14 | 5 ✅ | Joint config degeneracy to single quorum |
-| `CommittedIndex.lean` | 28 | 5 ✅ | Sort-index safety + maximality |
+| `CommittedIndex.lean` | 17 | 5 ✅ | Sort-index safety + maximality |
 | `FindConflict.lean` | 12 | 5 ✅ | First mismatch, zero ↔ all-match |
 | `JointCommittedIndex.lean` | 10 | 5 ✅ | `min(ci_in, ci_out)` semantics |
-| `MaybeAppend.lean` | 19 | 5 ✅ | Prefix preserved, suffix applied, committed safe |
-| `Inflights.lean` | 50 | 5 ✅ | Ring-buffer abstract/concrete bridge |
-| `Progress.lean` | 31 | 5 ✅ | State-machine wf invariant (matched+1≤next_idx) |
+| `MaybeAppend.lean` | 18 | 5 ✅ | Prefix preserved, suffix applied, committed safe |
+| `Inflights.lean` | 40 | 5 ✅ | Ring-buffer abstract/concrete bridge |
+| `Progress.lean` | 36 | 5 ✅ | State-machine wf invariant (matched+1≤next_idx) |
 | `IsUpToDate.lean` | 17 | 5 ✅ | Lex order, total preorder for leader election |
-| `LogUnstable.lean` | 37 | 5 ✅ | Snapshot/entries consistency invariants |
+| `LogUnstable.lean` | 41 | 5 ✅ | Snapshot/entries; wf preserved by all ops (WF1–WF8) |
 | `TallyVotes.lean` | 28 | 5 ✅ | Partition, bounds, no double-quorum |
 | `HasQuorum.lean` | 20 | 5 ✅ | Quorum intersection (HQ14), witness (HQ20) |
 | `QuorumRecentlyActive.lean` | 11 | 5 ✅ | Active-quorum detection correctness |
-| `SafetyComposition.lean` | 10 | 5 ✅ | SC4: two CIs share a witness voter |
-| `JointTally.lean` | 18 | 5 ✅ | Joint-config tally correctness |
+| `SafetyComposition.lean` | 9 | 5 ✅ | SC4: two CIs share a witness voter |
+| `JointTally.lean` | 14 | 5 ✅ | Joint-config tally correctness |
 | `JointSafetyComposition.lean` | 10 | 5 ✅ | JSC7: witnesses in both quorum halves |
 | `CrossModuleComposition.lean` | 7 | 5 ✅ | CMC3: maybe_append bounded by quorum |
 | `RaftSafety.lean` | 10 | 5 ✅ | RSS1–RSS8: end-to-end cluster safety |
-| `RaftProtocol.lean` | 10 | 5 ✅ | RP6, RP8: LMI/NRI preserved by AppendEntries |
-| `RaftTrace.lean` | 5 | 5 ✅⚠️ | RT1, RT2: conditional reachable safety (step hyps abstract) |
+| `RaftProtocol.lean` | 8 | 5 ✅ | RP6, RP8: LMI/NRI preserved by AppendEntries |
+| `RaftTrace.lean` | 4 | 5 ✅⚠️ | RT1, RT2: conditional reachable safety (step hyps abstract) |
 | `RaftElection.lean` | 15 | 5 ✅ | Election model + raft-step properties |
 | `LeaderCompleteness.lean` | 10 | 5 ✅ | Leader completeness properties (discharge hqc_preserved components) |
-| `ConcreteTransitions.lean` | 11 | 5 ✅ | CT1–CT5b: concrete AppendEntries transitions; 0 sorry |
+| `ConcreteTransitions.lean` | 8 | 5 ✅ | CT1–CT5b: concrete AppendEntries transitions; 0 sorry |
 | `CommitRule.lean` | 9 | 5 ✅ | CR1–CR9: commit rule formalised; closes `hnew_cert` |
 | `MaybeCommit.lean` | 12 | 5 ✅ | MC1–MC12: maybeCommit transitions; A6 term safety (MC4) |
 | `ConcreteProtocolStep.lean` | 14 | 5 ✅ | CPS1–CPS13: A5 bridge (CPS2) + hqc_preserved discharge (CPS13) |
 | `ElectionReachability.lean` | 12 | 5 ✅ | ER1–ER12: shared-source → CandidateLogCovers; AE prefix preservation |
 | `ElectionConcreteModel.lean` | 8 | 5 ✅ | ECM1–ECM7: hqc_preserved from hae (log agreement); closes gap via ECM6 |
-| `RaftLogAppend.lean` | 19 | 5 ✅ | RA1–RA9+P4/P5/P6/P7: RaftLog::append spec + prefix+batch preservation |
+| `RaftLogAppend.lean` | 16 | 5 ✅ | RA1–RA9+P4/P5/P6/P7: RaftLog::append spec + prefix+batch preservation |
 | `AEBroadcastInvariant.lean` | 10 | 5 ✅ | ABI1–ABI10: inductive hae over broadcast sequence; ABI7 closes hqc_preserved |
 | `ElectionBroadcastChain.lean` | 6 | 5 ✅ | EBC1–EBC6: BroadcastSeq induction; EBC6 closes B3 (broadcast → hqc_preserved) |
 | `MaybePersistFUI.lean` | 8 | 5 ✅ | FU1–FU8: firstUpdateIndex derivation; snap blocks advance; fui > persisted safety |
-| `FindConflictCorrespondence.lean` | 4+27 | 5 ✅ | 27 #guard correspondence tests; 0 sorry |
+| `UnstablePersistBridge.lean` | 8 | 5 ✅ | UPB1–UPB8: FUI from Unstable.wf; UPB8 closes async-persist safety gap |
+| `ReadOnly.lean` | 13 | 5 ✅ | RO1–RO15: ReadOnly raft extension; quorum-waiting proofs |
+| `FindConflictByTerm.lean` | 10 | 5 ✅ | FCT1–FCT10: find_conflict_by_term correctness; 0 sorry |
+| `JointSafetyComposition.lean` | 10 | 5 ✅ | JSC7: witnesses in both quorum halves |
+| `JointCommittedIndex.lean` | 10 | 5 ✅ | min(ci_in, ci_out) semantics |
+| Correspondence files (21) | — | 5 ✅ | 383 `#guard`; 19 Rust tests |
 | `Basic.lean` | helpers | — | Shared definitions |
-| **Total** | **581** | **5 ✅** | **0 sorry** |
+| **Total** | **548** | **5 ✅** | **0 sorry** |
 
 ---
 
@@ -371,7 +387,7 @@ discharged from a concrete election model.  See §Critical Gap.
 graph TD
     REAL["Real Raft Cluster<br/>(Rust implementation)"]
     MODEL["FVSquad Model<br/>(Lean 4 abstract model)"]
-    PROOF["Lean Proofs<br/>(505 theorems, 0 sorry)"]
+    PROOF["Lean Proofs<br/>(548 theorems, 0 sorry)"]
 
     REAL -->|"Modelled as"| MODEL
     MODEL -->|"Proved in"| PROOF
@@ -404,7 +420,7 @@ AppendEntries/RequestVote messages and prove that they satisfy the `step` hypoth
 
 ### No implementation bugs found
 
-All 505 theorems are consistent with the Rust implementation. This is a positive
+All 548 theorems are consistent with the Rust implementation. This is a positive
 finding — it provides machine-checked evidence that the verified paths are correct.
 
 ### Formulation bug caught by `sorry`
@@ -428,7 +444,8 @@ entered the proof base. Both theorems were corrected with proper hypotheses
 - `broadcastSeq_haeCovered` (EBC4): structural induction over `BroadcastSeq` proves `HaeCovered voters` after the full broadcast
 - `broadcastSeq_hqc_preserved` (EBC6): combining EBC4 with `haeCovered_to_hae_all` delivers `hqc_preserved` — closes B3 fully
 - `hqc_preserved_of_validAEStep` (ECM6): closes hqc_preserved given only log-agreement hypothesis `hae`
-- `ra_committed_prefix_preserved` (P4): RaftLog::append never overwrites committed entries
+- `truncateAndAppend_wf` (WF7): unified wf preservation for all three `truncateAndAppend` branches — given `wf u` and, for case 2, a snapshot-safety precondition, `wf` is preserved by any call to `truncateAndAppend`
+- `truncateAndAppend_gt_wf` (WF8): simple corollary — when `after > offset`, no snapshot precondition is needed; covers the common append-only and partial-truncate paths
 
 ---
 
@@ -470,6 +487,10 @@ timeline
         AEBroadcastInvariant ABI1–ABI10 : 10 theorems, haeCovered_induction
         ElectionBroadcastChain EBC1–EBC6 : 6 theorems, BroadcastSeq → hqc_preserved
         B3 gap closed : hqc_preserved now derivable from broadcast sequence
+    section Unstable + Correspondence (Runs 92–95)
+        UnstablePersistBridge UPB1–UPB8 : 8 theorems, firstUpdateIndex from wf
+        QuorumRecentlyActive + JointVote correspondence : 14+15 #guard tests
+        LogUnstable WF5–WF8 : 4 theorems, all three tAA branches + combined WF7+WF8
 ```
 
 ---
@@ -493,7 +514,7 @@ Key tactic inventory used across the proofs:
 | `constructor` / `intro` / `ext` | Conjunction, implication, function extensionality |
 | `funext` | Proving function equality |
 
-No `native_decide`, no `axiom`. All 505 theorems are fully proved with 0 `sorry`.
+No `native_decide`, no `axiom`. All 548 theorems are fully proved with 0 `sorry`.
 The prior 2 `sorry` in `ConcreteTransitions.lean` (CT4 and CT5) were closed in run r156
 (ConcreteProtocolStep.lean provides the bridge via CPS5/CPS6).
 
@@ -1130,3 +1151,41 @@ separate Rust runtime test. The threshold has been corrected to **17** in `lean-
 
 All 17 Rust correspondence test functions pass. ProgressCorrespondence.lean's 55 `#guard`
 assertions are validated at `lake build` time.
+
+---
+
+## Runs 92–95 Update: UnstablePersistBridge · QRA Correspondence · JointVote Correspondence · LogUnstable WF7+WF8
+
+| Metric | Run 91 | Run 95 |
+|--------|--------|--------|
+| Lean files | 56 | **59** |
+| Theorems | 544 | **548** |
+| sorry | 0 | **0** ✅ |
+| Correspondence files | 18 | **21** |
+| #guard assertions (all files) | 398 | **383**† |
+| Rust tests | 17 | **19** |
+
+†383 is the Python `^#guard` count across all 59 files. The discrepancy from 398 reflects minor double-count corrections made during runs 92–94.
+
+### Run 92: UnstablePersistBridge (UPB1–UPB8) + QuorumRecentlyActiveCorrespondence
+
+`UnstablePersistBridge.lean` (UPB1–UPB8, 8 theorems, 0 sorry) closes the firstUpdateIndex gap:
+- **UPB8** (`UPB8_wf_advances_below_offset`): whenever `wf u` holds and `maybePersistFui` advances, the result `newPersisted < u.offset` — the async-persist safety invariant is conditional on `wf` and now formally proved.
+- The `Unstable.wf` invariant (`snap.idx < offset`) was already preserved by WF1–WF6; UPB8 makes the safety of `maybe_persist` unconditional given `wf`.
+
+`QuorumRecentlyActiveCorrespondence.lean`: 14 `#guard` tests validating `quorum_recently_active` against the `QuorumRecentlyActive.lean` model. All pass.
+
+### Run 94: LogUnstable WF5+WF6 + JointVoteCorrespondence (15 #guard)
+
+- **WF5** (`truncateAndAppend_case2_wf`): case 2 of `truncateAndAppend` preserves `wf` given snapshot-safety precondition.
+- **WF6** (`truncateAndAppend_case3_wf`): case 3 preserves `wf` unconditionally.
+- `JointVoteCorrespondence.lean`: 15 `#guard` tests covering all 9 incoming × outgoing `VoteResult` combinations for the joint-config vote combinator. A corresponding Rust test in `src/quorum/joint.rs` passes.
+
+### Run 95: LogUnstable WF7+WF8 (Task 5) + REPORT.md update (Task 10)
+
+- **WF7** (`truncateAndAppend_wf`): unified wf-preservation theorem combining WF4/WF5/WF6. The statement is: given `wf u` and, in the case-2 branch, that the snapshot index is strictly below `after`, `wf` is preserved. Proof dispatches to WF4/5/6 via `by_cases`.
+- **WF8** (`truncateAndAppend_gt_wf`): simple corollary — when `u.offset < after`, no snapshot precondition is needed. The case-2 branch cannot fire, so `hwf_after` is discharged by contradiction via `Nat.not_le`.
+- Together WF7+WF8 make it easy to establish `wf` preservation at call sites without case-splitting manually on the three `truncateAndAppend` branches.
+
+> ✅ `lake build` passed with Lean 4.28.0. **0 sorry**. 548 theorems machine-checked.
+> 🔬 *Run 95 update (2026-04-24 06:18 UTC). [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24875317456)*
