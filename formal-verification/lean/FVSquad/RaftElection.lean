@@ -125,6 +125,19 @@ requires:
 | RI13 | `RI13_wonInTerm_consistent_with_vote_record`       | ✅ proved  | VoteRecord consistency → winner uniqueness |
 | RI14 | `RI14_processVoteRequest_voted_for_is_cand`        | ✅ proved  | After granting vote, votedFor = some candId |
 | RI15 | `RI15_two_leaders_same_term_same_id`               | ✅ proved  | Two election winners in the same term are the same node |
+
+### voteGranted characterisation and processVoteRequest structure (RV1–RV8)
+
+| ID   | Name                                           | Status    | Description |
+|------|------------------------------------------------|-----------|-------------|
+| RV1  | `RV1_voteGranted_true_iff`                     | ✅ proved  | Biconditional: voteGranted = true ↔ prior-ok ∧ isUpToDate |
+| RV2  | `RV2_voteGranted_false_of_not_upToDate`        | ✅ proved  | ¬isUpToDate → voteGranted = false |
+| RV3  | `RV3_voteGranted_true_of_none_and_upToDate`    | ✅ proved  | prior=none ∧ isUpToDate → voteGranted = true |
+| RV4  | `RV4_processVoteRequest_currentTerm`           | ✅ proved  | Resulting term = max(s.currentTerm, candTerm) |
+| RV5  | `RV5_processVoteRequest_role_unchanged_low_term` | ✅ proved | ¬(candTerm > currentTerm) → role unchanged |
+| RV6  | `RV6_processVoteRequest_higher_term_granted_state` | ✅ proved | Higher term + granted → full resulting state |
+| RV7  | `RV7_processVoteRequest_higher_term_denied_state`  | ✅ proved | Higher term + denied → becomeFollower state  |
+| RV8  | `RV8_wonInTerm_of_all_voters_voted`            | ✅ proved  | All voters voted → wonInTerm = true |
 -/
 
 namespace FVSquad.RaftElection
@@ -845,6 +858,130 @@ theorem RI15_two_leaders_same_term_same_id
     (hw2 : wonInTerm (hd :: tl) record term c2 = true) :
     c1 = c2 :=
   electionSafety hd tl record term c1 c2 hw1 hw2
+
+-- ─────────────────────────────────────────────────────────────
+-- RV1–RV8: voteGranted characterisation and processVoteRequest structure
+-- ─────────────────────────────────────────────────────────────
+
+/-!
+## Section RV — voteGranted / processVoteRequest structural theorems
+
+These theorems characterise the precise input–output relationship of `voteGranted`
+(complementing the one-way implications RE7/RE8/RE9) and the structural properties of
+`processVoteRequest` beyond the RI series.
+
+| ID   | Name                                           | Status    | Description |
+|------|------------------------------------------------|-----------|-------------|
+| RV1  | `RV1_voteGranted_true_iff`                     | ✅ proved  | Biconditional: voteGranted = true ↔ prior-ok ∧ isUpToDate |
+| RV2  | `RV2_voteGranted_false_of_not_upToDate`        | ✅ proved  | ¬isUpToDate → voteGranted = false |
+| RV3  | `RV3_voteGranted_true_of_none_and_upToDate`    | ✅ proved  | prior=none ∧ isUpToDate → voteGranted = true |
+| RV4  | `RV4_processVoteRequest_currentTerm`           | ✅ proved  | Resulting term = max(s.currentTerm, candTerm) |
+| RV5  | `RV5_processVoteRequest_role_unchanged_low_term` | ✅ proved | ¬(candTerm > s.currentTerm) → role unchanged |
+| RV6  | `RV6_processVoteRequest_higher_term_granted_state` | ✅ proved | Higher term + granted → full resulting state |
+| RV7  | `RV7_processVoteRequest_higher_term_denied_state`  | ✅ proved | Higher term + denied → becomeFollower state  |
+| RV8  | `RV8_wonInTerm_of_all_voters_voted`            | ✅ proved  | All voters voted → wonInTerm = true |
+-/
+
+/-- **RV1** Biconditional: `voteGranted voterLog priorVote candId candLastTerm candLastIndex = true`
+    iff (a) the prior vote is `none` or `some candId`, AND (b) the candidate's log is at
+    least as up-to-date as the voter's log.
+
+    This is the explicit iff form of the definition, complementing the one-way implications
+    RE7 (`voteGranted_isUpToDate`) and RE8 (`voteGranted_priorVote_none_or_self`). -/
+theorem RV1_voteGranted_true_iff (voterLog : LogId) (priorVote : Option Nat)
+    (candId candLastTerm candLastIndex : Nat) :
+    voteGranted voterLog priorVote candId candLastTerm candLastIndex = true ↔
+    (priorVote = none ∨ priorVote = some candId) ∧
+    isUpToDate voterLog candLastTerm candLastIndex = true := by
+  constructor
+  · intro h
+    exact ⟨voteGranted_priorVote_none_or_self voterLog priorVote candId candLastTerm candLastIndex h,
+           voteGranted_isUpToDate voterLog priorVote candId candLastTerm candLastIndex h⟩
+  · intro ⟨h1, h2⟩
+    simp only [voteGranted, Bool.and_eq_true]
+    refine ⟨?_, h2⟩
+    rcases h1 with rfl | rfl <;> simp
+
+/-- **RV2** If the candidate's log is *not* at least as up-to-date as the voter's log,
+    then `voteGranted` is `false` — regardless of the prior-vote status.  This is the
+    contrapositive of RE7. -/
+theorem RV2_voteGranted_false_of_not_upToDate (voterLog : LogId) (priorVote : Option Nat)
+    (candId candLastTerm candLastIndex : Nat)
+    (hiu : isUpToDate voterLog candLastTerm candLastIndex = false) :
+    voteGranted voterLog priorVote candId candLastTerm candLastIndex = false := by
+  simp [voteGranted, hiu]
+
+/-- **RV3** If the voter has not yet voted (`priorVote = none`) and the candidate's log is
+    at least as up-to-date as the voter's log, then `voteGranted` is `true`.
+
+    This is the "easy grant" case: a fresh voter with an up-to-date candidate. -/
+theorem RV3_voteGranted_true_of_none_and_upToDate (voterLog : LogId)
+    (candId candLastTerm candLastIndex : Nat)
+    (hiu : isUpToDate voterLog candLastTerm candLastIndex = true) :
+    voteGranted voterLog none candId candLastTerm candLastIndex = true := by
+  simp [voteGranted, hiu]
+
+/-- **RV4** The `currentTerm` of the node after `processVoteRequest` is the maximum of
+    `s.currentTerm` and `candTerm`.
+
+    - If `candTerm > s.currentTerm`: the node adopts the higher term (Raft term-update rule).
+    - If `candTerm ≤ s.currentTerm`: the node's term is unchanged. -/
+theorem RV4_processVoteRequest_currentTerm
+    (s : NodeState) (voterLog : LogId) (candId candTerm candLastTerm candLastIndex : Nat) :
+    (processVoteRequest s voterLog candId candTerm candLastTerm candLastIndex).currentTerm =
+    max s.currentTerm candTerm := by
+  by_cases h : candTerm > s.currentTerm
+  · simp only [processVoteRequest, if_pos h]
+    cases voteGranted voterLog none candId candLastTerm candLastIndex <;>
+    simp [becomeFollower] <;> omega
+  · simp only [processVoteRequest, if_neg h]
+    cases voteGranted voterLog s.votedFor candId candLastTerm candLastIndex <;> simp <;> omega
+
+/-- **RV5** When `candTerm ≤ s.currentTerm` (same term or lower), `processVoteRequest`
+    never changes the node's `role`.  The role can only change via `becomeFollower`, which
+    only fires when `candTerm > s.currentTerm`. -/
+theorem RV5_processVoteRequest_role_unchanged_low_term
+    (s : NodeState) (voterLog : LogId) (candId candTerm candLastTerm candLastIndex : Nat)
+    (hle : ¬ (candTerm > s.currentTerm)) :
+    (processVoteRequest s voterLog candId candTerm candLastTerm candLastIndex).role = s.role := by
+  simp only [processVoteRequest, if_neg hle]
+  cases voteGranted voterLog s.votedFor candId candLastTerm candLastIndex <;> rfl
+
+/-- **RV6** When `candTerm > s.currentTerm` **and** `voteGranted` returns `true` (with
+    `priorVote = none`, since the node steps to a fresh term), the full resulting state is:
+    `currentTerm = candTerm`, `votedFor = some candId`, `role = Follower`. -/
+theorem RV6_processVoteRequest_higher_term_granted_state
+    (s : NodeState) (voterLog : LogId) (candId candTerm candLastTerm candLastIndex : Nat)
+    (hgt  : candTerm > s.currentTerm)
+    (hg   : voteGranted voterLog none candId candLastTerm candLastIndex = true) :
+    processVoteRequest s voterLog candId candTerm candLastTerm candLastIndex =
+    { currentTerm := candTerm, votedFor := some candId, role := NodeRole.Follower } := by
+  simp [processVoteRequest, hgt, hg]
+
+/-- **RV7** When `candTerm > s.currentTerm` **and** `voteGranted` returns `false` (candidate
+    log not up-to-date), the result is `becomeFollower s candTerm`: the node adopts the
+    higher term but does **not** record a vote. -/
+theorem RV7_processVoteRequest_higher_term_denied_state
+    (s : NodeState) (voterLog : LogId) (candId candTerm candLastTerm candLastIndex : Nat)
+    (hgt  : candTerm > s.currentTerm)
+    (hd   : voteGranted voterLog none candId candLastTerm candLastIndex = false) :
+    processVoteRequest s voterLog candId candTerm candLastTerm candLastIndex =
+    becomeFollower s candTerm := by
+  simp [processVoteRequest, hgt, hd]
+
+/-- **RV8** If every voter in `voters` has voted for `candId` in `term` according to `record`,
+    then `wonInTerm voters record term candId = true`.
+
+    This connects individual vote records to the cluster-level election outcome: when the entire
+    voter list is a superset of the winning quorum (because *all* voted), the candidate wins. -/
+theorem RV8_wonInTerm_of_all_voters_voted
+    (voters : List Nat) (record : VoteRecord) (term candId : Nat)
+    (hall : ∀ v ∈ voters, record term v = some candId) :
+    wonInTerm voters record term candId = true := by
+  simp only [wonInTerm]
+  apply hasQuorum_true_of_all_in
+  intro v hv
+  simp [decide_eq_true_eq, hall v hv]
 
 /-! ## Evaluation examples -/
 
