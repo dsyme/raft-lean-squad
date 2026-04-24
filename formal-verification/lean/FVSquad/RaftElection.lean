@@ -66,6 +66,8 @@ requires:
 
 ## Theorem Table
 
+### Election outcome theorems (RE1–RE15)
+
 | ID   | Name                                  | Status    | Description                                                  |
 |------|---------------------------------------|-----------|--------------------------------------------------------------|
 | RE1  | `wonInTerm_nil`                       | ✅ proved  | Empty voter list: any candidate trivially satisfies quorum   |
@@ -83,6 +85,26 @@ requires:
 | RE13 | `wonInTerm_singleton_self`            | ✅ proved  | Candidate voting for itself wins in singleton cluster        |
 | RE14 | `electionSafety_two_leaders`         | ✅ proved  | Two nodes that won elections in same term → same ID          |
 | RE15 | `wonInTerm_voter_voted`               | ✅ proved  | Every shared voter voted for the actual winner               |
+
+### State transition theorems (RT1–RT15)
+
+| ID   | Name                                   | Status    | Description |
+|------|----------------------------------------|-----------|-------------|
+| RT1  | `RT1_becomeFollower_term`              | ✅ proved  | Term after becomeFollower equals the given term |
+| RT2  | `RT2_becomeFollower_role`              | ✅ proved  | Role is Follower after becomeFollower |
+| RT3  | `RT3_becomeFollower_vote_reset`        | ✅ proved  | Vote cleared when term strictly increases |
+| RT4  | `RT4_becomeFollower_vote_preserved`    | ✅ proved  | Vote preserved when term stays the same |
+| RT5  | `RT5_becomeFollower_term_monotone`     | ✅ proved  | becomeFollower never decreases the term |
+| RT6  | `RT6_becomeCandidate_term`             | ✅ proved  | Term after becomeCandidate = old term + 1 |
+| RT7  | `RT7_becomeCandidate_role`             | ✅ proved  | Role is Candidate after becomeCandidate |
+| RT8  | `RT8_becomeCandidate_vote`             | ✅ proved  | Candidate votes for itself |
+| RT9  | `RT9_becomeCandidate_term_strict`      | ✅ proved  | becomeCandidate strictly increases the term |
+| RT10 | `RT10_becomeLeader_role`               | ✅ proved  | Role is Leader after becomeLeader |
+| RT11 | `RT11_becomeLeader_term_unchanged`     | ✅ proved  | Term is unchanged by becomeLeader |
+| RT12 | `RT12_becomeLeader_vote_unchanged`     | ✅ proved  | Vote is unchanged by becomeLeader |
+| RT13 | `RT13_becomeLeader_voted_for_self`     | ✅ proved  | After becomeCandidate+becomeLeader, leader voted for itself (I4) |
+| RT14 | `RT14_becomeFollower_same_term_preserves_vote` | ✅ proved | Same-term becomeFollower preserves vote |
+| RT15 | `RT15_term_monotone_sequence`          | ✅ proved  | Term monotonicity: both transitions only increase term |
 -/
 
 namespace FVSquad.RaftElection
@@ -411,6 +433,170 @@ theorem wonInTerm_voter_voted (hd : Nat) (tl : List Nat) (record : VoteRecord)
   have heq : c2 = candidate := electionSafety hd tl record term c2 candidate hw2 hw
   rw [heq]; exact hvote
 
+/-! ## State transition functions
+
+These model the `become_follower`, `become_candidate`, and `become_leader` functions in
+`src/raft.rs:1155–1283`.  The Rust functions are imperative and mutate many fields; the
+Lean model captures only the election-relevant state (`currentTerm`, `votedFor`, `role`).
+
+## Theorem Table (Transitions)
+
+| ID   | Name                                   | Status    | Description |
+|------|----------------------------------------|-----------|-------------|
+| RT1  | `becomeFollower_term`                  | ✅ proved  | Term after becomeFollower equals the given term |
+| RT2  | `becomeFollower_role`                  | ✅ proved  | Role is Follower after becomeFollower |
+| RT3  | `becomeFollower_vote_reset`            | ✅ proved  | Vote is reset to none when term strictly increases |
+| RT4  | `becomeFollower_vote_preserved`        | ✅ proved  | Vote is preserved when term stays the same |
+| RT5  | `becomeFollower_term_monotone`         | ✅ proved  | becomeFollower never decreases the term |
+| RT6  | `becomeCandidate_term`                 | ✅ proved  | Term after becomeCandidate = old term + 1 |
+| RT7  | `becomeCandidate_role`                 | ✅ proved  | Role is Candidate after becomeCandidate |
+| RT8  | `becomeCandidate_vote`                 | ✅ proved  | Candidate votes for itself |
+| RT9  | `becomeCandidate_term_strict`          | ✅ proved  | becomeCandidate strictly increases the term |
+| RT10 | `becomeLeader_role`                    | ✅ proved  | Role is Leader after becomeLeader |
+| RT11 | `becomeLeader_term_unchanged`          | ✅ proved  | Term is unchanged by becomeLeader |
+| RT12 | `becomeLeader_vote_unchanged`          | ✅ proved  | Vote is unchanged by becomeLeader |
+| RT13 | `becomeLeader_voted_for_self`          | ✅ proved  | After becomeCandidate then becomeLeader, leader voted for itself |
+| RT14 | `becomeFollower_from_candidate_resets` | ✅ proved  | Follower after candidate with same term retains vote |
+| RT15 | `term_monotone_sequence`               | ✅ proved  | Term only increases: becomeFollower ≥ old; becomeCandidate > old |
+-/
+
+/-! ### `becomeFollower`
+
+Models `Raft::become_follower(term, leader_id)` from `src/raft.rs:1155`.
+
+The `reset` helper (line 1015) sets `self.vote = INVALID_ID` only when `term != self.term`.
+We model this: vote is cleared iff `newTerm ≠ s.currentTerm`. -/
+def becomeFollower (s : NodeState) (newTerm : Nat) : NodeState :=
+  { currentTerm := newTerm
+    votedFor    := if newTerm != s.currentTerm then none else s.votedFor
+    role        := NodeRole.Follower }
+
+/-! ### `becomeCandidate`
+
+Models `Raft::become_candidate()` from `src/raft.rs:1183`.
+
+Precondition (Rust): `self.state ≠ Leader` (panics otherwise).
+Effect: term ← term+1, vote ← self.id, role ← Candidate. -/
+def becomeCandidate (s : NodeState) (selfId : Nat) : NodeState :=
+  { currentTerm := s.currentTerm + 1
+    votedFor    := some selfId
+    role        := NodeRole.Candidate }
+
+/-! ### `becomeLeader`
+
+Models `Raft::become_leader()` from `src/raft.rs:1233`.
+
+Precondition (Rust): `self.state ≠ Follower`.
+Effect: role ← Leader, term and vote unchanged. -/
+def becomeLeader (s : NodeState) : NodeState :=
+  { s with role := NodeRole.Leader }
+
+-- ─────────────────────────────────────────────────────────────
+-- RT1–RT5: becomeFollower properties
+-- ─────────────────────────────────────────────────────────────
+
+/-- **RT1** `becomeFollower` sets the term to `newTerm`. -/
+theorem RT1_becomeFollower_term (s : NodeState) (newTerm : Nat) :
+    (becomeFollower s newTerm).currentTerm = newTerm := by
+  simp [becomeFollower]
+
+/-- **RT2** `becomeFollower` sets the role to `Follower`. -/
+theorem RT2_becomeFollower_role (s : NodeState) (newTerm : Nat) :
+    (becomeFollower s newTerm).role = NodeRole.Follower := by
+  simp [becomeFollower]
+
+/-- **RT3** When the term strictly increases, `becomeFollower` clears the vote. -/
+theorem RT3_becomeFollower_vote_reset (s : NodeState) (newTerm : Nat)
+    (h : newTerm ≠ s.currentTerm) :
+    (becomeFollower s newTerm).votedFor = none := by
+  simp [becomeFollower, h]
+
+/-- **RT4** When the term stays the same, `becomeFollower` preserves the vote. -/
+theorem RT4_becomeFollower_vote_preserved (s : NodeState) (newTerm : Nat)
+    (h : newTerm = s.currentTerm) :
+    (becomeFollower s newTerm).votedFor = s.votedFor := by
+  simp [becomeFollower, h]
+
+/-- **RT5** `becomeFollower` never decreases the term (caller must pass `newTerm ≥ s.currentTerm`).
+    This theorem states the monotonicity direction: the new state's term equals `newTerm`. -/
+theorem RT5_becomeFollower_term_monotone (s : NodeState) (newTerm : Nat)
+    (h : newTerm ≥ s.currentTerm) :
+    (becomeFollower s newTerm).currentTerm ≥ s.currentTerm := by
+  simp [becomeFollower, h]
+
+-- ─────────────────────────────────────────────────────────────
+-- RT6–RT9: becomeCandidate properties
+-- ─────────────────────────────────────────────────────────────
+
+/-- **RT6** `becomeCandidate` sets the term to `s.currentTerm + 1`. -/
+theorem RT6_becomeCandidate_term (s : NodeState) (selfId : Nat) :
+    (becomeCandidate s selfId).currentTerm = s.currentTerm + 1 := by
+  simp [becomeCandidate]
+
+/-- **RT7** `becomeCandidate` sets the role to `Candidate`. -/
+theorem RT7_becomeCandidate_role (s : NodeState) (selfId : Nat) :
+    (becomeCandidate s selfId).role = NodeRole.Candidate := by
+  simp [becomeCandidate]
+
+/-- **RT8** `becomeCandidate` records a vote for `selfId` (the node votes for itself). -/
+theorem RT8_becomeCandidate_vote (s : NodeState) (selfId : Nat) :
+    (becomeCandidate s selfId).votedFor = some selfId := by
+  simp [becomeCandidate]
+
+/-- **RT9** `becomeCandidate` strictly increases the term. -/
+theorem RT9_becomeCandidate_term_strict (s : NodeState) (selfId : Nat) :
+    (becomeCandidate s selfId).currentTerm > s.currentTerm := by
+  simp [becomeCandidate]
+
+-- ─────────────────────────────────────────────────────────────
+-- RT10–RT12: becomeLeader properties
+-- ─────────────────────────────────────────────────────────────
+
+/-- **RT10** `becomeLeader` sets the role to `Leader`. -/
+theorem RT10_becomeLeader_role (s : NodeState) :
+    (becomeLeader s).role = NodeRole.Leader := by
+  simp [becomeLeader]
+
+/-- **RT11** `becomeLeader` leaves the term unchanged. -/
+theorem RT11_becomeLeader_term_unchanged (s : NodeState) :
+    (becomeLeader s).currentTerm = s.currentTerm := by
+  simp [becomeLeader]
+
+/-- **RT12** `becomeLeader` leaves the vote unchanged. -/
+theorem RT12_becomeLeader_vote_unchanged (s : NodeState) :
+    (becomeLeader s).votedFor = s.votedFor := by
+  simp [becomeLeader]
+
+-- ─────────────────────────────────────────────────────────────
+-- RT13–RT15: compound properties
+-- ─────────────────────────────────────────────────────────────
+
+/-- **RT13** After `becomeCandidate` followed by `becomeLeader`, the leader voted for itself.
+    This is invariant I4 from the informal spec: every leader voted for itself while
+    campaigning.  The leader's `votedFor` field remains `some selfId` because `becomeLeader`
+    does not touch the vote. -/
+theorem RT13_becomeLeader_voted_for_self (s : NodeState) (selfId : Nat) :
+    (becomeLeader (becomeCandidate s selfId)).votedFor = some selfId := by
+  simp [becomeLeader, becomeCandidate]
+
+/-- **RT14** If a node is a candidate in term `t` and calls `becomeFollower` with the same
+    term `t`, the vote is preserved (no vote reset for same-term transitions).
+    This models the Rust `reset` path where `self.term == term` → vote unchanged. -/
+theorem RT14_becomeFollower_same_term_preserves_vote (s : NodeState) (selfId : Nat) :
+    (becomeFollower (becomeCandidate s selfId) (s.currentTerm + 1)).votedFor = some selfId := by
+  simp [becomeFollower, becomeCandidate]
+
+/-- **RT15** Term monotonicity across both transitions:
+    - `becomeFollower newTerm` produces term = `newTerm` (caller guarantees `newTerm ≥ old`)
+    - `becomeCandidate` produces term = `old + 1 > old`
+    This combines RT5 and RT9 into a single statement for use in inductive arguments. -/
+theorem RT15_term_monotone_sequence (s : NodeState) (selfId : Nat) (newTerm : Nat)
+    (h : newTerm ≥ s.currentTerm) :
+    (becomeFollower s newTerm).currentTerm ≥ s.currentTerm ∧
+    (becomeCandidate s selfId).currentTerm > s.currentTerm := by
+  exact ⟨RT5_becomeFollower_term_monotone s newTerm h,
+         RT9_becomeCandidate_term_strict s selfId⟩
+
 /-! ## Evaluation examples -/
 
 -- In a 3-voter cluster [1, 2, 3], if voters 1 and 2 voted for candidate 5, then 5 wins.
@@ -424,5 +610,18 @@ theorem wonInTerm_voter_voted (hd : Nat) (tl : List Nat) (record : VoteRecord)
 -- In a single-voter cluster, the sole voter's choice wins.
 #eval wonInTerm [42] (fun _ v => if v == 42 then some (42 : Nat) else none) 1 42
 -- true: single voter voted for 42
+
+-- Transition function examples
+#eval becomeCandidate { currentTerm := 1, votedFor := none, role := NodeRole.Follower } 42
+-- { currentTerm := 2, votedFor := some 42, role := Candidate }
+
+#eval becomeLeader (becomeCandidate { currentTerm := 1, votedFor := none, role := NodeRole.Follower } 42)
+-- { currentTerm := 2, votedFor := some 42, role := Leader }
+
+#eval becomeFollower { currentTerm := 1, votedFor := some 42, role := NodeRole.Candidate } 3
+-- { currentTerm := 3, votedFor := none, role := Follower }  (vote cleared — new term)
+
+#eval becomeFollower { currentTerm := 2, votedFor := some 42, role := NodeRole.Candidate } 2
+-- { currentTerm := 2, votedFor := some 42, role := Follower }  (vote preserved — same term)
 
 end FVSquad.RaftElection
