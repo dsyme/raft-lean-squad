@@ -96,3 +96,77 @@ impl Configuration {
         MajorityConfig::new(self.ids().iter().collect()).describe(l)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::quorum::VoteResult;
+
+    // These 15 cases mirror FVSquad/JointVoteCorrespondence.lean exactly.
+    // Each case specifies incoming voters, outgoing voters, yes-voters, no-voters,
+    // and the expected joint VoteResult.
+    //
+    // Cases 1–9 cover all 9 combinations of (incoming result) × (outgoing result).
+    // Cases 10–13 cover non-joint / degenerate configurations.
+    // Cases 14–15 cover larger quorums.
+    #[test]
+    fn test_joint_vote_result_correspondence() {
+        let cases: &[(&[u64], &[u64], &[u64], &[u64], VoteResult)] = &[
+            // Case 1: incoming=Won, outgoing=Won → Won
+            (&[1, 2, 3], &[4, 5], &[1, 2, 3, 4, 5], &[], VoteResult::Won),
+            // Case 2: incoming=Won, outgoing=Lost → Lost
+            (&[1, 2, 3], &[4, 5], &[1, 2], &[4, 5], VoteResult::Lost),
+            // Case 3: incoming=Won, outgoing=Pending → Pending
+            (&[1, 2, 3], &[4, 5], &[1, 2, 4], &[], VoteResult::Pending),
+            // Case 4: incoming=Lost, outgoing=Won → Lost
+            (&[1, 2, 3], &[4, 5], &[4, 5], &[1, 2, 3], VoteResult::Lost),
+            // Case 5: incoming=Lost, outgoing=Lost → Lost
+            (&[1, 2, 3], &[4, 5], &[], &[1, 2, 3, 4, 5], VoteResult::Lost),
+            // Case 6: incoming=Lost, outgoing=Pending → Lost
+            (&[1, 2, 3], &[4, 5], &[4], &[1, 2, 3], VoteResult::Lost),
+            // Case 7: incoming=Pending, outgoing=Won → Pending
+            (&[1, 2, 3], &[4, 5], &[1, 4, 5], &[3], VoteResult::Pending),
+            // Case 8: incoming=Pending, outgoing=Lost → Lost
+            (&[1, 2, 3], &[4, 5], &[1], &[3, 4, 5], VoteResult::Lost),
+            // Case 9: incoming=Pending, outgoing=Pending → Pending
+            (&[1, 2, 3], &[4, 5], &[1, 4], &[3], VoteResult::Pending),
+            // Case 10: empty incoming (convention Won), outgoing Won → Won
+            (&[], &[4, 5], &[4, 5], &[], VoteResult::Won),
+            // Case 11: non-joint (empty outgoing), incoming Won → Won
+            (&[1], &[], &[1], &[], VoteResult::Won),
+            // Case 12: non-joint (empty outgoing), incoming Lost → Lost
+            (&[1], &[], &[], &[1], VoteResult::Lost),
+            // Case 13: non-joint (empty outgoing), incoming Pending → Pending
+            (&[1], &[], &[], &[], VoteResult::Pending),
+            // Case 14: 2+2 voters, both Win → Won
+            (&[1, 2], &[3, 4], &[1, 2, 3, 4], &[], VoteResult::Won),
+            // Case 15: 5-voter incoming Won, 4-voter outgoing Lost → Lost
+            (&[1, 2, 3, 4, 5], &[6, 7, 8, 9], &[1, 2, 3], &[6, 7, 8, 9], VoteResult::Lost),
+        ];
+
+        for (i, &(incoming_ids, outgoing_ids, yes_ids, no_ids, expected)) in cases.iter().enumerate() {
+            let incoming: MajorityConfig = MajorityConfig::new(
+                incoming_ids.iter().copied().collect()
+            );
+            let outgoing: MajorityConfig = MajorityConfig::new(
+                outgoing_ids.iter().copied().collect()
+            );
+            let cfg = Configuration::new_joint_from_majorities(incoming, outgoing);
+            let check = |id: u64| -> Option<bool> {
+                if yes_ids.contains(&id) {
+                    Some(true)
+                } else if no_ids.contains(&id) {
+                    Some(false)
+                } else {
+                    None
+                }
+            };
+            let result = cfg.vote_result(check);
+            assert_eq!(
+                result, expected,
+                "Case {}: incoming={:?} outgoing={:?} yes={:?} no={:?}: expected {:?}, got {:?}",
+                i + 1, incoming_ids, outgoing_ids, yes_ids, no_ids, expected, result
+            );
+        }
+    }
+}

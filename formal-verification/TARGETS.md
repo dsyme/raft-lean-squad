@@ -78,7 +78,8 @@ has a `*Correspondence.lean` file with `#guard` tests and a matching Rust `test_
 | `raft_log_append` | `RaftLogAppendCorrespondence.lean` | 21 | ✅ | abstraction |
 | `maybe_persist_fui` | `MaybePersistFUICorrespondence.lean` | 20 | ✅ | abstraction |
 | `quorum_recently_active` | `QuorumRecentlyActiveCorrespondence.lean` | 14 | ✅ | abstraction |
-| **Total** | **19 files** | **~412** | **19 Rust tests** | — |
+| `joint_vote_result` | `JointVoteCorrespondence.lean` | 15 | ✅ | exact |
+| **Total** | **20 files** | **~427** | **20 Rust tests** | — |
 
 ## Proof Bridges (Run 92)
 
