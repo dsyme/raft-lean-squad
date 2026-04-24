@@ -408,3 +408,41 @@ theorem truncateAndAppend_case1_wf (u : Unstable) (newTerms : List Nat) (after :
   unfold wf
   rw [truncateAndAppend_snapshot_preserved, truncateAndAppend_case1_offset u newTerms after h]
   exact hwf
+
+/-- WF5: truncateAndAppend case 2 preserves wf given a snapshot-safe precondition.
+
+    In case 2 (`after ≤ offset`), the offset is reset to `after`.  For wf to hold
+    after the update, the snapshot index (if any) must be strictly below the new
+    offset `after`.  This is captured by `hwf_after`, which requires the same
+    invariant that `wf` would require if the offset were `after`.
+
+    **Significance**: This completes the wf-preservation coverage for
+    `truncateAndAppend`.  Together with WF4 and WF6, it shows that `wf` is
+    preserved by all three branches of `truncateAndAppend` — with appropriate
+    preconditions.  In practice the invariant holds at all call sites because
+    Raft only installs entries that post-date any pending snapshot. -/
+theorem truncateAndAppend_case2_wf (u : Unstable) (newTerms : List Nat) (after : Nat)
+    (h1 : after ≠ u.offset + u.entries.length)
+    (h2 : after ≤ u.offset)
+    (hwf_after : match u.snapshot with
+                 | none             => True
+                 | some ⟨sidx, _⟩  => sidx < after) :
+    wf (truncateAndAppend u newTerms after) := by
+  unfold wf truncateAndAppend
+  rw [if_neg h1, if_pos h2]
+  exact hwf_after
+
+/-- WF6: truncateAndAppend case 3 preserves wf unconditionally.
+
+    In case 3 (`after > offset` and `after ≠ offset + len`), neither the offset
+    nor the snapshot is changed — only a prefix of `entries` is kept and `newTerms`
+    is appended.  Since the snapshot invariant depends only on the snapshot and the
+    offset, and both are unchanged, `wf` is preserved directly from `hwf`. -/
+theorem truncateAndAppend_case3_wf (u : Unstable) (newTerms : List Nat) (after : Nat)
+    (h1 : after ≠ u.offset + u.entries.length)
+    (h2 : ¬(after ≤ u.offset))
+    (hwf : wf u) :
+    wf (truncateAndAppend u newTerms after) := by
+  unfold wf truncateAndAppend
+  rw [if_neg h1, if_neg h2]
+  exact hwf

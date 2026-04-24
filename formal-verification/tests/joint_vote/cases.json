@@ -1,0 +1,17 @@
+[
+  {"case": 1, "incoming": [1,2,3], "outgoing": [4,5], "yes_ids": [1,2,3,4,5], "no_ids": [], "expected": "Won",     "notes": "incoming=Won, outgoing=Won"},
+  {"case": 2, "incoming": [1,2,3], "outgoing": [4,5], "yes_ids": [1,2],       "no_ids": [4,5], "expected": "Lost",    "notes": "incoming=Won, outgoing=Lost"},
+  {"case": 3, "incoming": [1,2,3], "outgoing": [4,5], "yes_ids": [1,2,4],     "no_ids": [], "expected": "Pending", "notes": "incoming=Won, outgoing=Pending"},
+  {"case": 4, "incoming": [1,2,3], "outgoing": [4,5], "yes_ids": [4,5],       "no_ids": [1,2,3], "expected": "Lost",    "notes": "incoming=Lost, outgoing=Won"},
+  {"case": 5, "incoming": [1,2,3], "outgoing": [4,5], "yes_ids": [],          "no_ids": [1,2,3,4,5], "expected": "Lost",    "notes": "incoming=Lost, outgoing=Lost"},
+  {"case": 6, "incoming": [1,2,3], "outgoing": [4,5], "yes_ids": [4],         "no_ids": [1,2,3], "expected": "Lost",    "notes": "incoming=Lost, outgoing=Pending"},
+  {"case": 7, "incoming": [1,2,3], "outgoing": [4,5], "yes_ids": [1,4,5],     "no_ids": [3], "expected": "Pending", "notes": "incoming=Pending, outgoing=Won"},
+  {"case": 8, "incoming": [1,2,3], "outgoing": [4,5], "yes_ids": [1],         "no_ids": [3,4,5], "expected": "Lost",    "notes": "incoming=Pending, outgoing=Lost"},
+  {"case": 9, "incoming": [1,2,3], "outgoing": [4,5], "yes_ids": [1,4],       "no_ids": [3], "expected": "Pending", "notes": "incoming=Pending, outgoing=Pending"},
+  {"case": 10, "incoming": [],     "outgoing": [4,5], "yes_ids": [4,5],       "no_ids": [], "expected": "Won",     "notes": "empty incoming (convention Won), outgoing Won"},
+  {"case": 11, "incoming": [1],    "outgoing": [],    "yes_ids": [1],         "no_ids": [], "expected": "Won",     "notes": "non-joint: incoming Won, empty outgoing"},
+  {"case": 12, "incoming": [1],    "outgoing": [],    "yes_ids": [],          "no_ids": [1], "expected": "Lost",    "notes": "non-joint: incoming Lost, empty outgoing"},
+  {"case": 13, "incoming": [1],    "outgoing": [],    "yes_ids": [],          "no_ids": [], "expected": "Pending", "notes": "non-joint: incoming Pending, empty outgoing"},
+  {"case": 14, "incoming": [1,2],  "outgoing": [3,4], "yes_ids": [1,2,3,4],  "no_ids": [], "expected": "Won",     "notes": "2+2 voters both Win"},
+  {"case": 15, "incoming": [1,2,3,4,5], "outgoing": [6,7,8,9], "yes_ids": [1,2,3], "no_ids": [6,7,8,9], "expected": "Lost", "notes": "5-voter incoming Won, 4-voter outgoing Lost"}
+]
