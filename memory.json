@@ -1,8 +1,8 @@
 {
   "lean_version": "4.28.0",
-  "theorem_count": 578,
+  "theorem_count": 593,
   "sorry_count": 0,
-  "last_run": "Run 98 (2026-04-24): Task 4+5 (RaftElection.lean: becomeFollower/Candidate/Leader + RT1-RT15). 563->578T, 61F, 0 sorry.",
+  "last_run": 99,
   "hqc_preserved_gap": "CLOSED via AEBroadcastInvariant+ElectionBroadcastChain. Remaining: connect broadcast to full election lifecycle.",
   "aeneas_status": "permanently_blocked_no_new_privileges",
   "toolchain_notes": "no Mathlib, stdlib only. WF7/WF8 use Nat.not_le.mpr. LogUnstable/IsUpToDate have NO namespace.",
@@ -235,5 +235,8 @@
       "notes": "Run 98: transition functions + RT1-RT15 proved. Next: inductive invariants."
     }
   ],
-  "ci_status": "lean-ci.yml has build job (lake build) + correspondence-tests job (cargo test correspondence). Triggers: formal-verification/lean/**, formal-verification/tests/**, src/**"
+  "ci_status": "lean-ci.yml has build job (lake build) + correspondence-tests job (cargo test correspondence). Triggers: formal-verification/lean/**, formal-verification/tests/**, src/**",
+  "run_count": 99,
+  "last_task": "Task 5 (RI1-RI15 election invariants) + Task 1 (Research/TARGETS update)",
+  "election_model_phase": 5
 }
