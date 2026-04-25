@@ -1298,6 +1298,111 @@ mod test {
         }
     }
 
+    /// Lean Squad correspondence test for `next_entries_since` / `next_entries` /
+    /// `has_next_entries_since`.
+    ///
+    /// 🔬 Mirrors `FVSquad/NextEntriesCorrespondence.lean` (Run 113).
+    /// The Lean model uses `firstIndex = 4` (snapshot at 3), `UNLT = 10000`.
+    /// Parameters: `(applied, persisted, committed, limit, expected_is_some, expected_indices)`.
+    #[test]
+    fn test_next_entries_correspondence() {
+        let l = default_logger();
+        let ents = [
+            new_entry(4, 1),
+            new_entry(5, 1),
+            new_entry(6, 1),
+            new_entry(7, 1),
+            new_entry(8, 1),
+            new_entry(9, 1),
+            new_entry(10, 1),
+        ];
+        const UNLT: u64 = 10000;
+
+        // (applied, persisted, committed, limit, expected_is_some, expected_indices)
+        let cases: &[(u64, u64, u64, u64, bool, &[u64])] = &[
+            // #1  ub=min(3,3)=3, off=max(1,4)=4 > 3 → None
+            (0, 3, 3, 0, false, &[]),
+            // #2  ub=min(4,3)=3, off=4 > 3 → None
+            (0, 3, 4, 0, false, &[]),
+            // #3  ub=min(4,3+UNLT)=4, off=4 → [4]
+            (0, 3, 4, UNLT, true, &[4]),
+            // #4  ub=min(6,4)=4, off=4 → [4]
+            (0, 4, 6, 0, true, &[4]),
+            // #5  ub=min(6,6)=6, off=4 → [4,5,6]
+            (0, 4, 6, 2, true, &[4, 5, 6]),
+            // #6  ub=min(10,4)=4, off=4 → [4]
+            (0, 4, 10, 0, true, &[4]),
+            // #7  ub=min(10,6)=6, off=4 → [4,5,6]
+            (0, 4, 10, 2, true, &[4, 5, 6]),
+            // #8  ub=min(10,10)=10, off=4 → [4..10]
+            (0, 4, 10, 6, true, &[4, 5, 6, 7, 8, 9, 10]),
+            // #9  ub=min(3,UNLT)=3, off=max(4,4)=4 > 3 → None
+            (3, 4, 3, UNLT, false, &[]),
+            // #10 ub=5, off=4 → [4,5]
+            (3, 5, 5, UNLT, true, &[4, 5]),
+            // #11 ub=5, off=max(5,4)=5 → [5]
+            (4, 5, 5, UNLT, true, &[5]),
+            // #12 ub=5, off=max(6,4)=6 > 5 → None
+            (5, 5, 5, 0, false, &[]),
+            // #13 ub=7, off=max(6,4)=6 → [6,7]
+            (5, 7, 7, UNLT, true, &[6, 7]),
+            // #14 ub=7, off=max(8,4)=8 > 7 → None
+            (7, 7, 7, UNLT, false, &[]),
+            // #15 ub=min(8,6)=6, off=max(9,4)=9 > 6 → None (applied > ub)
+            (8, 6, 8, 0, false, &[]),
+            // #16 ub=7, off=4 → [4,5,6,7]
+            (3, 6, 7, UNLT, true, &[4, 5, 6, 7]),
+            // #17 ub=6, off=4 → [4,5,6]
+            (3, 7, 6, UNLT, true, &[4, 5, 6]),
+            // #18 ub=min(7,5+UNLT)=7, off=5 → [5,6,7]
+            (4, 5, 7, UNLT, true, &[5, 6, 7]),
+            // #19 ub=min(5,UNLT)=5, off=5 → [5]
+            (4, 7, 5, UNLT, true, &[5]),
+            // #20 ub=min(7,7+0)=7, off=5 → [5,6,7]
+            (4, 7, 7, 0, true, &[5, 6, 7]),
+        ];
+
+        for (i, &(applied, persisted, committed, limit, exp_is_some, exp_indices)) in
+            cases.iter().enumerate()
+        {
+            let store = MemStorage::new();
+            store
+                .wl()
+                .apply_snapshot(new_snapshot(3, 1))
+                .expect("");
+            let mut raft_log = RaftLog::new(store, l.clone(), &Config::default());
+            raft_log.max_apply_unpersisted_log_limit = limit;
+            raft_log.append(&ents);
+            let unstable = raft_log.unstable_entries().to_vec();
+            if let Some(e) = unstable.last() {
+                raft_log.stable_entries(e.get_index(), e.get_term());
+                raft_log.mut_store().wl().append(&unstable).expect("");
+            }
+            raft_log.maybe_persist(persisted, 1);
+            raft_log.maybe_commit(committed, 1);
+            #[allow(deprecated)]
+            raft_log.applied_to(applied);
+
+            // Check has_next_entries
+            let has_next = raft_log.has_next_entries();
+            assert_eq!(
+                has_next, exp_is_some,
+                "#{i}: has_next_entries = {has_next}, want {exp_is_some}"
+            );
+
+            // Check next_entries (indices of returned entries)
+            let next = raft_log.next_entries(None);
+            let actual_indices: Vec<u64> = next
+                .as_ref()
+                .map(|es| es.iter().map(|e| e.get_index()).collect())
+                .unwrap_or_default();
+            assert_eq!(
+                actual_indices, exp_indices,
+                "#{i}: next_entries indices = {actual_indices:?}, want {exp_indices:?}"
+            );
+        }
+    }
+
     #[test]
     fn test_slice() {
         let (offset, num) = (100u64, 100u64);

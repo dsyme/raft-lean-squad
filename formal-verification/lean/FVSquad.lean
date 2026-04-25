@@ -28,3 +28,6 @@ import FVSquad.ConcreteTransitions
 import FVSquad.CommitRule
 import FVSquad.MaybeCommit
 import FVSquad.ConcreteProtocolStep
+import FVSquad.HasNextEntries
+import FVSquad.NextEntries
+import FVSquad.NextEntriesCorrespondence
