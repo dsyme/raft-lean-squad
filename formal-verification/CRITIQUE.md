@@ -3,14 +3,14 @@
 > 🔬 *Lean Squad — automated formal verification for `dsyme/raft-lean-squad`.*
 
 ## Last Updated
-- **Date**: 2026-04-25 04:00 UTC
-- **Commit**: `09ddbe5` — Run 105: Task 7 (Critique update — 628T, 65 files, 0 sorry); PT22–PT24 membership theorems added
+- **Date**: 2026-04-25 08:10 UTC
+- **Commit**: `66da52b` — Run 109: Task 7 (Critique update — 647T, 66 files, 0 sorry); US16–US18 + RO14 added
 
 ---
 
 ## Overall Assessment
 
-The FV project has produced **628 theorem declarations across 65 Lean files, machine-checked by
+The FV project has produced **647 theorem declarations across 66 Lean files, machine-checked by
 Lean 4 (version 4.30.0-rc2, stdlib only — no Mathlib), with 0 `sorry`**.
 
 Since the last critique (Run 76, 50 files, 569T), the project has expanded significantly across
@@ -42,11 +42,21 @@ Since the last critique (Run 76, 50 files, 569T), the project has expanded signi
   demotion state, which allows `outgoing ∩ learners_next ≠ ∅`.  A relaxed 3-clause predicate
   (`VotersLearnersDisjointRelaxed`) is proved to match the actual Rust semantics.
 
-- **Layer 15: ReadOnly** — `ReadOnly.lean` (13T, RO1–RO13): ReadIndex linearisability
+- **Layer 15: ReadOnly** — `ReadOnly.lean` (15T, RO1–RO14): ReadIndex linearisability
   bookkeeping (`addRequest`, `recvAck`, `advance`) fully specified and proved; 0 sorry.
+  **RO14** (`advance_preserves_nodup`, Run 107): `advance` preserves the `Nodup` invariant on
+  the pending queue, completing the full Nodup-invariant cycle together with RO13.
+
+- **Layer 16: UncommittedState** — `UncommittedState.lean` (18T, US1–US18): flow-control
+  bookkeeping (`maybeIncrease`, `maybeReduce`) fully characterised; 0 sorry.
+  **US16** (`maybeIncrease_false_iff`, Run 108): complete rejection characterisation — the
+  exact conditions under which `maybeIncrease` returns `false` (and leaves state unchanged).
+  **US17** (`maybeIncrease_true_iff`, Run 108): dual acceptance iff — exact conditions under
+  which `maybeIncrease` returns `true`.  **US18** (`maybeReduce_ge_sub`, Run 108): saturation
+  lower bound — after reduce, `uncommitted ≥ uncommitted - size` (with clamping to zero).
 
 - **Correspondence suite expanded to ~22 targets, 450+ `#guard` tests** across 19 correspondence
-  files, with RunSte Rust tests added to `src/raft.rs`, `src/tracker.rs`, and elsewhere.
+  files, with Rust tests added to `src/raft.rs`, `src/tracker.rs`, and elsewhere.
 
 **No bugs found** in any modelled Rust function.  One **notable finding**: CI9–CI12 revealed
 that `VotersLearnersDisjoint` as initially stated is *stricter* than the actual Raft
@@ -1917,6 +1927,74 @@ All 55 `#guard` tests pass at compile time via `lake build`.
 
 ---
 
+## Run 109 Critique Update (2026-04-25)
+
+### Project Statistics (Runs 105-109)
+
+| Metric | Run 105 | Run 109 |
+|--------|---------|---------|
+| Total theorem declarations | 628 | **647** (+19) |
+| Lean 4 files | 65 | **66** (+1 proof file) |
+| `sorry` remaining | 0 | **0** |
+| `#guard` tests (correspondence) | 450+ | **450+** |
+| Lean 4 version | 4.30.0-rc2 | 4.30.0-rc2 |
+
+### New Theorems Added Since Run 105
+
+#### `ReadOnly.lean` — 15 theorems (RO1–RO14, +1 since Run 105)
+
+- **RO14** (`advance_preserves_nodup`, Run 107): `advance` preserves the `Nodup` invariant on
+  the pending queue. Previously, only `addRequest_preserves_nodup` (RO13) closed the Nodup
+  cycle inductively. RO14 confirms that the `advance` operation (which removes processed
+  requests) also maintains Nodup, completing the full invariant cycle.
+
+**Assessment**: High value. Together, RO13 and RO14 establish that the ReadIndex queue
+invariant (`Nodup`) is preserved by both the insertion and processing operations — a complete
+inductive invariant for the queue lifecycle.
+
+#### `UncommittedState.lean` — 18 theorems (US1–US18, +3 since Run 105)
+
+Run 108 completed the UncommittedState module with biconditional characterisations:
+
+- **US16** (`maybeIncrease_false_iff`): exactly characterises when `maybeIncrease` returns
+  `false` — the four conditions (noLimit, emptyEntries, zeroUncommitted, withinBudget). The
+  dual of US5 (`maybeIncrease_true_effect`); together they make the acceptance/rejection
+  decision fully transparent to the verifier.
+- **US17** (`maybeIncrease_true_iff`): dual — exact conditions under which `maybeIncrease`
+  accepts and updates state. US5+US17 are a complete biconditional pair.
+- **US18** (`maybeReduce_ge_sub`): saturation lower bound — after reduction, `uncommitted ≥
+  uncommitted - size`, with clamping to zero. Gives a tight lower bound on the post-reduction
+  state.
+
+**Assessment**: Medium–high value. US16/US17 are the strongest theorems in the module: they
+characterise the function's control flow completely, meaning any implementation that disagrees
+with either biconditional would immediately produce a Lean proof failure. US18 is a useful
+bound that prevents over-reduction from being invisible.
+
+### Gaps and Recommendations (Run 109)
+
+1. **LeaderCompleteness full chain**: `HLogConsistency` is still taken as a hypothesis via the
+   ER2 chain. Connecting `ElectionBroadcastChain.lean` to the concrete `RaftReachable` trace
+   to discharge `HLogConsistency` unconditionally is the **single highest-priority remaining gap**.
+
+2. **VotersLearnersDisjointRelaxed propagation**: Any proof using the strict predicate should
+   be reviewed. Update `CORRESPONDENCE.md` to note which proofs depend on the strict form.
+
+3. **Term-indexed safety**: The current `isClusterSafe` model is index-only. Connecting
+   `MaybeCommit.lean`'s MC4 (committed advances only to current-term entries) to the top-level
+   safety proof would formalise Raft §5.4.2 more closely.
+
+4. **ProgressTracker integration**: Prove that a reachable Raft state's progress map always
+   satisfies `all_wf`. PT1-PT24 prove per-operation invariants but there is no integration
+   theorem connecting to `RaftReachable`.
+
+5. **MaybeCommit correspondence**: An informal spec was added (Run 107). The next step is a
+   Lean formal spec and `#guard` correspondence tests for `MaybeCommit.lean`.
+
+> 🔬 Run 109 critique update (2026-04-25 08:10 UTC). [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24926413764)
+
+---
+
 ## Run 105 Critique Update (2026-04-25)
 
 ### Project Statistics (Runs 93-105)
@@ -2018,7 +2096,6 @@ added subsequently.  All 13 ReadOnly theorems proved, 0 sorry.
    satisfies `all_wf`. PT1-PT24 prove per-operation invariants but there is no integration
    theorem connecting to `RaftReachable`.
 
-5. **Paper update**: `paper.tex` needs updated statistics (628T, 65F, 0 sorry, 450+ `#guard`,
-   22 correspondence targets, 1 finding: CI9-CI12 demotion finding).
+5. **Paper update**: `paper.tex` was updated in Run 108 to 647T/66F/524g/12-layer.
 
 > 🔬 Run 105 critique update (2026-04-25 04:00 UTC). [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/24921939370)
