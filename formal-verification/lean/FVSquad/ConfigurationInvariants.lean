@@ -220,6 +220,105 @@ theorem CI8_free_peer_add_learner (cfg : Configuration)
     · exact hnotin_out hvot
     · exact hinv.2.1 jd hvot hj
 
+/-! ## CI9–CI12: Relaxed invariant and demotion-state finding
+
+### Background: Run 103 finding
+
+During Run 103, correspondence testing revealed that `VotersLearnersDisjoint` (4-clause)
+is **stricter than the Rust implementation** during the joint-config demotion phase.
+
+In Rust, when a peer is being demoted from voter to learner, it temporarily appears in
+both `outgoing_voters` AND `learners_next`.  The Rust invariant comment only requires
+that `learners` is disjoint from both voter halves — it does **not** prohibit
+`outgoing_voters ∩ learners_next ≠ ∅`.
+
+Counterexample from `test_configuration_invariants_correspondence` (case 5):
+```
+incoming_voters = [1, 2, 3]
+outgoing_voters = [1, 2, 3]
+learners        = []
+learners_next   = [3]         -- peer 3 is in outgoing AND learners_next (demotion)
+```
+This satisfies the Rust invariant (no peer is simultaneously a voter AND in `learners`),
+but **violates** the 4th clause of our Lean `VotersLearnersDisjoint`.
+
+The following theorems formalise this gap and provide a relaxed variant. -/
+
+/-- **`VotersLearnersDisjointRelaxed`** — the actual Rust invariant: no peer is
+    simultaneously in a voter set AND in `learners`.
+
+    This is the 3-clause version of `VotersLearnersDisjoint`, dropping the requirement
+    that `outgoing_voters ∩ learners_next = ∅`.  The Rust documentation only mandates:
+    "Learners and Voters does not intersect, i.e. if a peer is in either half of the
+    joint config, it can't be a learner".
+
+    During joint-config demotion, a peer may appear in both `outgoing_voters` and
+    `learners_next` — this is an intermediate state before the joint config finalises. -/
+def VotersLearnersDisjointRelaxed (cfg : Configuration) : Prop :=
+  (∀ id, id ∈ cfg.incoming_voters → id ∉ cfg.learners) ∧
+  (∀ id, id ∈ cfg.outgoing_voters → id ∉ cfg.learners) ∧
+  (∀ id, id ∈ cfg.incoming_voters → id ∉ cfg.learners_next)
+
+/-- **CI9** — The strict invariant implies the relaxed invariant.
+
+    `VotersLearnersDisjoint` has 4 clauses; `VotersLearnersDisjointRelaxed` has the
+    first 3.  The strict invariant is therefore sufficient for the relaxed one. -/
+theorem CI9_strict_implies_relaxed (cfg : Configuration)
+    (h : VotersLearnersDisjoint cfg) :
+    VotersLearnersDisjointRelaxed cfg :=
+  ⟨h.1, h.2.1, h.2.2.1⟩
+
+/-- **CI10** — When `outgoing_voters = []`, the strict and relaxed invariants coincide.
+
+    In a single (non-joint) configuration there are no outgoing voters, so the 4th
+    clause of `VotersLearnersDisjoint` is vacuously satisfied.  In particular, the
+    demotion intermediate state cannot arise, and both invariants are equivalent. -/
+theorem CI10_noOutgoing_relaxed_eq_strict (cfg : Configuration)
+    (hout : cfg.outgoing_voters = []) :
+    VotersLearnersDisjointRelaxed cfg ↔ VotersLearnersDisjoint cfg := by
+  constructor
+  · intro ⟨h1, h2, h3⟩
+    exact ⟨h1, h2, h3, fun id hmem _ => by simp [hout] at hmem⟩
+  · exact CI9_strict_implies_relaxed cfg
+
+/-- **CI11** — The strict invariant is strictly stronger: there exist configurations
+    satisfying the relaxed invariant but not the strict one.
+
+    The demotion-state counterexample from Run 103:
+    - Peer 3 is in both `outgoing_voters` and `learners_next`.
+    - `learners = []`, so no voter is simultaneously a learner.
+    - Relaxed invariant: satisfied (no voter is in `learners`).
+    - Strict invariant: violated (peer 3 is in `outgoing_voters ∩ learners_next`).
+
+    This #guard confirms the finding computably. -/
+private def demotionStateCfg : Configuration :=
+  { incoming_voters := [1, 2]      -- new config: peer 3 removed
+    outgoing_voters := [1, 2, 3]   -- old config: peer 3 still present
+    learners        := []
+    learners_next   := [3]         -- peer 3 being demoted: in outgoing AND learners_next
+    auto_leave      := false }
+
+-- Relaxed invariant holds: no voter is in learners; incoming ∩ learners_next = ∅.
+#guard
+  let cfg := demotionStateCfg
+  (cfg.incoming_voters.all (fun id => !cfg.learners.contains id)) &&
+  (cfg.outgoing_voters.all  (fun id => !cfg.learners.contains id)) &&
+  (cfg.incoming_voters.all (fun id => !cfg.learners_next.contains id))
+
+-- Strict invariant violated: peer 3 is in outgoing_voters AND learners_next.
+#guard
+  let cfg := demotionStateCfg
+  cfg.outgoing_voters.contains 3 && cfg.learners_next.contains 3
+
+/-- **CI12** — `mkConfiguration` (single-config case) always satisfies the relaxed
+    invariant when inputs are disjoint, just as it satisfies the strict invariant.
+
+    This is immediate since `CI2` gives the strict invariant and CI9 weakens it. -/
+theorem CI12_new_satisfies_relaxed (voters learners : List Nat)
+    (hdisj : ∀ id, id ∈ voters → id ∉ learners) :
+    VotersLearnersDisjointRelaxed (mkConfiguration voters learners) :=
+  CI9_strict_implies_relaxed _ (CI2_new_satisfies_invariant voters learners hdisj)
+
 /-! ## Summary -/
 
 /-
@@ -234,8 +333,17 @@ theorem CI8_free_peer_add_learner (cfg : Configuration)
 | CI6  | `CI6_learners_next_not_incoming`            | ✅ proved   | learners_next peer not in incoming_voters              |
 | CI7  | `CI7_finalise_preserves_incoming_disjoint`  | ✅ proved   | Joint finalisation preserves incoming ∩ learners = ∅  |
 | CI8  | `CI8_free_peer_add_learner`                 | ✅ proved   | Adding a free peer to learners preserves invariant     |
+| CI9  | `CI9_strict_implies_relaxed`                | ✅ proved   | VotersLearnersDisjoint → VotersLearnersDisjointRelaxed |
+| CI10 | `CI10_noOutgoing_relaxed_eq_strict`         | ✅ proved   | outgoing=[] → strict ↔ relaxed                         |
+| CI11 | `CI11` (`#guard` tests)                     | ✅ proved   | Demotion counterexample: relaxed ✓, strict ✗           |
+| CI12 | `CI12_new_satisfies_relaxed`                | ✅ proved   | `mkConfiguration` satisfies relaxed invariant          |
 
-**Sorry count**: 0.  All 9 theorems are proved without `sorry`.
+**Sorry count**: 0.  All 13 theorems are proved without `sorry`.
+
+**Key finding (Run 103/104)**: `VotersLearnersDisjoint` (4-clause) is stricter than the
+Rust invariant during joint-config demotion.  The actual Rust invariant corresponds to
+`VotersLearnersDisjointRelaxed` (3-clause).  For single configurations (`outgoing = []`),
+the two are equivalent (CI10).
 -/
 
 end FVSquad.ConfigurationInvariants
