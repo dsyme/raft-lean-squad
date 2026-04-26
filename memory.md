@@ -1,14 +1,14 @@
 # Lean Squad Memory — dsyme/raft-lean-squad
 
 ## Last Updated
-Run 118 — 2026-04-26 09:30 UTC
+Run 119 — 2026-04-26 17:15 UTC
 
 ## Repository
 - **Language**: Rust (Raft consensus library)
 - **FV Tool**: Lean 4 (v4.30.0-rc2, lakefile.toml, stdlib only — no Mathlib)
 - **FV Directory**: `formal-verification/`
 - **Lean Files**: 73 in `formal-verification/lean/FVSquad/`
-- **Theorems**: ~722 (0 sorry)
+- **Theorems**: ~673 (0 sorry)
 - **CI**: `.github/workflows/lean-ci.yml` — threshold 25 Rust correspondence tests
 
 ## Status Issue
@@ -38,17 +38,18 @@ All in `formal-verification/tests/` with Lean `#guard` counterparts.
 - `proofs-r130` branch (RaftSafety.lean + CRITIQUE.md changes): CONFLICT with main — skip for reconciliation run
 - run-117 branch not found remotely (may not have been pushed); changes recorded in state.json tentatively
 
-## Active Gaps (from CRITIQUE.md Run 112)
-1. **LeaderCompleteness full chain**: `HLogConsistency` still hypothetical; highest priority
-2. **Term-indexed safety**: connecting MaybeCommit MC4 to top-level proof
-3. **ProgressTracker integration**: PT1-PT26 per-op but no RaftReachable connection
-4. **Paper/Report**: last updated Run 115 (671T) — needs update for Runs 116-118
+## Active Gaps (from CRITIQUE.md Run 119)
+1. **HLogConsistency full discharge**: connect AEBroadcastInvariant inductive closure to RaftReachable
+2. **ProgressTracker integration**: all_wf in RaftReachable state (PT1-PT26 per-op but no RaftReachable connection)
+3. **Term-indexed safety**: MC4 → RSS6/RSS8 (Raft §5.4.2)
+4. **Paper/Report**: paper.tex last updated Run 108 (647T) — needs update for 673T
+5. **progress_set**: Phase 1 target, `src/tracker/progress_set.rs` — quorum_active
 
 ## Key Files
 - `formal-verification/TARGETS.md` — prioritised target list
 - `formal-verification/CORRESPONDENCE.md` — correspondence map (updated Run 118)
-- `formal-verification/CRITIQUE.md` — proof utility critique (Run 112)
-- `formal-verification/REPORT.md` — project report (Run 115)
+- `formal-verification/CRITIQUE.md` — proof utility critique (Run 119)
+- `formal-verification/REPORT.md` — project report (Run 119, 673T/73F)
 - `formal-verification/paper/paper.tex` — conference paper (Run 108)
 
 ## Notes
