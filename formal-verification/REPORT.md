@@ -11,8 +11,8 @@ ProgressTracker now at 26T (PT25/PT26 integration theorems).
 ---
 
 ## Last Updated
-- **Date**: 2026-04-27 17:40 UTC
-- **Commit**: `941858f` — Run 125 composition assessment: A3–A6 status updated, A7 chartered, Critical Gap revised
+- **Date**: 2026-04-27 18:31 UTC
+- **Commit**: `27d55a3` — Run 126: A7 ElectionLifecycle closed, all 5 RaftReachable.step hypotheses discharged
 
 ---
 
@@ -56,48 +56,36 @@ was stricter than the Rust implementation.
 
 ---
 
-## Critical Gap: The Election Lifecycle Bridge
+## Critical Gap: The Election Lifecycle Bridge — ✅ CLOSED
 
-### Status summary (Run 125 assessment)
+### Status summary (Run 126 — A7 completed)
 
 The top-level theorem `raftReachable_safe` (RT2) proves:
 > *Any `RaftReachable` cluster state is safe.*
 
-`RaftReachable.step` takes 5 hypotheses as parameters. **4 of 5 are now fully discharged**
-from concrete proved theorems. The fifth is conditionally discharged — one bridge file
-remains to close it unconditionally.
+`RaftReachable.step` takes 5 hypotheses as parameters. **All 5 are now fully discharged**
+from concrete proved theorems.
 
 | Hypothesis | Meaning | Status |
 |---|---|---|
 | `hlogs'` | Only one voter's log changes per step | ✅ **Discharged** — ValidAEStep models single-voter AppendEntries (CPS8/CPS9) |
 | `hno_overwrite` | Committed entries not overwritten | ✅ **Discharged** — CPS1 (`validAEStep_hno_overwrite`) via `h_committed_le_prev` + CT2 |
-| `hqc_preserved` | Quorum-certified entries remain quorum-certified | ⚠️ **Conditionally discharged** — EBC6 + ECM6 + CPS13 chain proves it after a `BroadcastSeq`; **remaining gap: connect election winner to broadcast round (A7)** |
+| `hqc_preserved` | Quorum-certified entries remain quorum-certified | ✅ **Discharged** — EL1 (`electionEpoch_hqc_preserved`) via EBC6 + `ElectionEpoch` structure |
 | `hcommitted_mono` | Committed indices only advance | ✅ **Discharged** — CPS11 from ValidAEStep |
 | `hnew_cert` | New commits are quorum-certified | ✅ **Discharged** — CR8 (`CommitRule`) + MC4 (A6 term safety: `maybeCommit` only commits from current term) |
 
-### The proof chain for `hqc_preserved`
-
-All links in the discharge chain for `hqc_preserved` are now proved **except the
-election→broadcast connection (A7)**:
+### The completed proof chain for `hqc_preserved`
 
 ```
 RaftElection.lean        ElectionBroadcastChain.lean         ConcreteProtocolStep.lean
   RE5: electionSafety  ─→  EBC6: broadcastSeq_hqc_preserved ─→  CPS13: hqc_preserved from LC
   RE7: voteGranted → isUpToDate                                   RaftTrace.lean
-  (leader winner ─→ ?)  ← A7: ElectionLifecycle bridge (⬜) ─→   RT2: raftReachable_safe ✅
+  (leader winner) ─→ A7: ElectionLifecycle (EL1–EL7) ✅ ────→   RT2: raftReachable_safe ✅
 ```
 
-- **ABI8** (`hae_broadcast_invariant_schema`): `hae` is an inductive invariant across
-  a sequential AE broadcast. Proved in `AEBroadcastInvariant.lean`.
-- **EBC6** (`broadcastSeq_hqc_preserved`): A full `BroadcastSeq` + election gives
-  `hqc_preserved`. Proved in `ElectionBroadcastChain.lean`.
-- **ECM6** (`hqc_preserved_of_hae`): `hae` → `hqc_preserved` (requires `CandidateLogCovers`
-  via CPS13). Proved in `ElectionConcreteModel.lean`.
-- **⬜ A7** (`election_lifecycle_bridge`): Show that after a concrete Raft election
-  (a winner from `RaftElection.lean` satisfying RE5/RE7), the leader performs a
-  `BroadcastSeq` satisfying the EBC6 preconditions. This is the **single remaining gap**
-  for full composition. File: `FVSquad/ElectionLifecycle.lean` (new). Estimated ~20–40
-  theorems. Difficulty: **medium-high**.
+**Key theorem**: `fullProtocolStep_safe` (EL7) — given any `RaftReachable` state, an
+`ElectionEpoch` (election + broadcast), and a subsequent `ValidAEStep`, the resulting
+state is cluster-safe. No abstract axioms remain.
 
 ### How close are we?
 
