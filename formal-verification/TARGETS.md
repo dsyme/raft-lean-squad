@@ -51,7 +51,7 @@ See `CRITIQUE.md §Critical Gap Analysis` for the full analysis.
 
 | Priority | ID | File | Function | Phase | Notes |
 |----------|----|------|----------|-------|-------|
-| 11 | `progress_set` | `src/tracker/progress_set.rs` | quorum tracking over progress map | 1 | Formalise `ProgressSet::quorum_active` and quorum detection across the voter progress map. |
+| 11 | `progress_set` | `src/tracker.rs` | `ProgressTracker::quorum_recently_active` as progress set | 5 ✅ | PS1–PS8 proved (Run 122, 0 sorry). `FVSquad/ProgressSet.lean`. Correspondence: `FVSquad/ProgressSetCorrespondence.lean` (26 `#guard`, covering PS1–PS8 properties). |
 | 21 | `read_only` | `src/read_only.rs` | `ReadOnly` struct + 5 methods | 5 ✅ | ReadIndex linearisability bookkeeping (Raft §6.4). `FVSquad/ReadOnly.lean` (15T: RO1–RO14, all proved, 0 sorry). |
 | 22 | `raft_log_append` | `src/raft_log.rs` | `RaftLog::append` | 5 ✅ | Lean spec + impl (Run 45+46) + P6/P7 proved (Run 50). `FVSquad/RaftLogAppend.lean` (14+ theorems). Correspondence test: `FVSquad/RaftLogAppendCorrespondence.lean` (Run 82, 21 `#guard`, all 3 truncate_and_append branches covered). |
 | 27 | `has_next_entries` | `src/raft_log.rs` | `applied_index_upper_bound` / `has_next_entries_since` | 5 ✅ | **New — Run 111.** Informal spec: `specs/has_next_entries_informal.md`. Lean spec: `FVSquad/HasNextEntries.lean` (14T: HNE1–HNE14, all proved, 0 sorry). Models the interaction between `committed`, `persisted`, and `max_apply_unpersisted_log_limit`. |
