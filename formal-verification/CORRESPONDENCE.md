@@ -7,7 +7,8 @@ correspondence level, known divergences, and the impact on any proofs that rely 
 definition.
 
 ## Last Updated
-- **Date**: 2026-04-26 04:00 UTC
+- **Date**: 2026-04-27 15:30 UTC
+- **Commit**: `27abfa4` — Run 122: Task 3 — Added `ProgressSet.lean` (8 theorems PS1–PS8, 0 sorry) and `ProgressSetCorrespondence.lean` (26 `#guard`). Task 6 — Updated CORRESPONDENCE.md with progress_set target. Totals: 681 theorems, 539+ `#guard`, 75 Lean files, 27 correspondence targets.
 - **Commit**: `e1aafbc` — Run 115: Task 8 — Added Rust correspondence test `test_progress_correspondence` (55 assertions). Task 9 — Updated CI threshold to 26. Now 26 correspondence targets, 26 Rust correspondence tests.
 - **Commit**: `adac6a1` — Run 114: Task 4 — Added `HasNextEntriesCorrespondence.lean` (33 `#guard`, Rust test `test_has_next_entries_since_correspondence`). Task 6 — Updated CORRESPONDENCE.md with all correspondence targets added since Run 92 (Runs 93–114). Totals: 671 theorems, 513 `#guard`, 71 Lean files, 26 correspondence targets, 25 Rust correspondence tests.
 
@@ -2654,3 +2655,56 @@ consistency of the abstract model, making `RaftReachable` more usable in compose
 - **Lean side**: 3 theorems proved in `BroadcastLifecycle.lean` (lake build ✅, 0 sorry, Lean 4.30.0-rc2).
 - **No correspondence tests**: this file bridges abstract model layers; there is no Rust counterpart to test against.
 - **Correspondence test status**: N/A — internal model bridging only.
+
+---
+
+## `FVSquad/ProgressSet.lean` ↔ `src/tracker.rs` — `ProgressTracker::quorum_recently_active` (as ProgressSet)
+
+**Lean file**: `formal-verification/lean/FVSquad/ProgressSet.lean`
+**Rust source**: [`src/tracker.rs`](../src/tracker.rs) — `ProgressTracker::quorum_recently_active`
+**Informal spec**: `formal-verification/specs/progress_set_informal.md`
+
+### Lean definitions
+
+| Lean name | Rust name | Rust location | Correspondence | Notes |
+|-----------|-----------|---------------|----------------|-------|
+| `ProgressSet` | `ProgressTracker` (subset) | `src/tracker.rs` | Abstraction | Models voters + per-peer progress; omits configuration, configuration changes |
+| `activeSet` | inner loop of `quorum_recently_active` | `src/tracker.rs:336–349` | Abstraction | Models which voters are collected into `active`; omits side-effects (flag resets) |
+| `resetActive` | side-effects of `quorum_recently_active` | `src/tracker.rs:336–349` | Abstraction | Models the flag-reset pass separately from the quorum check |
+| `quorumRecentlyActive` | `quorum_recently_active` (return value) | `src/tracker.rs:336–349` | Abstraction | Returns only the Bool result; state update is `resetActive` |
+
+### Known divergences (Abstraction-level)
+
+1. **Side-effect separation** — Rust `quorum_recently_active` mutates `recent_active` flags in the same call that computes the result. The Lean model separates the computation (`activeSet`) from the mutation (`resetActive`). The return value is faithfully modelled; the post-state flag values are faithfully modelled by `resetActive`.
+
+2. **HashMap → function** — Rust uses `HashMap<u64, Progress>`. Lean uses `Nat → Progress` (a total function). Entries not in the voter list are defined by the function but not accessed in the proofs; uniqueness is not enforced.
+
+3. **Type abstraction** — `u64` → `Nat`; no overflow.
+
+4. **Configuration not modelled** — `ProgressTracker` also carries a `Configuration` (voters + learners). This file models only the voter list and per-peer progress; learner membership is omitted.
+
+### Theorems and their correspondence relevance
+
+| Theorem | Property | Rust relevance |
+|---------|----------|---------------|
+| PS1 `activeSet_contains_self` | Leader always in activeSet | `*id == perspective_of { active.insert(*id) }` — unconditional |
+| PS2 `activeSet_subset_voters` | activeSet ⊆ voters | Active set built from voter progress map |
+| PS3 `quorumRecentlyActive_monotone` | More active → quorum preserved | Monotonicity of `has_quorum` |
+| PS4 `resetActive_idempotent` | Double-reset = single reset | Calling `quorum_recently_active` twice is idempotent on flags |
+| PS5 `activeSet_after_reset` | After reset: only leader active | Flags cleared; fresh quorum check needed |
+| PS6 `quorumRecentlyActive_nonempty` | Quorum → activeSet ≠ ∅ | Requires at least one active voter for quorum |
+| PS7 `resetActive_preserves_all_wf` | `all_wf` preserved | `recent_active` is metadata; no effect on replication state invariant |
+| PS8 `quorumRecentlyActive_iff` | Definitional biconditional | Explicit interface specification |
+
+### Validation evidence
+
+- **Lean side**: 8 theorems (PS1–PS8) proved in `ProgressSet.lean` (`lake build` ✅, 0 sorry, Lean 4.30.0-rc2).
+- **Correspondence tests**: 26 `#guard` assertions in `FVSquad/ProgressSetCorrespondence.lean` covering all PS properties on concrete 1-, 2-, 3-, and 5-voter clusters.
+- **Build command**: `cd formal-verification/lean && lake build FVSquad.ProgressSetCorrespondence`
+- **No Rust correspondence test yet**: a `test_progress_set_correspondence` function in `src/` would complement the Lean `#guard` tests with a full Rust execution check.
+
+### Impact on proofs
+
+PS1–PS8 lift and integrate the `QuorumRecentlyActive.lean` (QRA1–QRA15) and `ProgressTracker.lean` (PT1–PT26) theorems into a clean, composable `ProgressSet` interface. The `all_wf` preservation (PS7) confirms that `quorum_recently_active` is a safe operation in the context of the larger ProgressTracker invariant.
+
+> 🔬 Updated by [Lean Squad](https://github.com/dsyme/raft-lean-squad/actions/runs/25002793986) automated formal verification. Run 122: Task 3/6 — Added `ProgressSet.lean` (PS1–PS8) and `ProgressSetCorrespondence.lean` (26 `#guard`).
