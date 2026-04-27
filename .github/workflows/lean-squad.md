@@ -43,6 +43,10 @@ network:
     - "leanlang.org"
     - ocaml
 
+engine:
+  id: copilot
+  model: claude-opus-4.6
+
 checkout:
   fetch: ["*"]      # fetch all remote branches
   fetch-depth: 0   # fetch full history
