@@ -1,15 +1,15 @@
 # Lean Squad Memory — dsyme/raft-lean-squad
 
 ## Last Updated
-Run 125 — 2026-04-27 17:40 UTC (composition assessment: A3-A6 phases corrected, A7 chartered)
+Run 126 — 2026-04-27 17:50 UTC
 
 ## Repository
 - **Language**: Rust (Raft consensus library)
-- **FV Tool**: Lean 4 (v4.30.0-rc2, lakefile.toml, stdlib only — no Mathlib)
+- **FV Tool**: Lean 4 (v4.28.0, lakefile.toml, stdlib only — no Mathlib)
 - **FV Directory**: `formal-verification/`
-- **Lean Files**: 75 in `formal-verification/lean/FVSquad/`
-- **Theorems**: ~689 (0 sorry)
-- **CI**: `.github/workflows/lean-ci.yml` — threshold 25 Rust correspondence tests
+- **Lean Files**: 79 in `formal-verification/lean/FVSquad/`
+- **Theorems**: ~711 (0 sorry)
+- **CI**: `.github/workflows/lean-ci.yml`
 
 ## Status Issue
 - Issue #139 — `[Lean Squad] Formal Verification Status` (open)
@@ -23,93 +23,32 @@ multistep_reachability, election_model (RaftElection.lean), AEBroadcastInvariant
 ElectionBroadcastChain, ConcreteProtocolStep, ElectionConcreteModel, CommitRule, HasNextEntries,
 NextEntries, MaybeCommit, MaybePersist, MaybePersistFUI, RaftLogAppend, ReadOnly, UncommittedState,
 UnstablePersistBridge, LeaderCompleteness (partial), ProgressTracker (PT1-PT26),
-**progress_set (PS1-PS8, Run 122)** — ProgressSet.lean (8T, 0 sorry) + ProgressSetCorrespondence.lean (26 #guard)
+progress_set (PS1-PS8), MemStorage (MS1-MS14),
+**is_continuous_ents (ICE1-ICE8, Run 126)** — IsContinuousEnts.lean (8T, 0 sorry)
 
-## Correspondence Tests (25 Rust test functions)
-All in `formal-verification/tests/` with Lean `#guard` counterparts.
-- ProgressTrackerCorrespondence: 47 #guard (PT25/PT26 added Run 116)
-- See state.json for full target list
+## Correspondence Tests
+- MemStorageCorrespondence.lean: 18 #guard (Lean side)
+- tests/mem_storage/: 15 Rust assertions in test_mem_storage_correspondence (Run 126)
+  - **Known divergence**: compact-entire-log case excluded — Rust does not update
+    snapshot_metadata.index when draining all entries; Lean model tracks snapshotIndex
+    consistently. Only affects edge case where compactIndex = lastIndex+1.
 
-## CI Status (Run 118 audit)
-- `lean-ci.yml`: healthy. Threshold updated 20→25 (Run 118).
-- lean-toolchain: v4.30.0-rc2 ✅
-- Correspondence test job: `cargo test correspondence --features protobuf-codec`
-
-## Pending/Conflicts
-- `proofs-r130` branch (RaftSafety.lean + CRITIQUE.md changes): CONFLICT with main — skip for reconciliation run
-
-## Active Gaps (from Run 125 composition assessment)
-1. **A7 (election_lifecycle_bridge)** — THE SINGLE REMAINING GAP FOR FULL COMPOSITION:
-   Create `FVSquad/ElectionLifecycle.lean` with:
-   - `ElectionEpoch` structure: winner, term, voters, broadcast round
-   - Show elected leader's AE broadcast satisfies `BroadcastSeq` / `ValidAEStep` preconditions
-   - Apply EBC6 (broadcastSeq_hqc_preserved) + CPS13 → unconditional `hqc_preserved`
-   - Connect to `RaftReachable.step` → unconditional `raftReachable_safe`
-   - Also integrate MC4 (term-safety) into the election lifecycle
-   - Estimated: ~20–40 theorems, difficulty medium-high
-2. **ProgressTracker integration**: PT1-PT26 per-op but no RaftReachable connection
-3. **Paper/Report**: paper.tex updated Run 120 (673T/73F/20 layers) — PDF not compiled (LaTeX unavailable)
-
-## Composition Status (Run 125)
-All 5 `RaftReachable.step` hypotheses status:
-- `hlogs'`: ✅ Discharged (CPS8/CPS9 + ValidAEStep model)  
-- `hno_overwrite`: ✅ Discharged (CPS1)
-- `hcommitted_mono`: ✅ Discharged (CPS11)
-- `hnew_cert`: ✅ Discharged (CR8 + MC4)
-- `hqc_preserved`: ⚠️ Conditionally discharged (EBC6 + ECM6 + CPS13 chain — needs A7 bridge)
-
-Proof chain for `hqc_preserved`: RE5/RE7 → [A7 gap] → EBC6 → ECM6 → CPS13 → RaftReachable.step ✅
-
-A3-A6 phases updated in TARGETS.md (were stale at Phase 1, now correctly Phase 5 ✅)
+## Active Gaps (from CRITIQUE.md Run 119 + updates)
+1. **HLogConsistency full discharge**: connect AEBroadcastInvariant to RaftReachable
+2. **ProgressTracker integration**: all_wf in RaftReachable state
+3. **Term-indexed safety**: MC4 → RSS6/RSS8
+4. **Paper/Report**: needs update for Runs 122-126
+5. **CORRESPONDENCE.md**: needs MemStorage section (compact divergence documented)
 
 ## Key Files
 - `formal-verification/TARGETS.md` — prioritised target list
-- `formal-verification/CORRESPONDENCE.md` — correspondence map (updated Run 118)
-- `formal-verification/CRITIQUE.md` — proof utility critique (Run 119)
-- `formal-verification/REPORT.md` — project report (Run 119, 673T/73F)
-- `formal-verification/paper/paper.tex` — conference paper (Run 120, 673T/73F/20 layers)
-- `formal-verification/specs/progress_set_informal.md` — informal spec (Run 120, PS1-PS8)
+- `formal-verification/CORRESPONDENCE.md` — correspondence map
+- `formal-verification/CRITIQUE.md` — proof utility critique
+- `formal-verification/REPORT.md` — project report
+- `formal-verification/paper/paper.tex` — conference paper
+- `formal-verification/lean/FVSquad/IsContinuousEnts.lean` — ICE1-ICE8 (Run 126)
+- `formal-verification/tests/mem_storage/` — MemStorage correspondence harness (Run 126)
 
-## Run 123 (2026-04-27) — Task 10 + Task 3
-
-### Task 10: REPORT.md updated
-- Status: 681T / 74F / 671 #guard
-- Run 119-122 history appended
-
-### Task 3: New target — MemStorageCore log operations
-- **Informal spec**: `formal-verification/specs/mem_storage_informal.md` (MS1-MS8)
-- **Lean spec**: `formal-verification/lean/FVSquad/MemStorage.lean`
-- **Proved**: MS1 (compact advances firstIndex), MS2 (no-op), MS3 (suffix=ents), 
-  MS4 (prefix preserved), MS5 (compact preserves contiguous), MS7 (lastIndex), MS8 (length)
-- **Key lemma**: `firstIndex_after_drop` — dropping offset elts advances firstIndex by offset
-- **Sorry**: MS6 (append preserves contiguous) — `firstIndex {take ++ ents}` equality is hard
-  to prove via rw because `firstIndex` uses a `match` that Lean can't easily pattern-match
-  against. Workaround needed: opaque function or different definition. Deferred to Task 5.
-- **PR**: lean-squad/run-123-task10-task3-25004024142
-- **Sorry count**: 1 (was 0 overall in prior files, now 1 in MemStorage.lean)
-
-
-### Run 124 (2026-04-27) — Task 4 + Task 5
-
-### Task 4: Implementation Extraction — MemStorageCore
-- **Model**: `MemStorageCore` structure with `snapshotIndex : Nat` + `terms : List Nat`
-  (contiguity baked in: entry i has log index `snapshotIndex + 1 + i`)
-- **Definitions**: `firstIndex`, `lastIndex`, `compact`, `append`
-- **Source**: `src/storage.rs` (`MemStorageCore::compact`, `append`, `first_index`, `last_index`)
-- **Lean file**: `FVSquad/MemStorage.lean`
-
-### Task 5: Proof Assistance — MS1-MS8 all proved
-- **MS1**: `firstIndex ≤ lastIndex + 1`
-- **MS2**: `terms = [] ↔ lastIndex < firstIndex`
-- **MS3**: `compact` no-op when `ci ≤ firstIndex`
-- **MS4**: `compact` preserves `lastIndex`
-- **MS5**: `firstIndex (compact s ci) = max (firstIndex s) ci`
-- **MS6**: `append` preserves `firstIndex`
-- **MS7**: `lastIndex = startIndex + length - 1` (non-empty append)
-- **MS8**: `append [] = no-op`
-- **Sorry count**: 0. `lake build` passed (77 jobs, Lean 4.30.0-rc2)
-- **PR**: lean-squad/run-124-memstorage-task4-task5-25006260511
-
-### Next steps
-- Task 5: prove MS6 in MemStorage.lean (or restructure firstIndex definition to allow rw)
-- Continue with other Phase 3 targets (LogUnstable, InflightProposal, etc.)
+## Run History (recent)
+- Run 125: Task 3+5: MemStorage MS9-14, MemStorageCorrespondence.lean (18 #guard)
+- Run 126: Task 3+8: IsContinuousEnts.lean (ICE1-ICE8) + MemStorage Rust correspondence tests
