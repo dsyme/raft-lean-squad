@@ -935,8 +935,7 @@ In particular:
 \begin{itemize}\setlength\itemsep{0pt}
 \item The quorum intersection theorem is the \emph{only} mathematical
   fact about quorums used in the safety proof.  If it were wrong, the proof would
-  fail.  Its proof is non-trivial (inclusion-exclusion + arithmetic), giving
-  meaningful assurance.
+  fail.
 \item \texttt{MaybeAppend} gives a complete behavioural
   characterisation of AppendEntries log modification---the most frequent
   Raft protocol operation.  A bug in \texttt{maybe\_append} would cause
@@ -944,17 +943,16 @@ In particular:
 \item \texttt{SafetyComposition} is the first theorem that cannot
   be stated within a single module; it requires both quorum arithmetic
   and committed-index computation (both Layer~2) to interact.
-\item The standalone modules, while not in the safety chain, verify the
-  data-structure invariants that the Raft implementation relies on in
-  practice.  For example, the 40 \texttt{Inflights} theorems prove that
-  the ring-buffer implementation computes identical results to a simple
-  list model---a property that matters for operational correctness even
-  though the safety proof abstracts over it.
 \end{itemize}
 
-\paragraph{Why standalone components are standalone.}
-The 25 standalone files are not isolated by accident.
-\texttt{fullProtocolStep\_safe} proves that no two nodes apply
+The standalone modules, while not in the safety chain, verify the
+data-structure invariants that the Raft implementation relies on in
+practice.  For example, the 40 \texttt{Inflights} theorems prove that
+the ring-buffer implementation computes identical results to a simple
+list model---a property that matters for operational correctness even
+though the safety proof abstracts over it. At the conclusion of the work, the author asked an agent to analyze why
+the 25 standalone files were not linked into larger results. The analysis
+reported \texttt{fullProtocolStep\_safe} proves that no two nodes apply
 different entries at the same committed index---a property that depends
 only on quorum intersection, log-matching preservation, and the commit
 rule.  It does \emph{not} depend on how the log is stored
@@ -963,20 +961,24 @@ entries are delivered to the application (\texttt{NextEntries}), flow
 control (\texttt{UncommittedState}, \texttt{ProgressTracker}), or
 read-only request handling (\texttt{ReadOnly}).  Three groups could,
 however, strengthen the safety chain:
-(1)~the \emph{persistence chain} (45 theorems) could yield a
-crash-recovery safety theorem if \texttt{RaftReachable} were extended
-with a crash/restore transition;
-(2)~\texttt{CommitRule} + \texttt{MaybeCommit} +
-\texttt{CrossModuleComposition} (28 theorems) prove the same properties
-the main chain assumes via \texttt{ValidAEStep} fields, but from the
-Rust function models---linking them would give a concrete function-level
-discharge, reducing the trust boundary;
-(3)~\texttt{TallyVotes} + \texttt{JointTally} + \texttt{JointVote}
-(67 theorems) could derive election uniqueness from the concrete
-vote-counting algorithm, strengthening \texttt{RE5} from an assumed
-property of \texttt{ElectionEpoch} to a proved consequence of the
-tally logic.
-None of these extensions would change the \emph{statement} of EL7, but
+
+\begin{itemize}\setlength\itemsep{0pt}
+\item The \emph{persistence chain} (45 theorems) could yield a
+  crash-recovery safety theorem if \texttt{RaftReachable} were extended
+  with a crash/restore transition.
+\item \texttt{CommitRule} + \texttt{MaybeCommit} +
+  \texttt{CrossModuleComposition} (28 theorems) prove the same properties
+  the main chain assumes via \texttt{ValidAEStep} fields, but from the
+  Rust function models---linking them would give a concrete function-level
+  discharge, reducing the trust boundary.
+\item \texttt{TallyVotes} + \texttt{JointTally} + \texttt{JointVote}
+  (67 theorems) could derive election uniqueness from the concrete
+  vote-counting algorithm, strengthening \texttt{RE5} from an assumed
+  property of \texttt{ElectionEpoch} to a proved consequence of the
+  tally logic.
+\end{itemize}
+
+\noindent None of these extensions would change the \emph{statement} of EL7, but
 they would narrow the gap between the abstract model and the Rust code.
 
 The main remaining abstraction is the Rust implementation itself:
@@ -1049,7 +1051,7 @@ This directly produced \texttt{ElectionLifecycle.lean},
 closing the final gap and fully discharging all
 five \texttt{RaftReachable.step} hypotheses.
 
-\paragraph{What is remarkable} is not that four interventions occurred,
+What is remarkable is not that four interventions occurred,
 but what did \emph{not} require human intervention: the choice of all
 26 FV targets, the layered proof architecture, all 25 informal
 specifications, all Lean formalisations, all 718 proofs, the 28
@@ -1133,13 +1135,13 @@ Finding no implementation bugs in 718~theorem-checks is itself evidence
 of implementation quality.  The absence of counterexamples in the
 verified paths raises confidence, even without a fully concrete model.
 
-\paragraph{Not all theorems feed the top-level result, and that is fine.}
+\paragraph{Not all theorems feed the top-level result.}
 Only 25 of the 50 proof files (341 of 716 proof-file theorems) form the
 dependency chain to \texttt{fullProtocolStep\_safe}.  The remaining 25
 files (375 theorems) verify standalone data-structure invariants.  An
 LLM agent exploring a codebase will naturally verify what it encounters,
 producing useful module-level proofs even when they do not connect to
-the global safety theorem.  This mirrors human FV practice:
+a global safety theorem.  This mirrors human FV practice:
 not every invariant proved in seL4 feeds the top-level kernel safety
 property.  The standalone proofs still have value as independently
 verified specifications.
