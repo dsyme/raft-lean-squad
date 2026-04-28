@@ -251,11 +251,11 @@ human and the agent to examine as needed.
 Each run begins with a deterministic pre-step that inspects the
 repository's FV artefacts (Lean files, spec documents, open issues and
 PRs) and computes a phase-weighted probability distribution over
-ten tasks.  Two tasks are drawn and communicated to the agent;
+eleven tasks.  Two tasks are drawn and communicated to the agent;
 the agent confirms them against its persistent memory and executes
 them.  A mandatory final task (status-issue update) always runs.
 
-The ten tasks, in order of the typical progression, are:
+The eleven tasks, in order of the typical progression, are:
 
 \begin{enumerate}\setlength\itemsep{0pt}
 \item \textbf{Research \& Target Identification.}
@@ -291,6 +291,11 @@ The ten tasks, in order of the typical progression, are:
   Honestly assess whether the FV work is useful---are the proved
   properties meaningful, at the right level of abstraction, and likely
   to catch real bugs?  Identify highest-value gaps.
+\item \textbf{Correspondence Validation.}
+  Write compile-time \texttt{\#guard} tests that evaluate the Lean model
+  on concrete inputs and check the result against the Rust implementation.
+  Optionally use Aeneas for mechanical extraction; otherwise write
+  manual test fixtures with matching Rust \texttt{\#[test]} functions.
 \item \textbf{CI Automation.}
   Set up and maintain \texttt{lean-ci.yml} to automatically verify
   Lean proofs on every PR and push.
@@ -316,21 +321,25 @@ Table~\ref{tab:weights} illustrates the weight progression.
 \toprule
 Task & Name & Weight (early) & Weight (late) \\
 \midrule
-1 & Research         & 10.0 & 2.0 \\
-2 & Informal Spec    &  8.0 & 2.0 \\
-3 & Formal Spec      &  8.0 & 2.0 \\
-4 & Implementation   &  6.0 & 3.0 \\
-5 & Proof Assistance &  6.0 & 5.0 \\
-6 & Correspondence   & 10.0 & 5.0 \\
-7 & Critique         & 10.0 & 5.0 \\
-8 & CI               & 12.0 & 1.0 \\
-9 & Report          &  8.0 & 3.0 \\
-10 & Paper           &  8.0 & 3.0 \\
+1  & Research          & 10.0 & 2.0 \\
+2  & Informal Spec     &  8.0 & 2.0 \\
+3  & Formal Spec       &  8.0 & 2.0 \\
+4  & Implementation    &  6.0 & 2.0 \\
+5  & Proof Assistance  & 12.0 & 3.0 \\
+6  & Correspondence Review & 10.0 & 3.0 \\
+7  & Critique          &  4.0/10.0 & 2.0/3.0 \\
+8  & Corr.\ Validation  & 12.0 & 5.0/3.0 \\
+9  & CI                & 12.0 & 2.0 \\
+10 & Report            &  3.0/8.0 & 2.0/3.0 \\
+11 & Paper             &  2.0/8.0 & 1.0/3.0 \\
 \bottomrule
 \end{tabular}
-\caption{Phase-weighted task selection.  ``Early'' weights apply when the
-  task's prerequisites are met but the task has not yet been completed;
-  ``late'' weights apply once the artefact exists and is being maintained.}
+\caption{Phase-weighted task selection (11~tasks).  ``Early'' weights
+  apply when the task's prerequisites are met but the task has not yet been
+  completed; ``late'' weights apply once the artefact exists.
+  Slash notation (e.g.\ 4.0/10.0) indicates the weight while proofs are
+  incomplete vs.\ after proof maturity.  Tasks~5, 8, and~9 are most
+  heavily weighted during active proof work.}
 \label{tab:weights}
 \end{table}
 
