@@ -6,7 +6,7 @@
 by Lean 4.30.0-rc2 (stdlib only). Top-level safety theorem `fullProtocolStep_safe` (EL7) proved
 with **all 5 `RaftReachable.step` hypotheses fully discharged** — no abstract axioms remain.
 Main safety chain: 25 files, 341 theorems. Standalone components: 25 files, 375 theorems.
-Correspondence: 28 files, 670+ `#guard` assertions.
+Correspondence: 28 files, 625 `#guard` assertions.
 
 ---
 
@@ -30,7 +30,7 @@ in `dsyme/raft-lean-squad` over 129 automated runs. Starting from zero, the proj
    the resulting state is safe — **all 5 `RaftReachable.step` hypotheses fully discharged**
 6. Of the 50 proof files: **25 (341T)** form the main safety chain feeding into EL7;
    **25 (375T)** are standalone verified components
-7. Validated **28 correspondence targets** via 670+ `#guard` tests and Rust test functions
+7. Validated **28 correspondence targets** via 625 `#guard` tests and Rust test functions
 8. Proved **RST1–RST8** (`Restore.lean`): snapshot restoration spec — standalone component
 
 **Dependency structure**: Only 25 of 50 proof files are transitively required by the
@@ -420,7 +420,7 @@ graph TD
 > directly through `ValidAEStep` fields rather than importing `CommitRule`. These files serve
 > as independent verification of the same properties from a different angle.
 
-### Correspondence Validation (28 files, 670 `#guard`)
+### Correspondence Validation (28 files, 625 `#guard`)
 
 Each `*Correspondence.lean` file evaluates the Lean model on concrete test cases at
 `lake build` time, with matching Rust tests run by `cargo test`.
@@ -488,7 +488,7 @@ graph TD
 
 All five `RaftReachable.step` hypotheses are fully discharged from concrete protocol
 theorems. The remaining abstraction is the Rust implementation itself: Lean models
-capture the algorithms faithfully (confirmed by 670 `#guard` assertions) but are not
+capture the algorithms faithfully (confirmed by 625 `#guard` assertions) but are not
 mechanically extracted from Rust source.
 
 ---
