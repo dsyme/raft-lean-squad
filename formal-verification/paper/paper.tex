@@ -445,17 +445,10 @@ proof artefacts across subsequent runs.
 
 Over later iterations the agent expanded the target list to
 \textbf{26~targets} and organised them into seven layers
-(Table~\ref{tab:layers}).  Twelve additional targets were added as
-the agent discovered cross-module composition opportunities
-(\texttt{SafetyComposition}, \texttt{CrossModuleComposition}),
-protocol-level properties (\texttt{RaftSafety}, \texttt{RaftProtocol}),
-the reachability model (\texttt{RaftTrace}), further quorum
-lemmas (\texttt{HasQuorum}, \texttt{TallyVotes},
-\texttt{QuorumRecentlyActive}, \texttt{IsUpToDate},
-\texttt{LogUnstable}), and the election model
-(\texttt{RaftElection}, \texttt{LeaderCompleteness},
-\texttt{ConcreteTransitions}, \texttt{CommitRule},
-\texttt{MaybeCommit}, \texttt{ConcreteProtocolStep}).
+(Table~\ref{tab:layers}).  Additional targets were added as
+the agent discovered cross-module composition opportunities,
+protocol-level safety properties,
+a reachability model, and a complete election model.
 This layered architecture emerged from the
 agent's own analysis of module dependencies---it was not prescribed by
 the human author.
@@ -615,9 +608,8 @@ proving the abstract/concrete bridge: the efficient ring buffer and a
 simple list model compute identical \texttt{free\_to} results.
 
 \texttt{Progress.lean} (36 theorems) formalises the per-node progress
-tracker state machine, proving the well-foundedness invariant
-\texttt{matched + 1 $\leq$ next\_idx} is preserved across all transitions
-(including \texttt{maybeDecrTo} probe step-back and \texttt{optimisticUpdate} pipeline advance).
+tracker state machine, proving that the well-foundedness invariant
+(\texttt{matched + 1 $\leq$ next\_idx}) is preserved across all transitions.
 
 \paragraph{Layer~2: Quorum Arithmetic.}
 Eight files prove the mathematical foundations of Raft safety.
@@ -646,33 +638,28 @@ attested by a majority) and maximality (result is the largest such index).
 \paragraph{Layer~3: Protocol Operations.}
 Three files prove correctness of core Raft log operations.
 \texttt{MaybeAppend.lean} (18 theorems) gives a complete post-condition
-for \texttt{maybe\_append}: theorem MA13 proves the prefix is untouched
-and MA14 proves the suffix is correctly applied.  Together they provide
-a behavioural specification of AppendEntries log modification.
+for \texttt{maybe\_append}: the prefix is untouched
+and the suffix is correctly applied, providing
+a full behavioural specification of AppendEntries log modification.
 
 \texttt{FindConflict.lean} (12 theorems) proves that the function
-returns zero iff all entries match (FC11), and returns the first index
-of mismatch otherwise.
+returns zero iff all entries match, and returns the first mismatch index
+otherwise.
 
 \texttt{MaybePersist.lean} (13 theorems) formalises the async-persist
-safety guards of \texttt{maybe\_persist} and \texttt{maybe\_persist\_snap}
-from \texttt{src/raft\_log.rs}.  Key results: MP1 gives the complete
-iff-characterisation of the three guards (monotonicity, below-firstUpdateIndex,
-term-match); MP8 proves idempotence (second call with the same arguments
-always returns false, preventing double-advance).
+safety guards, proving a complete iff-characterisation of the three
+guards (monotonicity, firstUpdateIndex bound, term-match) and
+idempotence (a second call with the same arguments always returns false).
 
 \paragraph{Layer~4: Cross-Module Composition.}
 Three files prove properties spanning multiple independent modules.
-\texttt{SafetyComposition.lean} (9 theorems) bridges quorum arithmetic
-and committed index computation: theorem SC4 states that if two voters
+The key result is that if two voters
 have committed different entries at the same index, they must share a
 witness voter in their respective quorums---but the same voter cannot
 have voted for two different entries, giving a contradiction.
-
-\texttt{CrossModuleComposition.lean} (7 theorems) proves that
-\texttt{maybe\_append} is safe with respect to quorum commitments (CMC3):
-it never advances a committed index beyond what the current quorum has
-certified.
+A second file proves that
+\texttt{maybe\_append} never advances a committed index beyond what
+the current quorum has certified.
 
 \paragraph{Layer~5: Raft Safety.}
 \texttt{RaftSafety.lean} (10 theorems) lifts quorum-level safety to
@@ -694,14 +681,14 @@ they must be identical.  The proof uses \texttt{quorum\_intersection\_mem}
 (HQ20) to obtain a shared witness voter and conclude that both entries
 equal the witness's log entry.
 
-RSS8 (\texttt{raft\_end\_to\_end\allowbreak\_safety\_full}) provides the
+RSS8 provides the
 conditional end-to-end result: given the
 \texttt{CommitCertInvariant}---every applied
 entry is quorum-certified---the cluster is safe.
 
 \texttt{RaftProtocol.lean} (8~theorems) proves that
-\texttt{Append\-Entries} preserves the Log Matching Invariant (RP6) and
-the No-Rollback property (RP8), formalising the Raft protocol transition
+AppendEntries preserves the Log Matching Invariant and
+the No-Rollback property, formalising the Raft protocol transition
 rules at the log level.
 
 \paragraph{Layer~6: Reachability.}
@@ -781,338 +768,73 @@ in its log.
 \texttt{AppendEntries} effect function directly, proving CT1--CT5b:
 key properties of how the log is updated by a concrete AE step.
 
-\texttt{CommitRule.lean} (9~theorems) formalises the Raft commit rule
-(\texttt{leaderCommit} reflects a genuine quorum acknowledgement).
-Theorem CR8 proves \texttt{CommitRuleValid~=~hnew\_cert} by
-definitional equality (\texttt{Iff.rfl}), \emph{closing} the
+\texttt{CommitRule.lean} (9~theorems) formalises the Raft commit rule,
+proving that \texttt{leaderCommit} reflects a genuine quorum
+acknowledgement and \emph{closing} the
 \texttt{hnew\_cert} hypothesis of \texttt{RaftReachable.step}.
 
-\texttt{MaybeCommit.lean} (12~theorems) formalises \texttt{maybeCommit},
-the function that advances the commit index.  Theorem MC4
-(\texttt{maybeCommit\_term}) proves \emph{A6 term safety}: the commit index
+\texttt{MaybeCommit.lean} (12~theorems) formalises the commit-index
+advance function and proves \emph{term safety}: the commit index
 advances only when the entry at the new committed index has
-\texttt{term~=~cs.term} (leader's current term), formalising Raft~\S5.4.2.
-This is the formal Lean proof of the mechanism that prevents the ``figure~8''
-problem from the Raft paper: a stale entry from an old leader's term cannot
-be directly committed by a new leader, because \texttt{maybeCommit}
-would use the new leader's current term, and the old entry would carry a
-different term.  MC4 and CR8 together close both halves of commit
-safety: CR8 proves the quorum-certification half, MC4 proves the term-safety half.
+the leader's current term, formalising Raft~\S5.4.2.
+This is the formal proof of the mechanism that prevents the ``figure~8''
+problem from the Raft paper.
 
 \texttt{ConcreteProtocolStep.lean} (14~theorems) introduces the
-\texttt{ValidAEStep} structure and proves the \emph{A5 bridge}
-(CPS2, \texttt{validAEStep\_raftReachable}): if \texttt{cs} is
-\texttt{RaftReachable} and a valid \texttt{ValidAEStep} fires on it,
-the resulting state \texttt{cs'} is also \texttt{RaftReachable}.  This is
+\texttt{ValidAEStep} structure and proves the \emph{A5 bridge}:
+if a state is \texttt{RaftReachable} and a valid AppendEntries step fires,
+the resulting state is also \texttt{RaftReachable}.  This is
 the first theorem that directly connects a concrete Raft message to the
 abstract reachability model.
 
-Four additional files in Layer~7 close the \texttt{hqc\_preserved} gap:
+Four additional files close the \texttt{hqc\_preserved} gap
+(the hardest hypothesis) through a chain: election safety
+($\leq 1$ leader per term) $\to$ vote-granting implies
+\texttt{isUpToDate} $\to$ broadcast-sequence structural induction
+$\to$ \texttt{hqc\_preserved} from broadcast $\to$ election
+lifecycle bridge.
 
-\texttt{ElectionReachability.lean} (12~theorems) proves that
-\texttt{CandidateLogCovers} holds under the \emph{high-water-mark}
-condition: if a reference log exists from which all voters received their
-entries, the candidate's log covers every committed entry.  Theorems
-ER1--ER4 reduce the obligation; ER9--ER10 close it under the
-shared-source condition.
-
-\texttt{ElectionConcreteModel.lean} (8~theorems) bridges the abstract
-hypotheses of \texttt{ElectionReachability} to the concrete Raft protocol:
-ECM1--ECM4 prove that a \texttt{ValidAEStep} establishes the
-\texttt{hae} (log-agreement after AE) hypothesis, and ECM5--ECM7 chain
-this through \texttt{CandidateLogCovers} to discharge
-\texttt{hqc\_preserved}.
-
-\texttt{AEBroadcastInvariant.lean} (10~theorems) proves that the
-log-agreement invariant \texttt{hae} holds inductively as the leader
-broadcasts AppendEntries to voters one by one.  The key theorem,
-ABI8 (\texttt{hqc\_preserved\_of\_broadcast}), establishes that after a
-complete AE broadcast round, the cluster satisfies \texttt{hqc\_preserved}.
-
-\texttt{ElectionBroadcastChain.lean} (6~theorems) closes the gap left by
-the \texttt{haeCovered\_induction} placeholder in
-\texttt{AEBroadcastInvariant.lean}.  It introduces \texttt{BroadcastSeq},
-an inductive type threading cluster states through a sequence of
-single-voter AppendEntries steps.  EBC1--EBC2 prove log-stability for
-non-stepping nodes; EBC3 proves per-voter agreement through the tail;
-EBC4 (\texttt{broadcastSeq\_haeCovered}) is the key structural-induction
-theorem establishing \texttt{HaeCovered} for the entire voter list;
-EBC5 lifts \texttt{HaeCovered} to a universal \texttt{hae} hypothesis;
-and EBC6 (\texttt{electionBroadcastChain\_hqc\_preserved}) chains these
-through ECM4 (\texttt{hqc\_preserved\_of\_hae}) to deliver
-\texttt{hqc\_preserved} from a complete broadcast sequence---the concrete
-bridge previously missing between the AE broadcast invariant and
-\texttt{hqc\_preserved}.
-
-\texttt{ElectionLifecycle.lean} (7~theorems, EL1--EL7) is the capstone
-file that closes the gap.  It defines \texttt{ElectionEpoch}---a
+\texttt{ElectionLifecycle.lean} (7~theorems) is the capstone
+file.  It defines \texttt{ElectionEpoch}---a
 structure tying an election winner to a specific term and broadcast
 round---and proves that any \texttt{RaftReachable} state followed by an
 \texttt{ElectionEpoch} and a \texttt{ValidAEStep} produces a new
-\texttt{RaftReachable} state.  EL1 (\texttt{electionEpoch\_hqc\_pre\-served})
-discharges the hardest hypothesis; EL7 (\texttt{fullProtocol\-Step\_safe})
+\texttt{RaftReachable} state.
+\texttt{fullProtocolStep\_safe}
 is the end-to-end result: no abstract axioms remain.
 
-\texttt{RaftLog\-Append.lean} (16~theorems) formalises
-\texttt{raft\_log.rs::append} as a Lean~4 function over a
-\texttt{RaftLog} record, proving
-RA1--RA9: the empty-input invariant, the return-value specification
-(last index after append), the committed-index monotonicity, and the
-stable-storage prefix preservation.  Theorems P4--P7 prove further
-prefix and prefix-of-committed properties.
-
-\texttt{MaybePersistFUI.lean} (8~theorems) formalises the
-\texttt{firstUpdateIndex} derivation in \texttt{RaftLog::maybe\_persist}
-(\texttt{src/raft\_log.rs}).  The function determines the boundary below
-which persistent storage must not advance, derived from the \texttt{Unstable}
-struct's snapshot and entries fields.  Key theorems: FU1
-(\texttt{fu1\_unstable\_snap\_blocks}): when a snapshot is set, the FUI
-equals \texttt{snap.index + 1}, fencing off persistence below the snapshot
-horizon; FU8 (\texttt{fu8\_unstable\_fui\_gt\_persisted}): the derived FUI
-is strictly greater than the current \texttt{persisted} value---the key
-safety invariant ensuring \texttt{maybe\_persist} cannot advance past stable
-storage.  All 8 theorems have 0 \texttt{sorry}.
+Two additional files formalise
+raft-log append (prefix preservation, committed-index monotonicity)
+and the \texttt{firstUpdateIndex} derivation for async-persist
+safety (the key invariant ensuring \texttt{maybe\_persist} cannot
+advance past stable storage).
 
 \paragraph{Layer~8: Correspondence Validation.}
 Twenty-eight correspondence-test files provide compile-time evidence that the
 Lean models agree with the Rust implementation on concrete inputs.  Each
-file re-implements a specific Lean model function and checks it against
-hand-crafted fixtures via \texttt{\#guard} assertions, which are evaluated
+file evaluates the Lean model function on concrete inputs and checks
+the result against the expected value from the Rust implementation
+via \texttt{\#guard} assertions, which are evaluated
 by \texttt{lake build} at compile time.  Matching Rust test functions run
 the same cases via \texttt{cargo test}.
+In total: 625 compile-time correspondence assertions across 28 files
+(12 at ``exact'' correspondence, 16 at ``abstraction'' level)
+and 18+ Rust test functions.
+The full per-file breakdown is available in the repository's
+\texttt{REPORT.md}.
 
-The 28 files cover: \texttt{find\_conflict} (20~guards, exact),
-\texttt{maybe\_append} (32~guards, exact), \texttt{is\_up\_to\_date}
-(12~guards, exact), \texttt{committed\_index} (11~guards, abstraction),
-\texttt{limit\_size} (10~guards, abstraction), \texttt{config\_validate}
-(12~guards, exact), \texttt{inflights} (12~guards, abstraction),
-\texttt{log\_unstable} (12~guards, exact), \texttt{tally\_votes}
-(10~guards, exact), \texttt{vote\_result} (15~guards, exact),
-\texttt{has\_quorum} (15~guards, exact),
-\texttt{read\_only} (15~guards, exact),
-\texttt{find\_conflict\_by\_term} (16~guards, abstraction),
-\texttt{progress} (51~guards, abstraction --- \texttt{maybeUpdate},
-\texttt{maybeDecrTo}, \texttt{optimisticUpdate}, and state transitions),
-\texttt{progress\_tracker} (44~guards, abstraction),
-\texttt{maybe\_persist} (21~guards, abstraction --- \texttt{maybe\_persist}
-and \texttt{maybe\_persist\_snap} with snapshot fixtures),
-\texttt{maybe\_commit} (17~guards, abstraction --- \texttt{maybe\_commit}
-and \texttt{commit\_to}: the A6 term-safety guard and monotone commit),
-\texttt{raft\_log\_append} (21~guards, abstraction --- all three
-\texttt{truncate\_and\_append} branches),
-\texttt{maybe\_persist\_fui} (25~guards, abstraction --- FUI derivation),
-\texttt{election} (28~guards, abstraction),
-\texttt{configuration\_invariants} (18~guards, abstraction),
-\texttt{joint\_vote} (18~guards, abstraction),
-\texttt{quorum\_recently\_active} (14~guards, abstraction),
-\texttt{uncommitted\_state} (13~guards, abstraction),
-\texttt{has\_next\_entries} (33~guards, abstraction),
-\texttt{next\_entries} (28~guards, abstraction),
-\texttt{progress\_set} (28~guards, abstraction), and
-\texttt{mem\_storage} (23~guards, abstraction).
-In total: 625 compile-time correspondence assertions and 18+ Rust test functions.
+\paragraph{Layers~9--20: Standalone Module Verifications.}
+Twelve additional layers (170~theorems across 14~files) verify
+individual Raft subsystems that do not feed into the safety chain:
+read-only request handling, backward-scan conflict resolution,
+flow-control byte accounting, configuration invariants,
+persistent-storage bridging, progress tracking, raft-log append,
+next-entries slicing, composed progress sets, in-memory storage,
+batch concatenation validity, and snapshot restoration.
+Each file is fully proved with 0~\texttt{sorry};
+Table~\ref{tab:layers} gives per-layer file and theorem counts.
 
-\paragraph{Layer~9: ReadOnly Operations.}
-\texttt{ReadOnly.lean} (14~theorems) formalises \texttt{raft-rs}'s
-read-only request queue (\texttt{src/read\_only.rs}), modelling it as a
-pure record with a request queue and a pending-ack map.  Key theorems include
-RO8 (\texttt{advance\_removes\_ctx}: advancing the committed index dequeues
-exactly the confirmed read requests) and RO14--RO15 (the \texttt{QueuePendingInv}
-invariant is preserved by \texttt{recvAck} and \texttt{advance}).
 
-\paragraph{Layer~10: Backward-Scan Optimisation (FindConflictByTerm).}
-\texttt{FindConflictByTerm.lean} (10~theorems) formalises
-\texttt{find\_conflict\_by\_term} (\texttt{src/raft\_log.rs},
-lines 218--257),
-which allows a Raft leader to skip over a diverging log suffix in a
-single step given a conflict hint from a rejecting follower.
-Key theorems: FCB1 (result index is bounded by input), FCB3 (maximality
-of the backward scan --- every skipped position has term exceeding the
-hint), FCB6 (the scan always terminates with a \texttt{some} result via
-the dummy entry at index~0), and FCB9 (with a non-decreasing log the
-scan finds the largest valid index).
-
-\paragraph{Layer~11: Flow-Control Byte Accounting (UncommittedState).}
-\texttt{UncommittedState.lean} (18~theorems) formalises the
-\texttt{UncommittedState} struct (\texttt{src/raft.rs}) responsible for
-flow-controlling uncommitted-log byte usage.  Key theorems: US16
-(complete characterisation of budget rejection), US17 (dual: acceptance
-iff at least one free-pass condition holds), and US18 (saturation-safe
-lower bound on \texttt{maybeReduce} output).
-
-\paragraph{Layer~12: Configuration Invariants.}
-\texttt{Configuration\-Invariants.lean} (11~theorems) formalises the
-voter/learner disjointness invariant across joint-consensus
-configuration changes.  Key theorems: CI5 (\texttt{allVoters} $\cap$ learners = $\emptyset$
-under the invariant), CI7 (invariant preserved under joint-config
-finalisation), and CI11 (counterexample showing the strict invariant is
-strictly stronger than the relaxed version during demotion state).
-
-\paragraph{Layer~13: Persistent-Storage Bridge.}
-\texttt{MaybePersistFUI.lean} (8~theorems) and
-\texttt{UnstablePersistBridge.lean} (8~theorems) together bridge the
-\texttt{maybe\_persist} operation to the \texttt{LogUnstable}
-well-formedness predicate.  FU1 shows that a pending snapshot blocks
-the firstUpdateIndex from advancing; FU8 proves fui $>$ persisted as a
-safety invariant; UPB8 closes the async-persist safety gap.
-
-\paragraph{Layer~14: Progress Tracking.}
-\texttt{ProgressTracker.lean} (26~theorems, PT1--PT26) proves that
-the \texttt{all\_wf} invariant---every peer's progress record is
-well-formed---is preserved by all six progress-tracker operations:
-\texttt{recordVote}, \texttt{quorumRecentlyActive}, \texttt{isSingleton},
-\texttt{applyChanges}, and membership update, plus two integration
-theorems (PT25--PT26) connecting \texttt{initTracker} and
-\texttt{applyChanges} to membership preservation.
-
-\paragraph{Layer~15: Raft-Log Append.}
-\texttt{RaftLog\-Append.lean} (16~theorems, RA1--RA9 + P4--P7) formalises
-\texttt{RaftLog::\allowbreak truncate\_and\_append}
-(\texttt{src/raft\_log.rs}).
-Key results: RA4 (prefix preservation under truncation), RA7 (suffix
-correctly applied), and P4--P7 (stable-storage prefix preservation
-across append).
-
-\paragraph{Layer~16: Next-Entries Slicing.}
-\texttt{NextEntries.lean} (7~theorems, NE1--NE7) formalises
-\texttt{RaftLog::next\_entries\_since} and \texttt{next\_entries}
-(\texttt{src/raft\_log.rs\#L447--L492}).  Key results: NE1 (returns
-\texttt{none} iff \texttt{hasNextEntriesSince} is false), NE3 (the
-$i$-th element equals $\mathit{offset}+i$), NE4 (anti-monotone in
-\texttt{sinceIdx}), and NE7 (\texttt{next\_entries} equals
-\texttt{next\_entries\_since(applied)}).
-\texttt{HasNextEntries.lean} (14~theorems, HNE1--HNE14) formalises the
-boolean predicate \texttt{hasNextEntries\-Since} / \texttt{hasNext\-Entries}.
-HNE7 characterises when the predicate is false (empty slice); HNE14 gives the
-top-level conjunction form used by NE1.
-
-\paragraph{Layer~17: Progress Set.}
-\texttt{ProgressSet.lean} (8~theorems, PS1--PS8) formalises the
-\texttt{ProgressTracker} as a composed progress set and proves 8 key
-properties of \texttt{quorum\_recently\_active} as a composed operation.
-PS1 proves the quorum threshold; PS8 proves the false-negative freedom.
-Correspondence validated by \texttt{ProgressSetCorrespondence.lean} (28
-\texttt{\#guard}).
-
-\paragraph{Layer~18: MemStorage Core.}
-\texttt{MemStorage.lean} (14~theorems) models \texttt{MemStorageCore}
-(\texttt{src/storage.rs}) pure log operations: \texttt{firstIndex},
-\texttt{lastIndex}, \texttt{compact}, and \texttt{append}.  Key results:
-contiguity preservation under compact, append length correctness, and
-monotonicity of \texttt{firstIndex} under compaction.  Correspondence
-validated by \texttt{MemStorageCorrespondence.lean} (23~\texttt{\#guard}).
-
-\paragraph{Layer~19: IsContinuousEnts.}
-\texttt{IsContinuousEnts.lean} (8~theorems, ICE1--ICE8) formalises
-\texttt{is\_continuous\_ents} (\texttt{src/util.rs}), which validates that two
-AppendEntries batches can be safely concatenated.  ICE1--ICE3 cover the
-three branches (empty msg, empty ents, index check); ICE4--ICE8 prove
-structural properties including symmetry and transitivity of the predicate.
-
-\paragraph{Layer~20: Restore.}
-\texttt{Restore.lean} (8~theorems, RST1--RST8) formalises
-\texttt{RaftLog::restore} (\texttt{src/raft\_log.rs:696})---the snapshot
-restoration operation.  RST1 (committed = snapshot index), RST2 (persisted
-$\le$ committed), RST3 (committed advances), RST7 (ordering invariant
-preserved), and RST8 (idempotence at current committed) are the key results.
-
-\subsection{Proof Statistics}
-
-Table~\ref{tab:inventory} summarises the full file inventory.
-Total: 718 theorems, 79~files (50 proof files + 28 correspondence-test
-files + 1 helper), 0 \texttt{sorry}, $\approx$21{,}300 lines of Lean.
-
-\begin{table*}[p]
-\centering\footnotesize
-\begin{tabular}{lrp{5cm}}
-\toprule
-File & Thms & Key result \\
-\midrule
-LimitSize         & 17 & Prefix, maximality \\
-ConfigValidate    & 10 & 8-constraint predicate equiv \\
-MajorityVote      & 21 & Won/Lost/Pending characterisation \\
-JointVote         & 14 & Joint-config degeneracy \\
-CommittedIndex    & 17 & Sort-index safety + maximality \\
-FindConflict      & 12 & First mismatch; zero $\Leftrightarrow$ all-match \\
-JointCommittedIndex & 10 & $\min(\mathit{ci}_{in}, \mathit{ci}_{out})$ \\
-MaybeAppend       & 18 & Prefix preserved; suffix applied \\
-Inflights         & 40 & Ring-buffer abstract/concrete bridge \\
-Progress          & 36 & State-machine WF invariant \\
-IsUpToDate        & 17 & Lex order, total preorder \\
-LogUnstable       & 41 & Snapshot/entries consistency \\
-TallyVotes        & 28 & Partition, bounds, no-double-quorum \\
-HasQuorum         & 20 & Quorum intersection (HQ14, HQ20) \\
-QuorumRecentlyActive & 11 & Active-quorum detection \\
-SafetyComposition & 9  & SC4: two CIs share witness \\
-JointTally        & 14 & Joint-config tally correctness \\
-JointSafetyComposition & 10 & JSC7: witnesses in both halves \\
-CrossModuleComposition &  7 & CMC3: maybe\_append bounded \\
-RaftSafety        & 10 & RSS1--RSS8: cluster safety \\
-RaftProtocol      &  8 & LMI, NRI preserved by AppendEntries \\
-RaftTrace         &  4 & RT1, RT2: reachable safety \\
-RaftElection      & 53 & Abstract Raft-step properties (incl.\ election) \\
-LeaderCompleteness & 10 & Leader completeness components \\
-ConcreteTransitions &  8 & CT4: LMI preserved; CT5: broadcast $\to$ match \\
-CommitRule        &  9 & CR8: \texttt{hnew\_cert} closed \\
-MaybeCommit       & 12 & MC4: A6 term safety \\
-MaybePersist      & 13 & MP6: async-persist below firstUpdateIndex \\
-ConcreteProtocolStep & 14 & CPS2: A5 bridge (concrete$\to$abstract) \\
-ElectionReachability & 12 & ER1--ER10: high-water-mark + shared-source \\
-ElectionConcreteModel &  8 & ECM1--ECM7: hae $\to$ hqc\_preserved \\
-AEBroadcastInvariant & 10 & ABI8: hqc\_preserved\_of\_broadcast \\
-ElectionBroadcastChain &  6 & EBC4: broadcast seq $\Rightarrow$ HaeCovered \\
-ElectionLifecycle &  7 & EL1--EL7: election epoch $\Rightarrow$ RaftReachable \\
-MultiStepReachability &  7 & MS2: N-step end-to-end safety certificate \\
-MaybePersistFUI   &  8 & FU1: snap blocks advance; FU8: fui $>$ persisted \\
-RaftLogAppend     & 16 & RA1--RA9, P4--P7: append spec \\
-ReadOnly          & 14 & RO8: advance removes ctx; RO14--RO15: inv \\
-FindConflictByTerm & 10 & FCB3: maximality; FCB6: always some \\
-ProgressTracker   & 26 & PT1--PT26: all\_wf invariant preservation \& integration \\
-UncommittedState  & 18 & US16--US18: budget accept/reject characterisation \\
-ConfigurationInvariants & 11 & CI5: voters$\cap$learners=$\emptyset$; CI11: strict vs.\ relaxed \\
-UnstablePersistBridge &  8 & Bridge: MaybePersist$\leftrightarrow$LogUnstable \\
-FindConflictCorrespondence &  2 & 20 \texttt{\#guard}, exact \\
-MaybeAppendCorrespondence &  0 & 32 \texttt{\#guard}, exact \\
-IsUpToDateCorrespondence  &  0 & 12 \texttt{\#guard}, exact \\
-CommittedIndexCorrespondence & 0 & 11 \texttt{\#guard}, abstraction \\
-LimitSizeCorrespondence   &  0 & 10 \texttt{\#guard}, abstraction \\
-ConfigValidateCorrespondence & 0 & 12 \texttt{\#guard}, exact \\
-InflightsCorrespondence   &  0 & 12 \texttt{\#guard}, abstraction \\
-LogUnstableCorrespondence &  0 & 12 \texttt{\#guard}, exact \\
-TallyVotesCorrespondence  &  0 & 10 \texttt{\#guard}, exact \\
-VoteResultCorrespondence  &  0 & 15 \texttt{\#guard}, exact \\
-HasQuorumCorrespondence   &  0 & 15 \texttt{\#guard}, exact \\
-ReadOnlyCorrespondence    &  0 & 15 \texttt{\#guard}, exact \\
-FindConflictByTermCorrespondence & 0 & 16 \texttt{\#guard}, abstraction \\
-ProgressCorrespondence    &  0 & 51 \texttt{\#guard}, abstraction \\
-ProgressTrackerCorrespondence & 0 & 44 \texttt{\#guard}, abstraction \\
-MaybePersistCorrespondence &  0 & 21 \texttt{\#guard}, abstraction \\
-MaybeCommitCorrespondence  &  0 & 17 \texttt{\#guard}, abstraction \\
-RaftLogAppendCorrespondence & 0 & 21 \texttt{\#guard}, abstraction \\
-MaybePersistFUICorrespondence & 0 & 25 \texttt{\#guard}, abstraction \\
-ElectionCorrespondence    &  0 & 28 \texttt{\#guard}, abstraction \\
-ConfigurationInvariantsCorrespondence & 0 & 18 \texttt{\#guard}, abstraction \\
-JointVoteCorrespondence   &  0 & 18 \texttt{\#guard}, abstraction \\
-QuorumRecentlyActiveCorrespondence &  0 & 14 \texttt{\#guard}, abstraction \\
-HasNextEntriesCorrespondence & 0 & 33 \texttt{\#guard}, abstraction \\
-NextEntriesCorrespondence &  0 & 28 \texttt{\#guard}, abstraction \\
-UncommittedStateCorrespondence & 0 & 13 \texttt{\#guard}, abstraction \\
-ProgressSetCorrespondence & 0 & 28 \texttt{\#guard}, abstraction \\
-MemStorageCorrespondence  & 0 & 23 \texttt{\#guard}, abstraction \\
-BroadcastLifecycle &  3 & BL1--BL3: BroadcastSeq$\to$RaftReachable bridge \\
-HasNextEntries    & 14 & HNE1--HNE14: hasNextEntriesSince boolean spec \\
-NextEntries       &  7 & NE1--NE7: nextEntriesSince slice model \\
-ProgressSet       &   8 & PS1--PS8: composed progress set \\
-MemStorage        &  14 & Compact/append contiguity \\
-IsContinuousEnts  &   8 & ICE1--ICE8: batch concat validity \\
-Restore           &   8 & RST1--RST8: snapshot restore spec \\
-\midrule
-\textbf{Total}    & \textbf{718} & \textbf{0 sorry; 625 \texttt{\#guard}} \\
-\bottomrule
-\end{tabular}
-\caption{Full file inventory (all at Phase~5, 0 sorry). Correspondence files contribute \texttt{\#guard} assertions but no named theorems (except \texttt{FindConflictCorrespondence}, 2 theorems).}
-\label{tab:inventory}
-\end{table*}
 
 \subsection{Bugs and Findings}
 \label{sec:findings}
@@ -1156,32 +878,30 @@ from concrete proved theorems:
 
 \begin{itemize}\setlength\itemsep{0pt}
 \item \texttt{hlogs'}: discharged by \texttt{ValidAEStep}, which models
-  single-voter AppendEntries (CPS8/CPS9).
-\item \texttt{hno\_overwrite}: discharged by CPS1
-  (\texttt{validAEStep\_hno\_over\-write}), via the committed-$\leq$-prev
-  precondition and CT2.
-\item \texttt{hqc\_preserved}: discharged by EL1
-  (\texttt{electionEpoch\_hqc\_pre\-served}), which chains election safety
-  (RE5), the broadcast induction (EBC6), and the election lifecycle
-  bridge (A7).
-\item \texttt{hcommitted\_mono}: discharged by CPS11 from
+  single-voter AppendEntries.
+\item \texttt{hno\_overwrite}: discharged via the committed-$\leq$-prev
+  precondition and the concrete-transitions bridge.
+\item \texttt{hqc\_preserved}: discharged by the election lifecycle
+  chain, which combines election safety, the broadcast induction,
+  and the election lifecycle bridge.
+\item \texttt{hcommitted\_mono}: discharged from
   \texttt{ValidAEStep}.
-\item \texttt{hnew\_cert}: discharged by CR8 (\texttt{CommitRuleValid})
-  together with MC4 (A6 term safety: \texttt{maybeCommit} only commits
-  entries from the current leader's term).
+\item \texttt{hnew\_cert}: discharged by the commit rule
+  together with term safety (the commit index
+  advances only for entries from the current leader's term).
 \end{itemize}
 
-The key theorem is \texttt{fullProtocolStep\_safe} (EL7): given any
+The key theorem is \texttt{fullProtocolStep\_safe}: given any
 \texttt{RaftReachable} state, an \texttt{ElectionEpoch} (election +
 broadcast), and a subsequent \texttt{ValidAEStep}, the resulting state
 is cluster-safe.  No abstract axioms remain.
 
 The proof chain for the hardest hypothesis (\texttt{hqc\_preserved})
-proceeds: election safety (RE5, at most one leader per term) $\to$
-vote-granting implies \texttt{isUpToDate} (RE7) $\to$
-\texttt{BroadcastSeq} induction (EBC4) $\to$
-\texttt{hqc\_preserved} from broadcast (EBC6) $\to$
-election lifecycle bridge (EL1--EL7).
+proceeds: election safety (at most one leader per term) $\to$
+vote-granting implies \texttt{isUpToDate} $\to$
+\texttt{BroadcastSeq} induction $\to$
+\texttt{hqc\_preserved} from broadcast $\to$
+election lifecycle bridge.
 
 Concretely, \texttt{hno\_overwrite} corresponds to the Rust panic guard:
 \begin{lstlisting}[language=Rust2]
@@ -1192,7 +912,7 @@ if conflict != 0
 }
 \end{lstlisting}
 This panic is proved to be unreachable in a correct Raft execution by
-\texttt{hno\_overwrite}.  Theorem RP8 (\texttt{raft\_transitions\_no\_rollback})
+\texttt{hno\_overwrite}.  The \texttt{RaftProtocol} layer
 proves that \texttt{maybe\_append} satisfies \texttt{hno\_overwrite} given
 the appropriate preconditions.
 
@@ -1201,7 +921,7 @@ the appropriate preconditions.
 The 718 theorems divide into two groups by structural role.
 \textbf{The safety chain} (25 files, 341 theorems) forms a connected
 dependency graph from quorum arithmetic through to
-\texttt{fullProtocolStep\_safe} (EL7), the end-to-end safety result.
+\texttt{fullProtocolStep\_safe}, the end-to-end safety result.
 Every theorem in this chain has a genuine transitive dependency on the
 lower layers; removing any would break the final result.
 \textbf{Standalone module verifications} (25 files, 375 theorems) prove
@@ -1213,15 +933,15 @@ invariants.  Both groups contribute to overall confidence.
 In particular:
 
 \begin{itemize}\setlength\itemsep{0pt}
-\item HQ20 (\texttt{quorum\_intersection\_mem}) is the \emph{only} mathematical
-  fact about quorums used in the RSS1 proof.  If it were wrong, RSS1 would
+\item The quorum intersection theorem is the \emph{only} mathematical
+  fact about quorums used in the safety proof.  If it were wrong, the proof would
   fail.  Its proof is non-trivial (inclusion-exclusion + arithmetic), giving
   meaningful assurance.
-\item MA13/MA14 (\texttt{MaybeAppend}) give a complete behavioural
+\item \texttt{MaybeAppend} gives a complete behavioural
   characterisation of AppendEntries log modification---the most frequent
   Raft protocol operation.  A bug in \texttt{maybe\_append} would cause
-  one of these to fail.
-\item SC4 (\texttt{SafetyComposition}) is the first theorem that cannot
+  one of these theorems to fail.
+\item \texttt{SafetyComposition} is the first theorem that cannot
   be stated within a single module; it requires both quorum arithmetic
   and committed-index computation (both Layer~2) to interact.
 \item The standalone modules, while not in the safety chain, verify the
@@ -1234,7 +954,7 @@ In particular:
 
 \paragraph{Why standalone components are standalone.}
 The 25 standalone files are not isolated by accident.
-\texttt{fullProtocolStep\_safe} (EL7) proves that no two nodes apply
+\texttt{fullProtocolStep\_safe} proves that no two nodes apply
 different entries at the same committed index---a property that depends
 only on quorum intersection, log-matching preservation, and the commit
 rule.  It does \emph{not} depend on how the log is stored
@@ -1325,8 +1045,8 @@ and then wrote:
 \texttt{/lean-squad OK go through and make progress on whatever
 else needs doing to close out the work}
 \end{quote}
-This directly produced \texttt{ElectionLifecycle.lean}
-(EL1--EL7), closing the A7 gap and fully discharging all
+This directly produced \texttt{ElectionLifecycle.lean},
+closing the final gap and fully discharging all
 five \texttt{RaftReachable.step} hypotheses.
 
 \paragraph{What is remarkable} is not that four interventions occurred,
@@ -1375,7 +1095,7 @@ not existing (use \texttt{Nat.le\_refl \_}).
 \subsection{Lessons Learned}
 
 \paragraph{Phase-weighted task selection enables autonomy.}
-The workflow's ten-task structure with adaptive weights means the
+The workflow's eleven-task structure with adaptive weights means the
 agent always has a well-defined next action.  The agent does not need
 a human to tell it what to do next---the weight computation, combined
 with persistent memory, provides sufficient direction.  The layered
@@ -1751,13 +1471,13 @@ culminating in the end-to-end safety theorem
 \texttt{raftReachable\_safe} with zero \texttt{sorry} and all five
 abstract \texttt{RaftReachable.step} hypotheses fully discharged from
 concrete protocol theorems, plus the A5
-bridge (CPS2) connecting concrete AppendEntries steps to the abstract
+bridge connecting concrete AppendEntries steps to the abstract
 reachability model, and an additional 28 correspondence-validation
 files providing 625 compile-time \texttt{\#guard} assertions and 18+
 Rust test functions confirming that the Lean models agree with the
 Rust implementation on concrete inputs.
 The human author's total involvement was: designing the reusable
-workflow, merging PRs, and writing two short comments.
+workflow, merging PRs, and writing four brief GitHub issue comments.
 He required no Lean expertise, no formal-methods training, and
 invested near-zero hours of proof-engineering labour.
 
@@ -1789,7 +1509,7 @@ Squad to other production codebases to test generality.
 \emph{This paper was co-authored by Don Syme, LeanSquad (an autonomous
 AI automation workflow using GitHub Agentic Workflows), Copilot CLI
 (GitHub's AI coding agent), and Claude Sonnet~4.6 (Anthropic's LLM).  Don Syme designed the Lean Squad workflow
-and made two brief interventions; all 26 target selections, all
+and made four brief interventions; all 26 target selections, all
 specifications, all 718 proofs, the layered architecture, and the
 correspondence-validation harness were produced autonomously by the AI
 agent.  All theorems are machine-checked by Lean~4.30.0-rc2 with zero
